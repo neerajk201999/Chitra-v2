@@ -186,3 +186,31 @@ describe("media assets (ADR-0006)", () => {
     expect(() => sceneHash({ ...s, scenes: s.scenes.map((sc, i) => i === 0 ? { ...sc, elements: sc.elements.map((e) => e.type === "image" ? { ...e, src: "assets/missing.png" } : e) } : sc) } as never, 0, dir)).toThrow(/asset not found/);
   });
 });
+
+describe("video-in-scene + audio v2 (ADR-0007)", () => {
+  it("rejects remote video src and accepts local clips with sfx", () => {
+    const s = structuredClone(flagship);
+    s.scenes[0].elements.push({ type: "video", id: "clip", src: "https://x.com/a.mp4" });
+    expect(validateScore(s).ok).toBe(false);
+    const s2 = structuredClone(flagship);
+    s2.scenes[0].elements.push({ type: "video", id: "clip", src: "assets/a.mp4" });
+    s2.scenes[0].choreography[1].sfx = { src: "assets/sfx/whoosh.wav", gainDb: -14 };
+    expect(validateScore(s2).ok).toBe(true);
+  });
+  it("MO-AUD-3 flags SFX-dense scenes", () => {
+    const s = validFixture();
+    for (const a of s.scenes[1].choreography) (a as { sfx?: object }).sfx = { src: "assets/sfx/tick.wav", gainDb: -14 };
+    const f = runStaticGates(s).filter((x) => x.ruleId === "MO-AUD-3");
+    expect(s.scenes[1].choreography.length).toBeGreaterThan(2);
+    expect(f.length).toBe(1);
+  });
+  it("compiles video elements to frame-swap imgs with a media runtime", () => {
+    const s = validFixture();
+    s.scenes[0].elements.push({ type: "video", id: "clip", src: "assets/a.mp4", fit: "cover",
+      position: { anchor: "center", x: 50, y: 50 }, width: 60, height: 60, radius: 2, scrim: 0, startMs: 0, role: "hero" } as never);
+    const { html } = compile(s);
+    expect(html).toContain('data-vid="cold-open--clip"');
+    expect(html).toContain("setMedia");
+    expect(html).toContain("VIDMETA");
+  });
+});

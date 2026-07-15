@@ -242,6 +242,60 @@ program
     }
   });
 
+const SFX_RECIPES: Record<string, string[]> = {
+  // Deterministic signal-source synthesis (ADR-0007): zero licensing, byte-stable
+  // for a given ffmpeg version. Tasteful defaults — short, soft, low-mid heavy.
+  "tick.wav": ["-f", "lavfi", "-i", "sine=frequency=1400:duration=0.07",
+    "-af", "highpass=f=600,afade=t=in:d=0.005,afade=t=out:st=0.02:d=0.05,volume=0.7"],
+  "whoosh.wav": ["-f", "lavfi", "-i", "anoisesrc=color=pink:duration=0.7:amplitude=0.6:seed=42",
+    "-af", "bandpass=f=500:w=400,afade=t=in:d=0.22,afade=t=out:st=0.3:d=0.4,volume=0.8"],
+  "rise.wav": ["-f", "lavfi", "-i", "aevalsrc=0.35*sin(2*PI*(140+320*t*t)*t):s=48000:d=0.9",
+    "-af", "lowpass=f=1400,afade=t=in:d=0.1,afade=t=out:st=0.55:d=0.35"],
+  "boom.wav": ["-f", "lavfi", "-i", "sine=frequency=52:duration=1.0",
+    "-af", "lowpass=f=140,afade=t=in:d=0.008,afade=t=out:st=0.08:d=0.9,volume=0.9"],
+};
+
+program
+  .command("sfx-kit")
+  .option("-o, --out <dir>", "output directory", "assets/sfx")
+  .description("Generate the deterministic starter SFX kit: tick, whoosh, rise, boom (ADR-0007; no licensing)")
+  .action((o: { out: string }) => {
+    mkdirSync(path.resolve(o.out), { recursive: true });
+    for (const [name, args] of Object.entries(SFX_RECIPES)) {
+      const target = path.join(o.out, name);
+      const r = spawnSync("ffmpeg", ["-y", "-v", "error", ...args, "-ar", "48000", target], { encoding: "utf8" });
+      if (r.status !== 0) fail(`ffmpeg failed for ${name}: ${(r.stderr ?? "").slice(-300)}`);
+      console.log(`✔ ${target}`);
+    }
+  });
+
+program
+  .command("bed")
+  .option("-o, --out <file>", "output wav", "assets/bed.wav")
+  .requiredOption("-d, --duration <s>", "bed length in seconds", parseFloat)
+  .option("--freq <hz>", "root frequency (default 110 = A2)", parseFloat)
+  .option("--bpm <n>", "pulse tempo (default 84)", parseFloat)
+  .description("Synthesize a deterministic ambient music bed: root drone + fifth + slow pulse, loudness-normalized at mux (ADR-0007)")
+  .action((o: { out: string; duration: number; freq?: number; bpm?: number }) => {
+    const f = o.freq ?? 110;
+    const bpm = o.bpm ?? 84;
+    const d = o.duration;
+    if (!Number.isFinite(d) || d <= 0 || d > 600) fail("--duration must be 0–600 seconds");
+    const pulseHz = bpm / 60 / 4; // one swell per bar
+    const expr =
+      `0.16*sin(2*PI*${f}*t)` +
+      `+0.10*sin(2*PI*${(f * 1.5).toFixed(2)}*t)` +
+      `+0.06*sin(2*PI*${(f * 2.003).toFixed(2)}*t)` +
+      `+0.05*sin(2*PI*${(f * 0.5).toFixed(2)}*t)*(0.5+0.5*sin(2*PI*${pulseHz.toFixed(4)}*t))`;
+    mkdirSync(path.dirname(path.resolve(o.out)), { recursive: true });
+    const r = spawnSync("ffmpeg", ["-y", "-v", "error",
+      "-f", "lavfi", "-i", `aevalsrc=${expr}:s=48000:d=${d.toFixed(3)}`,
+      "-af", `lowpass=f=900,tremolo=f=${(pulseHz / 2).toFixed(4)}:d=0.25,aecho=0.7:0.5:610:0.22,afade=t=in:d=1.6,afade=t=out:st=${Math.max(0, d - 2.4).toFixed(3)}:d=2.4`,
+      "-ar", "48000", "-ac", "2", path.resolve(o.out)], { encoding: "utf8" });
+    if (r.status !== 0) fail(`ffmpeg bed synthesis failed: ${(r.stderr ?? "").slice(-300)}`);
+    console.log(`✔ ${o.out} — ${d}s ambient bed @ ${f}Hz root, pulse ${bpm}bpm`);
+  });
+
 program
   .command("probe")
   .description("Verify the environment: ffmpeg, bundled Chrome, fonts")

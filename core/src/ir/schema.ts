@@ -116,6 +116,26 @@ const ImageElement = z.object({
   scrim: z.number().min(0).max(0.8).default(0), // darkening overlay for text legibility
 });
 
+const VideoElement = z.object({
+  type: z.literal("video"),
+  id,
+  role: z.enum(["hero", "support", "ambient"]).default("hero"),
+  // Same hermetic rule as images (ADR-0006/0007): project-relative only.
+  src: z
+    .string()
+    .min(1)
+    .refine((s) => !/^[a-z][a-z0-9+.-]*:\/\//i.test(s) && !s.startsWith("/"), {
+      message: "video src must be a project-relative path (acquire clips first, e.g. ffmpeg trim of a recording)",
+    }),
+  startMs: z.number().int().min(0).default(0), // offset into the source clip
+  fit: z.enum(["cover", "contain"]).default("cover"),
+  position: Position.default({ anchor: "center" }),
+  width: z.number().min(1).max(140).default(100),
+  height: z.number().min(1).max(140).default(100),
+  radius: z.number().min(0).max(50).default(0),
+  scrim: z.number().min(0).max(0.8).default(0),
+});
+
 const StatElement = z.object({
   type: z.literal("stat"),
   id,
@@ -146,6 +166,7 @@ export const Element = z.discriminatedUnion("type", [
   TextElement,
   ShapeElement,
   ImageElement,
+  VideoElement,
   StatElement,
   ChartBarElement,
 ]);
@@ -176,6 +197,19 @@ export const Animation = z.object({
   /** Escape hatch (MO-EASE-1): raw values allowed ONLY with a reason. Flagged by gates. */
   override: z
     .object({ reason, durationMs: z.number().min(50).max(5000).optional(), gsapEase: z.string().optional() })
+    .optional(),
+  /** ADR-0007: a sound fired at this animation's resolved start (mixed at mux).
+   *  Sparse by rule (MO-AUD-3) — hero entrances and transitions, not every move. */
+  sfx: z
+    .object({
+      src: z
+        .string()
+        .min(1)
+        .refine((s) => !/^[a-z][a-z0-9+.-]*:\/\//i.test(s) && !s.startsWith("/"), {
+          message: "sfx src must be a project-relative path (generate a kit with `chitra sfx-kit`)",
+        }),
+      gainDb: z.number().min(-40).max(6).default(-14),
+    })
     .optional(),
 });
 export type AnimationT = z.infer<typeof Animation>;

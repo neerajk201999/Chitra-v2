@@ -31,6 +31,10 @@ Remaining:
 - Router + per-register workflow skills (product-launch, social-short as separate workflows).
 - **Exit gate:** cold-start test in 3 harnesses by 3 outside testers hits the 10-minute bar.
 
+## M3.5 — Expressiveness & audio v2 (owner-directed priority, 2026-07-15) — LANDED same day
+Owner call: close the Remotion expressiveness gap and the HyperFrames workflow gap now, ahead of M4. Landed: **video-in-scene** (ADR-0007: ffmpeg frame pre-extraction, deterministic, content-hashed, MO-MED-gated) · **SFX on choreography** (sounds fire at resolved animation starts; MO-AUD-3 sparsity gate) · **deterministic starter audio** (`chitra sfx-kit`, `chitra bed` — zero-license ffmpeg synthesis) · workflow skills (product-launch, screen-demo, social-short) · renderer-frontier survey (docs/research/render-stack-frontier.md). Proven by the akta.pro launch film: transcribed voiceover → real UI stills + moving clip + bed + SFX, all gates green.
+Remaining honest gaps vs Remotion: keyframes/masks/nested comps (curated-preset policy, not a bug), clip audio pass-through, narration/TTS timeline.
+
 ## M4 — ChitraBench (define "best")
 *Goal: the public benchmark for motion-design quality.*
 - Fixed brief suite (per register), scoring harness (gates + calibrated VLM rubrics), blind A/B protocol.

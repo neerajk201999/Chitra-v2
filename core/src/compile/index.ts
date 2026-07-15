@@ -201,6 +201,19 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
         `<div style="position:relative;width:${w}px;height:${h}px;border-radius:${r};overflow:hidden;"><img src="${esc(el.src)}" style="width:100%;height:100%;object-fit:${el.fit};display:block;"/>${scrim}</div>`
       );
     }
+    case "video": {
+      // ADR-0007: rendered as a per-frame image swap. The renderer pre-extracts
+      // the clip to JPEGs (deterministic; headless <video> seeking is not) and
+      // injects the frame directory via __chitra.setMedia; the seek runtime
+      // swaps src and awaits decode before any capture.
+      const w = (el.width * score.meta.width) / 100;
+      const h = (el.height * score.meta.height) / 100;
+      const r = `${(el.radius * Math.min(score.meta.width, score.meta.height)) / 100}px`;
+      const scrim = el.scrim > 0 ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,${el.scrim});border-radius:${r};"></div>` : "";
+      return wrap(
+        `<div style="position:relative;width:${w}px;height:${h}px;border-radius:${r};overflow:hidden;background:#000;"><img class="chitra-vid" data-vid="${esc(sceneId)}--${esc(el.id)}" style="width:100%;height:100%;object-fit:${el.fit};display:block;"/>${scrim}</div>`
+      );
+    }
     case "stat": {
       const sizePx = Math.round(TYPE_SCALE.display * scale);
       const labelPx = Math.round(TYPE_SCALE.kicker * scale);
@@ -310,7 +323,7 @@ function presetTweens(
 function textOverMedia(scene: SceneT): Set<string> {
   const over = new Set<string>();
   const hasBgImage = scene.background === "image";
-  const mediaIds = scene.elements.filter((e) => e.type === "image").map((e) => e.id);
+  const mediaIds = scene.elements.filter((e) => e.type === "image" || e.type === "video").map((e) => e.id);
   for (const el of scene.elements) {
     if (el.type !== "text" && el.type !== "stat") continue;
     if (hasBgImage || mediaIds.length > 0) over.add(el.id); // v0 conservative: any media in scene
@@ -496,15 +509,46 @@ SPECS.forEach(function (s) {
 // Force initial state paint
 tl.time(0, false); tl.pause(0);
 
+// ADR-0007: video elements as frame swaps. VIDMETA carries scene-local timing;
+// setMedia() (called by the renderer after pre-extraction) supplies frame dirs.
+var VIDMETA = ${JSON.stringify(
+      score.scenes.flatMap((scene) => {
+        let acc = 0;
+        for (const s of score.scenes) {
+          if (s.id === scene.id) break;
+          acc += s.durationMs;
+        }
+        return scene.elements
+          .filter((e) => e.type === "video")
+          .map((e) => ({ key: `${scene.id}--${e.id}`, sceneStartMs: acc, sceneEndMs: acc + scene.durationMs }));
+      })
+    )};
+var MEDIA = {};
+function pad5(n) { return ("0000" + n).slice(-5); }
+
 window.__chitra = {
   durationMs: DURATION_MS,
   fps: ${fps},
   width: ${width},
   height: ${height},
   missingTargets: MISSING,
+  setMedia: function (map) { MEDIA = map || {}; },
   seek: function (ms) {
     tl.time(Math.min(ms, DURATION_MS - 0.001) / 1000, false);
-    return true;
+    var waits = [];
+    VIDMETA.forEach(function (v) {
+      var m = MEDIA[v.key];
+      var img = document.querySelector('img[data-vid="' + v.key + '"]');
+      if (!m || !img) return;
+      var local = Math.min(Math.max(ms - v.sceneStartMs, 0), v.sceneEndMs - v.sceneStartMs);
+      var idx = Math.min(Math.floor((local / 1000) * m.fps), m.count - 1);
+      var src = m.base + "/f" + pad5(idx + 1) + ".jpg";
+      if (img.getAttribute("src") !== src) {
+        img.setAttribute("src", src);
+        if (img.decode) waits.push(img.decode().catch(function () {}));
+      }
+    });
+    return waits.length ? Promise.all(waits).then(function () { return true; }) : true;
   },
   ready: function () {
     var families = ${JSON.stringify([score.style.fonts.display, score.style.fonts.text])};
@@ -521,7 +565,8 @@ window.__chitra = {
     }).then(function () {
       var ok = families.every(function (f) { return document.fonts.check("16px '" + f + "'"); });
       var badImages = Array.prototype.filter.call(document.images, function (img) {
-        return !(img.complete && img.naturalWidth > 0);
+        // chitra-vid frames get src injected by the renderer post-load
+        return img.getAttribute("src") && !(img.complete && img.naturalWidth > 0);
       }).map(function (img) { return img.getAttribute("src"); });
       return { fontsOk: ok, missingTargets: MISSING, badImages: badImages };
     });

@@ -19,3 +19,4 @@ Immutable, dated snapshots (2026-07-14). Conclusions drawn from these live in AD
 3. **The renderer is a solved substrate, not the product.** Deterministic seek (CDP BeginFrame) + FFmpeg is proven in two codebases; WebCodecs is the future everyone (Remotion, EditFrame) is converging on. Abstract the backend.
 4. **Taste is encodable.** Apple springs, Material tokens, Linear/Kowalski rules, Impeccable's two-altitude slop test, HyperFrames' house styles — concrete, tokenizable, testable.
 5. **The moat is the benchmark.** No VBench-for-motion-design exists. Whoever defines the measurement defines "best."
+- [render-stack-frontier.md](render-stack-frontier.md) — 2026 renderer survey: frame pre-extraction (HeyGen/HyperFrames), Replit's clock-lying WebCodecs pipeline, BeginFrame mode, music sourcing norms (Remotion @remotion/sfx, ElevenLabs text-to-music).

@@ -58,7 +58,12 @@ export function runStaticGates(score: ScoreT): Finding[] {
     // MO-MED-1: text positioned over a media rect needs a scrim or on-media color.
     // Static approximation: the text element's anchor point falling inside the
     // image rect counts as "over" — the rendered-frame gates own exact geometry.
-    const mediaRects = scene.elements.filter((e) => e.type === "image").map((e) => {
+    // MO-AUD-3: SFX are sparse — more than one sound per scene on average is design noise
+    const sfxCount = scene.choreography.filter((a) => a.sfx).length;
+    if (sfxCount > 2)
+      f.push({ ruleId: "MO-AUD-3", severity: "P2", path: p(".choreography"), message: `${sfxCount} SFX in one scene — sound marks hero moments, not every move (max 2/scene)` });
+
+    const mediaRects = scene.elements.filter((e) => e.type === "image" || e.type === "video").map((e) => {
       const cx = e.position.x ?? 50, cy = e.position.y ?? 50;
       const a = e.position.anchor;
       const left = a.includes("left") ? cx : a.includes("right") ? cx - e.width : cx - e.width / 2;

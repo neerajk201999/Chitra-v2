@@ -10,12 +10,12 @@
  * are never re-rendered. Encoding pipes cached PNGs to ffmpeg in order.
  */
 import { createHash } from "node:crypto";
-import { spawn } from "node:child_process";
-import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync, rmSync } from "node:fs";
+import { spawn, spawnSync } from "node:child_process";
+import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import path from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import type { ScoreT } from "../ir/schema.js";
-import { compile, type CompileResult } from "../compile/index.js";
+import { compile, resolveSceneTimeline, type CompileResult } from "../compile/index.js";
 
 /**
  * Chrome flags mined from HyperFrames' engine (docs/research/stack-validation.md §2).
@@ -51,7 +51,20 @@ const ENCODE = {
  * markup changes, GSAP upgrades). Part of every scene hash — without it the
  * cache serves frames compiled by an older compiler.
  */
-export const COMPILER_CACHE_VERSION = "3";
+export const COMPILER_CACHE_VERSION = "4";
+
+/** Content digest of a file, memoized on (path, mtime, size) — video files are
+ *  tens of MB and sceneHash runs per scene per render. */
+const digestMemo = new Map<string, string>();
+function fileDigest(file: string): string {
+  const st = statSync(file);
+  const key = `${file}:${st.mtimeMs}:${st.size}`;
+  const hit = digestMemo.get(key);
+  if (hit) return hit;
+  const d = createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 16);
+  digestMemo.set(key, d);
+  return d;
+}
 
 /** Digest of every asset file a scene (or its transition-visible neighbors) references.
  *  Asset BYTES must be in the hash: editing an image in place must invalidate
@@ -62,13 +75,14 @@ function assetDigests(score: ScoreT, sceneIndex: number, projectDir: string): Re
   for (const idx of [sceneIndex - 1, sceneIndex, sceneIndex + 1]) {
     const scene = score.scenes[idx];
     if (!scene) continue;
-    const srcs = scene.elements.filter((e) => e.type === "image").map((e) => (e as { src: string }).src);
+    const srcs = scene.elements.filter((e) => e.type === "image" || e.type === "video").map((e) => (e as { src: string }).src);
     if (scene.background === "image" && scene.backgroundImage) srcs.push(scene.backgroundImage);
+    for (const a of scene.choreography) if (a.sfx) srcs.push(a.sfx.src);
     for (const src of srcs) {
       if (out[src]) continue;
       const file = path.resolve(projectDir, src);
       if (!existsSync(file)) throw new Error(`asset not found: ${src} (resolved to ${file})`);
-      out[src] = createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 16);
+      out[src] = fileDigest(file);
     }
   }
   return out;
@@ -115,6 +129,52 @@ export interface TextRegion {
   h: number;
 }
 
+/** ADR-0007: pre-extract every video element to per-frame JPEGs (content-hashed,
+ *  cached). Returns the media map for the page runtime plus the keep-set for
+ *  the pruner. Extraction is the only place moving media meets the renderer —
+ *  the browser never decodes video, which is what keeps frames deterministic. */
+export function prepareMedia(
+  score: ScoreT,
+  projectDir: string,
+  workDir: string
+): { map: Record<string, { base: string; fps: number; count: number }>; keep: Set<string> } {
+  const map: Record<string, { base: string; fps: number; count: number }> = {};
+  const keep = new Set<string>();
+  const fps = score.meta.fps;
+  for (const scene of score.scenes) {
+    for (const el of scene.elements) {
+      if (el.type !== "video") continue;
+      const file = path.resolve(projectDir, el.src);
+      if (!existsSync(file)) throw new Error(`video asset not found: ${el.src}`);
+      const boxW = Math.round((el.width * score.meta.width) / 100);
+      const maxCount = Math.ceil((scene.durationMs / 1000) * fps) + 1;
+      const mediaHash = createHash("sha256")
+        .update(JSON.stringify({ v: 1, digest: fileDigest(file), fps, boxW, maxCount, startMs: el.startMs }))
+        .digest("hex")
+        .slice(0, 16);
+      keep.add(mediaHash);
+      const dir = path.join(workDir, "media", mediaHash);
+      const marker = path.join(dir, "done");
+      if (!existsSync(marker)) {
+        mkdirSync(dir, { recursive: true });
+        const r = spawnSync(
+          "ffmpeg",
+          ["-y", "-v", "error", "-ss", (el.startMs / 1000).toFixed(3), "-i", file,
+           "-vf", `fps=${fps},scale=${Math.min(boxW * 2, 3840)}:-2`, "-frames:v", String(maxCount),
+           "-q:v", "3", path.join(dir, "f%05d.jpg")],
+          { encoding: "utf8" }
+        );
+        if (r.status !== 0) throw new Error(`video frame extraction failed for ${el.src}: ${(r.stderr ?? "").slice(-500)}`);
+        writeFileSync(marker, mediaHash);
+      }
+      const count = readdirSync(dir).filter((f) => f.endsWith(".jpg")).length;
+      if (count === 0) throw new Error(`video ${el.src}: no frames extracted (startMs beyond clip end?)`);
+      map[`${scene.id}--${el.id}`] = { base: `file://${dir}`, fps, count };
+    }
+  }
+  return { map, keep };
+}
+
 /** Compile the score, write the page next to the project assets, open a driven browser. */
 export async function openSession(score: ScoreT, projectDir: string, workDir: string): Promise<RenderSession> {
   const compiled = compile(score);
@@ -128,6 +188,8 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
   const page = await browser.newPage();
   await page.setViewport({ width: compiled.width, height: compiled.height, deviceScaleFactor: 1 });
   await page.goto(`file://${pageFile}`, { waitUntil: "load" });
+  const media = prepareMedia(score, projectDir, workDir);
+  await page.evaluate((m) => (window as unknown as { __chitra: { setMedia(x: unknown): void } }).__chitra.setMedia(m), media.map);
   const readiness = (await page.evaluate("window.__chitra.ready()")) as {
     fontsOk: boolean;
     missingTargets: string[];
@@ -228,13 +290,14 @@ export async function renderScore(
     const enc = ENCODE[quality];
     mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
     const music = score.audio?.music;
-    if (music) {
+    const sfx = collectSfx(score, projectDir, compiled);
+    if (music || sfx.length) {
       const silent = outFile.replace(/(\.[a-z0-9]+)?$/i, ".video-only.mp4");
       await pipeEncode(framePaths, fps, silent, enc.preset, enc.crf);
-      await muxMusic(silent, path.resolve(projectDir, music.src), outFile, {
+      await muxAudio(silent, outFile, {
         durationS: compiled.durationMs / 1000,
-        gainDb: music.gainDb,
-        fadeOutMs: music.fadeOutMs,
+        music: music ? { file: path.resolve(projectDir, music.src), gainDb: music.gainDb, fadeOutMs: music.fadeOutMs } : null,
+        sfx,
       });
       rmSync(silent, { force: true });
     } else {
@@ -243,10 +306,17 @@ export async function renderScore(
 
     // Prune cache entries no longer referenced by this score — frame caches are
     // hundreds of full-HD PNGs per scene and grow without bound otherwise
-    // (this filled a user's disk once; never again).
+    // (this filled a user's disk once; never again). media/ holds pre-extracted
+    // video frames (ADR-0007) and is pruned by its own keep-set.
     const keep = new Set(score.scenes.map((_, i) => sceneHash(score, i, projectDir)));
     for (const d of readdirSync(cacheDir, { withFileTypes: true }))
-      if (d.isDirectory() && !keep.has(d.name)) rmSync(path.join(cacheDir, d.name), { recursive: true, force: true });
+      if (d.isDirectory() && d.name !== "media" && !keep.has(d.name)) rmSync(path.join(cacheDir, d.name), { recursive: true, force: true });
+    const mediaDir = path.join(cacheDir, "media");
+    if (existsSync(mediaDir)) {
+      const mediaKeep = prepareMedia(score, projectDir, cacheDir).keep;
+      for (const d of readdirSync(mediaDir, { withFileTypes: true }))
+        if (d.isDirectory() && !mediaKeep.has(d.name)) rmSync(path.join(mediaDir, d.name), { recursive: true, force: true });
+    }
 
     return {
       outFile,
@@ -261,30 +331,73 @@ export async function renderScore(
   }
 }
 
-/**
- * Mux a music bed onto a silent video: pre-gain trim → loudness normalization
- * to -14 LUFS (MO-AUD-1, the streaming/social target) → tail fade → AAC.
- * Music shorter than the video pads with silence; longer is trimmed.
- */
-function muxMusic(
+export interface SfxEvent {
+  file: string;
+  atMs: number;
+  gainDb: number;
+}
+
+/** ADR-0007: sounds fire at their animation's RESOLVED start — sound design
+ *  inherits choreography's relational timing, no separate audio timeline. */
+export function collectSfx(score: ScoreT, projectDir: string, compiled: CompileResult): SfxEvent[] {
+  const events: SfxEvent[] = [];
+  score.scenes.forEach((scene, i) => {
+    const sceneStart = compiled.sceneBoundsMs[i].startMs;
+    for (const r of resolveSceneTimeline(scene)) {
+      const sfx = (r.anim as { sfx?: { src: string; gainDb: number } }).sfx;
+      if (!sfx) continue;
+      const file = path.resolve(projectDir, sfx.src);
+      if (!existsSync(file)) throw new Error(`sfx asset not found: ${sfx.src}`);
+      events.push({ file, atMs: Math.round(sceneStart + r.startMs), gainDb: sfx.gainDb });
+    }
+  });
+  return events;
+}
+
+/** Mix bed + SFX under the silent video. Bed is loudness-normalized to −14 LUFS;
+ *  SFX ride on top; a limiter holds true peaks (MO-AUD-3). */
+function muxAudio(
   videoFile: string,
-  musicFile: string,
   outFile: string,
-  opts: { durationS: number; gainDb: number; fadeOutMs: number }
+  opts: { durationS: number; music: { file: string; gainDb: number; fadeOutMs: number } | null; sfx: SfxEvent[] }
 ): Promise<void> {
-  if (!existsSync(musicFile)) return Promise.reject(new Error(`Music file not found: ${musicFile}`));
-  const fadeS = opts.fadeOutMs / 1000;
-  const fadeStart = Math.max(0, opts.durationS - fadeS);
-  const filter =
-    `[1:a]volume=${opts.gainDb}dB,` +
-    `loudnorm=I=-14:TP=-1.5:LRA=11,` +
-    `apad,atrim=0:${opts.durationS.toFixed(3)},` +
-    `afade=t=out:st=${fadeStart.toFixed(3)}:d=${fadeS.toFixed(3)}[a]`;
+  const D = opts.durationS.toFixed(3);
+  const inputs: string[] = ["-i", videoFile];
+  let idx = 1;
+  let bedLabel: string;
+  const filters: string[] = [];
+  if (opts.music) {
+    if (!existsSync(opts.music.file)) return Promise.reject(new Error(`Music file not found: ${opts.music.file}`));
+    inputs.push("-i", opts.music.file);
+    const fadeS = opts.music.fadeOutMs / 1000;
+    const fadeStart = Math.max(0, opts.durationS - fadeS);
+    filters.push(
+      `[${idx}:a]volume=${opts.music.gainDb}dB,loudnorm=I=-14:TP=-1.5:LRA=11,apad,atrim=0:${D},` +
+        `afade=t=out:st=${fadeStart.toFixed(3)}:d=${fadeS.toFixed(3)},aresample=48000,aformat=channel_layouts=stereo[bed]`
+    );
+    idx++;
+    bedLabel = "[bed]";
+  } else {
+    inputs.push("-f", "lavfi", "-t", D, "-i", "anullsrc=r=48000:cl=stereo");
+    filters.push(`[${idx}:a]atrim=0:${D}[bed]`);
+    idx++;
+    bedLabel = "[bed]";
+  }
+  const sfxLabels: string[] = [];
+  opts.sfx.forEach((e, i) => {
+    inputs.push("-i", e.file);
+    filters.push(`[${idx}:a]volume=${e.gainDb}dB,aresample=48000,aformat=channel_layouts=stereo,adelay=${e.atMs}|${e.atMs}[s${i}]`);
+    sfxLabels.push(`[s${i}]`);
+    idx++;
+  });
+  const mixInputs = 1 + sfxLabels.length;
+  filters.push(
+    `${bedLabel}${sfxLabels.join("")}amix=inputs=${mixInputs}:duration=first:normalize=0,alimiter=limit=0.89,atrim=0:${D}[a]`
+  );
   return runFfmpeg([
     "-y",
-    "-i", videoFile,
-    "-i", musicFile,
-    "-filter_complex", filter,
+    ...inputs,
+    "-filter_complex", filters.join(";"),
     "-map", "0:v", "-c:v", "copy",
     "-map", "[a]", "-c:a", "aac", "-b:a", "192k",
     "-movflags", "+faststart",
