@@ -116,18 +116,6 @@ function colorOf(palette: Palette, key: string): string {
   return map[key] ?? palette.text;
 }
 
-/** Anchor → CSS translate that positions the element's reference point. */
-const ANCHOR_TRANSLATE: Record<string, string> = {
-  center: "translate(-50%,-50%)",
-  "top-left": "translate(0,0)",
-  top: "translate(-50%,0)",
-  "top-right": "translate(-100%,0)",
-  left: "translate(0,-50%)",
-  right: "translate(-100%,-50%)",
-  "bottom-left": "translate(0,-100%)",
-  bottom: "translate(-50%,-100%)",
-  "bottom-right": "translate(-100%,-100%)",
-};
 const ANCHOR_DEFAULT_XY: Record<string, [number, number]> = {
   center: [50, 50],
   "top-left": [8, 8],
@@ -140,12 +128,23 @@ const ANCHOR_DEFAULT_XY: Record<string, [number, number]> = {
   "bottom-right": [92, 88],
 };
 
+/**
+ * Anchor positioning. Right/bottom anchors MUST use `right`/`bottom` offsets:
+ * an absolutely-positioned box computes shrink-to-fit width from its `left`
+ * offset to the container edge BEFORE transforms, so `left + translateX(-100%)`
+ * squeezes right-anchored text into the right margin (caught by the critique
+ * loop on the first score to use anchor:right).
+ */
 function posStyle(el: { position: { anchor: string; x?: number; y?: number } }): string {
   const a = el.position.anchor;
   const [dx, dy] = ANCHOR_DEFAULT_XY[a];
   const x = el.position.x ?? dx;
   const y = el.position.y ?? dy;
-  return `left:${x}%;top:${y}%;transform:${ANCHOR_TRANSLATE[a]};`;
+  const xPart = a.includes("right") ? `right:${(100 - x).toFixed(3)}%;` : `left:${x}%;`;
+  const yPart = a.includes("bottom") ? `bottom:${(100 - y).toFixed(3)}%;` : `top:${y}%;`;
+  const tx = a.includes("left") || a.includes("right") ? "0" : "-50%";
+  const ty = a.includes("top") || a.includes("bottom") ? "0" : "-50%";
+  return `${xPart}${yPart}transform:translate(${tx},${ty});`;
 }
 
 function formatStat(value: number, format: string, decimals: number): string {

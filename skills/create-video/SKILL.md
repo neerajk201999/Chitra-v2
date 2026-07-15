@@ -31,6 +31,12 @@ Write `score.json` (`tier:"score"`). Consult the motion language (`docs/motion/m
 Style: start from a house style in `styles/` (e.g. `night.json`, `paper.json`) and adapt palette to brand. Keep palettes ≤ 2 chromatic colors + neutrals. Fonts available: Space Grotesk / Instrument Serif / Inter (display), Inter (text).
 
 Element vocabulary: `text` (textRole: display/headline/title/body/caption/kicker), `shape` (rect/line/circle/gradient-field), `image`, `stat` (with count-up), `chart-bar`.
+
+**Assets from the world (ADR-0006).** When the brief references real material — a product, a site, a logo, photography — acquire it BEFORE writing the score, never by URL inside it:
+- `chitra fetch <url> -o assets/name.jpg [--max-width 1600]` — download + normalize an image (strips metadata, logs provenance to `assets/sources.jsonl`).
+- `chitra snap <url> -o assets/site.png [--width 1920 --height 1080] [--full-page] [--delay 2500]` — screenshot a live webpage with the vendored Chrome (product-UI scenes, references).
+- Video reference? Extract stills: `ffmpeg -ss <sec> -i ref.mp4 -frames:v 1 assets/still.png`. (Downloading the video itself — e.g. yt-dlp — is the user's step; ask them.)
+- Then reference by relative path: `{"type":"image","src":"assets/site.png","fit":"cover","radius":2,"scrim":0.35}`. Asset bytes are content-hashed into the render cache — editing a pixel re-renders exactly the scenes that show it. Obey MO-MED-1..4: scrim or on-media text, never untreated, one slow move max.
 Preset vocabulary: enters `fade-up · fade-in · scale-settle · slide-in · wipe-reveal · line-reveal · blur-focus`; features `count-up · draw-line`; ambient `drift · scale-drift` (give ambient an `override.durationMs` = scene length, reason "ambient field travels the full scene length"); exits `fade-out · fade-down-out · scale-out`.
 Relational timing: `at.after` chains animations (`{"after":"kicker-in","offsetMs":120}`). Stagger ≤ 60ms each (`MO-CHOR-1`).
 

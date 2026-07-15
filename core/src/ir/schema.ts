@@ -100,7 +100,14 @@ const ImageElement = z.object({
   type: z.literal("image"),
   id,
   role: z.enum(["hero", "support", "ambient"]).default("support"),
-  src: z.string().min(1), // path relative to project root; hashed at compile
+  // Project-relative path only. Remote URLs are forbidden by ADR-0006: the render
+  // path never touches the network — acquisition is `chitra fetch`/`chitra snap`.
+  src: z
+    .string()
+    .min(1)
+    .refine((s) => !/^[a-z][a-z0-9+.-]*:\/\//i.test(s) && !s.startsWith("/"), {
+      message: "image src must be a project-relative path (use `chitra fetch <url>` to download assets first)",
+    }),
   fit: z.enum(["cover", "contain"]).default("cover"),
   position: Position.default({ anchor: "center" }),
   width: z.number().min(1).max(140).default(100),

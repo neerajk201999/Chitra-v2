@@ -55,6 +55,25 @@ export function runStaticGates(score: ScoreT): Finding[] {
         f.push({ ruleId: "IR-REF-2", severity: "P1", path: p(`.choreography[${ai}]`), message: `Animation "${a.id}" targets "${a.target}" but no such element exists in this scene` });
     });
 
+    // MO-MED-1: text positioned over a media rect needs a scrim or on-media color.
+    // Static approximation: the text element's anchor point falling inside the
+    // image rect counts as "over" — the rendered-frame gates own exact geometry.
+    const mediaRects = scene.elements.filter((e) => e.type === "image").map((e) => {
+      const cx = e.position.x ?? 50, cy = e.position.y ?? 50;
+      const a = e.position.anchor;
+      const left = a.includes("left") ? cx : a.includes("right") ? cx - e.width : cx - e.width / 2;
+      const top = a.includes("top") ? cy : a.includes("bottom") ? cy - e.height : cy - e.height / 2;
+      return { el: e, left, top, right: left + e.width, bottom: top + e.height };
+    });
+    scene.elements.forEach((el, ei) => {
+      if (el.type !== "text") return;
+      const tx = el.position.x ?? 50, ty = el.position.y ?? 50;
+      for (const r of mediaRects) {
+        if (tx >= r.left && tx <= r.right && ty >= r.top && ty <= r.bottom && r.el.scrim < 0.3 && el.color !== "on-media")
+          f.push({ ruleId: "MO-MED-1", severity: "P2", path: p(`.elements[${ei}]`), message: `"${el.content.slice(0, 30)}" sits over image "${r.el.id}" with scrim ${r.el.scrim} — raise scrim to ≥0.3 or use on-media color` });
+      }
+    });
+
     // Register scene-length bounds
     if (scene.durationMs > reg.maxSceneMs)
       f.push({ ruleId: "MO-EDIT-2", severity: "P2", path: p(".durationMs"), message: `Scene runs ${scene.durationMs}ms; ${score.meta.register} scenes should stay ≤ ${reg.maxSceneMs}ms` });

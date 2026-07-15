@@ -12,6 +12,7 @@ import { validateScore, type ScoreT } from "../ir/schema.js";
 import { runStaticGates, runFrameGates, summarize, type Finding } from "../gates/index.js";
 import { openSession, renderScore, type Quality } from "../render/index.js";
 import { generateEvidence } from "../evidence/index.js";
+import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 
 const program = new Command();
 program.name("chitra").description("Chitra deterministic core: validate, gate, render, and generate critic evidence for Motion IR scores").version("0.1.0");
@@ -198,6 +199,46 @@ program
         rmSync(t, { recursive: true, force: true });
         console.log(`✔ removed ${t}`);
       }
+    }
+  });
+
+program
+  .command("fetch")
+  .argument("<url>", "http(s) URL of an image")
+  .requiredOption("-o, --out <file>", "output path (extension picks format: .png/.jpg/.webp)")
+  .option("--max-width <px>", "downscale to at most this width", (v) => parseInt(v, 10))
+  .option("--json", "machine-readable output")
+  .description("Download + normalize a web image into the project (ADR-0006; logs provenance to assets/sources.jsonl)")
+  .action(async (url: string, o: { out: string; maxWidth?: number; json?: boolean }) => {
+    try {
+      const report = await fetchAsset(url, o.out, { maxWidth: o.maxWidth });
+      writeAssetLog(process.cwd(), report);
+      if (o.json) console.log(JSON.stringify(report, null, 2));
+      else console.log(`✔ ${report.out} — ${report.width}×${report.height}, ${(report.bytes / 1024).toFixed(0)}KB, sha256 ${report.sha256.slice(0, 16)}…`);
+    } catch (e) {
+      fail((e as Error).message);
+    }
+  });
+
+program
+  .command("snap")
+  .argument("<url>", "webpage URL to screenshot")
+  .requiredOption("-o, --out <file>", "output path (.png/.jpg/.webp)")
+  .option("--width <px>", "viewport width (default 1920)", (v) => parseInt(v, 10))
+  .option("--height <px>", "viewport height (default 1080)", (v) => parseInt(v, 10))
+  .option("--full-page", "capture the full scroll height")
+  .option("--delay <ms>", "settle time before capture (default 1500)", (v) => parseInt(v, 10))
+  .option("--hide <selector...>", "CSS selectors to hide before capture (cookie/consent overlays auto-hidden)")
+  .option("--json", "machine-readable output")
+  .description("Screenshot a webpage with the vendored Chrome for use as a score asset (ADR-0006)")
+  .action(async (url: string, o: { out: string; width?: number; height?: number; fullPage?: boolean; delay?: number; hide?: string[]; json?: boolean }) => {
+    try {
+      const report = await snapPage(url, o.out, { width: o.width, height: o.height, fullPage: o.fullPage, delayMs: o.delay, hide: o.hide });
+      writeAssetLog(process.cwd(), report);
+      if (o.json) console.log(JSON.stringify(report, null, 2));
+      else console.log(`✔ ${report.out} — ${report.width}×${report.height}, ${(report.bytes / 1024).toFixed(0)}KB, sha256 ${report.sha256.slice(0, 16)}…`);
+    } catch (e) {
+      fail((e as Error).message);
     }
   });
 

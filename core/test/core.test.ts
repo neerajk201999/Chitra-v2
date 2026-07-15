@@ -144,3 +144,45 @@ describe("compiler determinism surface", () => {
     expect(runtime).not.toContain("Math.random");
   });
 });
+
+describe("media assets (ADR-0006)", () => {
+  const withImage = (scrim: number, color?: string) => {
+    const s = validFixture();
+    s.scenes[0].elements.push({
+      type: "image", id: "shot", role: "support", src: "assets/shot.png",
+      fit: "cover", position: { anchor: "center", x: 50, y: 50 },
+      width: 60, height: 60, radius: 2, scrim,
+    } as never);
+    if (color) (s.scenes[1].elements as { color?: string }[]).forEach((e) => { if (e.color === "text" || e.color === undefined) e.color = color; });
+    return s;
+  };
+  it("rejects remote and absolute src (render path must stay hermetic)", () => {
+    const s = structuredClone(flagship);
+    s.scenes[0].elements.push({ type: "image", id: "x", src: "https://example.com/a.png" });
+    expect(validateScore(s).ok).toBe(false);
+    s.scenes[0].elements[s.scenes[0].elements.length - 1].src = "/etc/a.png";
+    expect(validateScore(s).ok).toBe(false);
+  });
+  it("MO-MED-1: text over unscrimmed media is a P2; scrim clears it", () => {
+    const bad = runStaticGates(withImage(0)).filter((f) => f.ruleId === "MO-MED-1");
+    expect(bad.length).toBeGreaterThan(0);
+    expect(bad[0].severity).toBe("P2");
+    const good = runStaticGates(withImage(0.4)).filter((f) => f.ruleId === "MO-MED-1");
+    expect(good.length).toBe(0);
+  });
+  it("sceneHash digests asset bytes: editing the image invalidates its scene", async () => {
+    const { mkdtempSync, writeFileSync: wf, mkdirSync: mk } = await import("node:fs");
+    const os = await import("node:os");
+    const dir = mkdtempSync(path.join(os.tmpdir(), "chitra-asset-"));
+    mk(path.join(dir, "assets"), { recursive: true });
+    wf(path.join(dir, "assets/shot.png"), Buffer.from("fake-png-v1"));
+    const s = withImage(0.4);
+    const h1 = sceneHash(s, 0, dir);
+    const h0 = sceneHash(s, 1, dir); // neighbor: also depends on the asset
+    wf(path.join(dir, "assets/shot.png"), Buffer.from("fake-png-v2"));
+    expect(sceneHash(s, 0, dir)).not.toBe(h1);
+    expect(sceneHash(s, 1, dir)).not.toBe(h0);
+    expect(sceneHash(s, 4, dir)).toBe(sceneHash(s, 4, dir));
+    expect(() => sceneHash({ ...s, scenes: s.scenes.map((sc, i) => i === 0 ? { ...sc, elements: sc.elements.map((e) => e.type === "image" ? { ...e, src: "assets/missing.png" } : e) } : sc) } as never, 0, dir)).toThrow(/asset not found/);
+  });
+});

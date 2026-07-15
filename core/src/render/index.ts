@@ -51,12 +51,34 @@ const ENCODE = {
  * markup changes, GSAP upgrades). Part of every scene hash — without it the
  * cache serves frames compiled by an older compiler.
  */
-export const COMPILER_CACHE_VERSION = "2";
+export const COMPILER_CACHE_VERSION = "3";
 
-export function sceneHash(score: ScoreT, sceneIndex: number): string {
+/** Digest of every asset file a scene (or its transition-visible neighbors) references.
+ *  Asset BYTES must be in the hash: editing an image in place must invalidate
+ *  exactly the scenes that show it (ADR-0006). Missing files throw — a broken
+ *  reference must fail loudly at hash time, not render as a broken-image frame. */
+function assetDigests(score: ScoreT, sceneIndex: number, projectDir: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const idx of [sceneIndex - 1, sceneIndex, sceneIndex + 1]) {
+    const scene = score.scenes[idx];
+    if (!scene) continue;
+    const srcs = scene.elements.filter((e) => e.type === "image").map((e) => (e as { src: string }).src);
+    if (scene.background === "image" && scene.backgroundImage) srcs.push(scene.backgroundImage);
+    for (const src of srcs) {
+      if (out[src]) continue;
+      const file = path.resolve(projectDir, src);
+      if (!existsSync(file)) throw new Error(`asset not found: ${src} (resolved to ${file})`);
+      out[src] = createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 16);
+    }
+  }
+  return out;
+}
+
+export function sceneHash(score: ScoreT, sceneIndex: number, projectDir = "."): string {
   const scene = score.scenes[sceneIndex];
   const basis = JSON.stringify({
     compilerV: COMPILER_CACHE_VERSION,
+    assets: assetDigests(score, sceneIndex, projectDir),
     scene,
     style: score.style,
     meta: score.meta,
@@ -178,7 +200,7 @@ export async function renderScore(
 
     for (let s = 0; s < score.scenes.length; s++) {
       const bounds = compiled.sceneBoundsMs[s];
-      const hash = sceneHash(score, s);
+      const hash = sceneHash(score, s, projectDir);
       const dir = path.join(cacheDir, hash);
       const firstFrame = Math.ceil(bounds.startMs / frameMs - 1e-6);
       const endFrame = Math.min(totalFrames, Math.ceil(bounds.endMs / frameMs - 1e-6));
@@ -222,7 +244,7 @@ export async function renderScore(
     // Prune cache entries no longer referenced by this score — frame caches are
     // hundreds of full-HD PNGs per scene and grow without bound otherwise
     // (this filled a user's disk once; never again).
-    const keep = new Set(score.scenes.map((_, i) => sceneHash(score, i)));
+    const keep = new Set(score.scenes.map((_, i) => sceneHash(score, i, projectDir)));
     for (const d of readdirSync(cacheDir, { withFileTypes: true }))
       if (d.isDirectory() && !keep.has(d.name)) rmSync(path.join(cacheDir, d.name), { recursive: true, force: true });
 
