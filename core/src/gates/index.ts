@@ -163,8 +163,41 @@ export function runStaticGates(score: ScoreT): Finding[] {
       if (el.type !== "text") return;
       const enter = resolved.find((r) => r.anim.target === el.id && PRESETS[r.anim.preset as PresetName].kind === "enter");
       const exit = resolved.find((r) => r.anim.target === el.id && PRESETS[r.anim.preset as PresetName].kind === "exit");
+      // A continuation of a match cut (identical text/position carried over from
+      // the previous scene, no fresh entrance) was already counted in the chain.
+      const prev = score.scenes[si - 1];
+      if (
+        !enter &&
+        prev?.elements.some(
+          (e) =>
+            e.type === "text" &&
+            e.content === el.content &&
+            (e.position.x ?? 50) === (el.position.x ?? 50) &&
+            (e.position.y ?? 50) === (el.position.y ?? 50)
+        )
+      )
+        return;
       const visibleFrom = enter ? enter.startMs + enter.durationMs * 0.5 : 0;
-      const visibleTo = exit ? exit.startMs : scene.durationMs;
+      let visibleTo = exit ? exit.startMs : scene.durationMs;
+      // Match-cut chaining: identical text at the identical position in the
+      // following scene(s) reads as ONE continuous span across the cut.
+      if (!exit) {
+        for (let ni = si + 1; ni < score.scenes.length; ni++) {
+          const next = score.scenes[ni];
+          const cont = next.elements.find(
+            (e) =>
+              e.type === "text" &&
+              e.content === el.content &&
+              (e.position.x ?? 50) === (el.position.x ?? 50) &&
+              (e.position.y ?? 50) === (el.position.y ?? 50) &&
+              !next.choreography.some((a) => a.target === e.id && PRESETS[a.preset as PresetName].kind === "enter")
+          );
+          if (!cont) break;
+          const contExit = next.choreography.find((a) => a.target === cont.id && PRESETS[a.preset as PresetName].kind === "exit");
+          visibleTo += contExit ? safeResolve(next)?.find((r) => r.anim.id === contExit.id)?.startMs ?? next.durationMs : next.durationMs;
+          if (contExit) break;
+        }
+      }
       const needMs = (wordCount(el.content) / TYPOGRAPHY.readingWpm) * 60000 * TYPOGRAPHY.readingSafety + TYPOGRAPHY.sceneEntryGraceMs;
       const haveMs = visibleTo - visibleFrom;
       if (haveMs < needMs)
@@ -348,8 +381,19 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
   const bgFor = (scene: SceneT) => (scene.background === "surface" ? p.surface : scene.background === "primary" ? p.primary : p.bg);
   score.scenes.forEach((scene, si) => {
     if (scene.background === "image") return;
+    // Text sitting ON media (image/video/figure) is lit by the media, not the
+    // scene background — its legibility belongs to MO-MED-1 + frame gates.
+    const media = scene.elements.filter((e) => e.type === "image" || e.type === "video" || e.type === "figure");
+    const onMedia = (tx: number, ty: number) =>
+      media.some((m) => {
+        const cx = m.position.x ?? 50, cy = m.position.y ?? 50, a = m.position.anchor;
+        const left = a.includes("left") ? cx : a.includes("right") ? cx - m.width : cx - m.width / 2;
+        const top = a.includes("top") ? cy : a.includes("bottom") ? cy - m.height : cy - m.height / 2;
+        return tx >= left && tx <= left + m.width && ty >= top && ty <= top + m.height;
+      });
     scene.elements.forEach((el, ei) => {
       if (el.type !== "text") return;
+      if (onMedia(el.position.x ?? 50, el.position.y ?? 50)) return;
       const colorHex = el.color === "text" ? p.text : el.color === "text-dim" ? p.textDim : el.color === "primary" ? p.primary : el.color === "accent" ? p.accent : p.onMedia;
       const ratio = contrast(hexLum(colorHex), hexLum(bgFor(scene)));
       const min = el.textRole === "display" || el.textRole === "headline" ? 3 : TYPOGRAPHY.minContrast; // large-text allowance

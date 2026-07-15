@@ -202,7 +202,7 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       const typed = scene?.choreography.some((a) => a.preset === "type-in" && a.target === el.id);
       if (typed) {
         const chars = [...el.content]
-          .map((c) => `<span class="ch">${c === " " ? "&nbsp;" : esc(c)}</span>`)
+          .map((c) => `<span class="ch" style="display:inline-block;max-width:0;overflow:hidden;white-space:pre;vertical-align:top;">${c === " " ? "&nbsp;" : esc(c)}</span>`)
           .join("");
         const caretH = Math.round(sizePx * 0.9);
         return wrap(
@@ -395,7 +395,7 @@ function presetTweens(
       const n = target && target.type === "text" ? Math.max([...target.content].length, 1) : 1;
       return [
         // chars appear discretely at a fixed cadence — typing, not fading
-        { ...base, targets: `${sel} .ch`, from: { autoAlpha: 0 }, vars: { autoAlpha: 1, duration: 0.001, ease: "none" }, stagger: { each: durationMs / n / 1000, from: "start" } },
+        { ...base, targets: `${sel} .ch`, from: { maxWidth: 0 }, vars: { maxWidth: "1.2em", duration: 0.001, ease: "none" }, stagger: { each: durationMs / n / 1000, from: "start" } },
         // caret: visible during the reveal, blinks, then exits
         { ...base, targets: `${sel} .caret`, from: { autoAlpha: 0 }, vars: { keyframes: [{ autoAlpha: 1 }, { autoAlpha: 1 }, { autoAlpha: 0.15 }, { autoAlpha: 1 }, { autoAlpha: 0.15 }, { autoAlpha: 1 }, { autoAlpha: 0 }] } },
       ];
