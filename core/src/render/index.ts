@@ -53,7 +53,7 @@ const ENCODE = {
  * markup changes, GSAP upgrades). Part of every scene hash — without it the
  * cache serves frames compiled by an older compiler.
  */
-export const COMPILER_CACHE_VERSION = "14";
+export const COMPILER_CACHE_VERSION = "15";
 
 /** Content digest of a file, memoized on (path, mtime, size) — video files are
  *  tens of MB and sceneHash runs per scene per render. */
@@ -73,6 +73,7 @@ function sceneAssetSources(scene: ScoreT["scenes"][number]): string[] {
   for (const element of scene.elements) {
     if (element.type === "image" || element.type === "video") srcs.push(element.src);
     if (element.type === "figure") srcs.push(element.src, ...element.assets.map((asset) => asset.src));
+    if (element.type === "scene3d" && element.frontTexture) srcs.push(element.frontTexture);
   }
   if (scene.background === "image" && scene.backgroundImage) srcs.push(scene.backgroundImage);
   for (const animation of scene.choreography) if (animation.sfx) srcs.push(animation.sfx.src);

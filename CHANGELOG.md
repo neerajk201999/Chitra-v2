@@ -47,6 +47,9 @@ versioned separately.
 - ADR-0027 `chitra release` and `verify-release`: bounded temporal frame gates,
   staged non-overwriting outputs, hash-bound creative/render/evidence inputs,
   measured final-mux loudness/peak, and stale receipt rejection.
+- ADR-0028 rights-traced front textures for curated card/slab `scene3d`
+  subjects and reason-gated, frame-addressed internal mesh, camera, studio-light,
+  and exposure tracks, with exact random-seek and repeated-frame verification.
 
 ### Fixed
 
@@ -57,6 +60,9 @@ versioned separately.
   and measured on the encoded final bus rather than trusting the source bed.
 
 ### Benchmarked
+
+- Generated textured-3D benchmark lands 3/3 authored internal states in
+  non-monotonic seek order and repeats the same PNG byte-identically.
 
 - Registered the immutable 274-frame Card Vault target and published an
   exhaustive freeze-frame lower baseline plus worst-frame indices.

@@ -349,6 +349,11 @@ const Scene3dElement = z.object({
   id,
   role: z.enum(["hero", "support"]).default("hero"),
   primitive: z.enum(["card", "coin", "slab"]).default("card"),
+  frontTexture: projectAssetPath.refine(
+    (value) => /\.(?:png|jpe?g|webp)$/i.test(value),
+    "scene3d frontTexture must be PNG, JPEG, or WebP"
+  ).optional(),
+  frontTextureAssetUse: AssetUse.optional(),
   // Palette-driven look; hexes resolved from style at compile.
   baseColor: z.enum(["surface", "primary", "accent", "text"]).default("surface"),
   envTint: z.enum(["primary", "accent", "neutral"]).default("accent"),
@@ -360,6 +365,11 @@ const Scene3dElement = z.object({
   position: Position.default({ anchor: "center" }),
   width: z.number().min(10).max(140).default(70),
   height: z.number().min(10).max(140).default(50),
+}).superRefine((value, ctx) => {
+  if (value.frontTexture && value.primitive === "coin")
+    ctx.addIssue({ code: "custom", path: ["frontTexture"], message: "scene3d coin front textures are unsupported" });
+  if (value.frontTextureAssetUse && !value.frontTexture)
+    ctx.addIssue({ code: "custom", path: ["frontTextureAssetUse"], message: "frontTextureAssetUse requires frontTexture" });
 });
 
 const StatElement = z.object({
@@ -469,6 +479,42 @@ const KeyframeTrack = z
     }
   });
 
+/** ADR-0028: bounded state inside Chitra's curated Three.js subject. */
+const ThreeVector = z.object({
+  x: z.number().min(-50).max(50).optional(),
+  y: z.number().min(-50).max(50).optional(),
+  z: z.number().min(-50).max(50).optional(),
+}).strict().refine((value) => value.x != null || value.y != null || value.z != null, "a 3D vector must set at least one axis");
+const ThreeRotation = z.object({
+  x: z.number().min(-1440).max(1440).optional(),
+  y: z.number().min(-1440).max(1440).optional(),
+  z: z.number().min(-1440).max(1440).optional(),
+}).strict().refine((value) => value.x != null || value.y != null || value.z != null, "a 3D rotation must set at least one axis");
+const ThreeScale = z.object({
+  x: z.number().min(0.01).max(20).optional(),
+  y: z.number().min(0.01).max(20).optional(),
+  z: z.number().min(0.01).max(20).optional(),
+}).strict().refine((value) => value.x != null || value.y != null || value.z != null, "a 3D scale must set at least one axis");
+const ThreeKeyframe = z.object({
+  frame: z.number().int().min(0).max(1200),
+  mesh: z.object({ position: ThreeVector.optional(), rotationDeg: ThreeRotation.optional(), scale: ThreeScale.optional() }).strict().optional(),
+  camera: z.object({ position: ThreeVector.optional(), fov: z.number().min(10).max(100).optional() }).strict().optional(),
+  keyLight: z.object({ position: ThreeVector.optional(), intensity: z.number().min(0).max(20).optional() }).strict().optional(),
+  fillLight: z.object({ position: ThreeVector.optional(), intensity: z.number().min(0).max(20).optional() }).strict().optional(),
+  exposure: z.number().min(0.25).max(5).optional(),
+  easing: easingToken.optional(),
+}).strict().refine((value) => value.mesh || value.camera || value.keyLight || value.fillLight || value.exposure != null, {
+  message: "a three keyframe must set at least one internal 3D property",
+});
+const ThreeKeyframeTrack = z.array(ThreeKeyframe).min(2).max(1201).superRefine((frames, ctx) => {
+  if (frames[0]?.frame !== 0)
+    ctx.addIssue({ code: "custom", path: [0, "frame"], message: "a three keyframe track must begin at frame 0" });
+  for (let i = 1; i < frames.length; i++) {
+    if (frames[i].frame <= frames[i - 1].frame)
+      ctx.addIssue({ code: "custom", path: [i, "frame"], message: "three keyframe indices must be strictly increasing" });
+  }
+});
+
 export const Animation = z.object({
   id,
   /** Element id; group prefix with trailing '*'; or `figureId/innerId` to
@@ -499,6 +545,8 @@ export const Animation = z.object({
   /** ADR-0013: only valid with `keyframe-track`; MO-KEY-1 enforces the pairing,
    *  explicit reason, and scene bounds. */
   keyframes: KeyframeTrack.optional(),
+  /** ADR-0028: typed internal scene3d state; paired by MO-3D-2. */
+  threeKeyframes: ThreeKeyframeTrack.optional(),
   /** Escape hatch (MO-EASE-1): raw values allowed ONLY with a reason. Flagged by gates. */
   override: z
     .object({ reason, durationMs: z.number().min(50).max(5000).optional(), gsapEase: z.string().optional() })

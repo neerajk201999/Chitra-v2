@@ -104,6 +104,8 @@ export const PRESETS = {
   // ADR-0013: exact frame-addressed transform/compositing track. Duration is
   // derived from its final frame; defaultDuration is only a schema fallback.
   "keyframe-track": { defaultEasing: "move-through", defaultDuration: "standard", kind: "feature" },
+  // ADR-0028: exact frame-addressed state inside a curated scene3d subject.
+  "three-keyframe-track": { defaultEasing: "move-through", defaultDuration: "standard", kind: "feature" },
   "hide": { defaultEasing: "linear", defaultDuration: "standard", kind: "exit" }, // instant state declaration (match-cut continuity)
   "fade-out": { defaultEasing: "exit-swift", defaultDuration: "standard", kind: "exit" },
   "fade-down-out": { defaultEasing: "exit-swift", defaultDuration: "standard", kind: "exit" },

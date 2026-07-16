@@ -6,7 +6,13 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 2. **No paint-settle guarantee** between `seek()` and screenshot beyond empirical determinism on macOS; Linux/CI golden-frame verification pending (M5). Determinism claims are same-machine only.
 3. **Audio covers music + SFX + detected beat timing** (ADR-0007/0011/0027) — still no narration/voiceover timeline, energy-envelope property tracks, or clip-audio pass-through. Music-led final muxes are two-pass normalized and measured at −14 ±0.5 LUFS with true peak ≤−1.5 dBTP; beat detection, `at.onBeat`, and beat-cut gates are live. (M2 remainder.)
 4. **VLM critic unproven**: no calibration set or measured human-agreement rate for `critique-video`; the deterministic layer's 10/10 seeded catch rate does not cover aesthetic judgment (M2/M4).
-5. **Expressiveness ceiling (partly closed)**: figures, video-in-scene, cursor/type choreography, real 3D primitives, reason-gated frame tracks, custom particles, ADR-0021 one-level parent groups, and ADR-0023 rights-gated source-assisted figure assets are built. Card Vault 0.7 authors all 274 clean-room frames, but not exactly: internal 3D/light tracks and motion blur remain measured gaps. Local-coordinate/deeper comps, masks/mattes, blend modes, and richer motif vocabulary remain typed-IR gaps; source-assisted Card Vault measurement awaits an explicit rights decision.
+5. **Expressiveness ceiling (partly closed)**: figures, video-in-scene,
+   cursor/type choreography, real 3D primitives, DOM frame tracks, ADR-0028
+   textured internal mesh/camera/light/exposure tracks, custom particles,
+   one-level parent groups, and rights-gated source-assisted assets are built.
+   Card Vault is still not exact: motion blur remains a measured gap, while
+   local-coordinate/deeper comps, masks/mattes, blend modes, back/side textures,
+   custom geometry/materials, and richer motif vocabulary remain typed-IR gaps.
 6. **Temporal gates are bounded, not exhaustive.** ADR-0027 samples output
    frames at ≤250ms intervals plus animation/cut/transition neighborhoods.
    Shorter violations between those frames can still slip through; every-frame
