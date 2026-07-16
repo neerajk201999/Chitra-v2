@@ -1,0 +1,170 @@
+{
+  "irVersion": "0.1.0",
+  "tier": "score",
+  "meta": {
+    "title": "Card Vault clean-room reconstruction candidate 0.5",
+    "register": "brand-film",
+    "width": 720,
+    "height": 900,
+    "fps": 30,
+    "seed": 8211,
+    "safeZone": "none"
+  },
+  "style": {
+    "name": "card-vault-clean-room",
+    "palette": {
+      "bg": "#020506",
+      "surface": "#111315",
+      "primary": "#9e1734",
+      "accent": "#0d655d",
+      "text": "#f2f2f0",
+      "textDim": "#a0a5a4",
+      "onMedia": "#ffffff"
+    },
+    "fonts": {
+      "display": "Inter",
+      "text": "Inter",
+      "mono": "JetBrains Mono"
+    },
+    "displayWeight": 500,
+    "textWeight": 400,
+    "trackingDisplay": -0.02,
+    "grain": 0
+  },
+  "scenes": [
+    {
+      "id": "card-vault-film",
+      "reason": "Reconstruct the registered 274-frame product-to-privacy-mark arc with a clean-room Chitra composition so comparator evidence can expose the next real compositor gap",
+      "durationMs": 9133,
+      "background": "bg",
+      "elements": [
+        {
+          "type": "figure",
+          "id": "vault-stage",
+          "role": "hero",
+          "src": "figure.html",
+          "position": { "anchor": "top-left", "x": 0, "y": 0 },
+          "width": 100,
+          "height": 100,
+          "radius": 0,
+          "shadow": false
+        }
+      ],
+      "choreography": [
+        {
+          "id": "hero-card-track",
+          "target": "vault-stage/hero-stage",
+          "preset": "keyframe-track",
+          "override": { "reason": "The registered reference uses a frame-specific perspective card reveal and disappearance that no curated entrance preset expresses" },
+          "keyframes": [
+            { "frame": 0, "x": -18, "y": 10, "scale": 0.35, "rotationYDeg": -34, "rotationZDeg": -16, "opacity": 0, "perspectivePx": 900 },
+            { "frame": 9, "x": -14, "y": 8, "scale": 0.48, "rotationYDeg": -30, "rotationZDeg": -14, "opacity": 0, "perspectivePx": 900, "easing": "move-through" },
+            { "frame": 18, "x": -5, "y": 3, "scale": 0.86, "rotationYDeg": -18, "rotationZDeg": -8, "opacity": 0.72, "perspectivePx": 900, "easing": "enter-settle" },
+            { "frame": 31, "x": 0, "y": 0, "scale": 1, "rotationYDeg": -9, "rotationZDeg": -5, "opacity": 1, "perspectivePx": 900, "easing": "enter-settle" },
+            { "frame": 49, "x": 0, "y": 0, "scale": 1, "rotationYDeg": -7, "rotationZDeg": -4, "opacity": 1, "perspectivePx": 900, "easing": "move-through" },
+            { "frame": 61, "x": 2, "y": 5, "scale": 0.82, "rotationXDeg": -6, "rotationYDeg": -4, "rotationZDeg": -3, "opacity": 0.15, "perspectivePx": 900, "easing": "exit-swift" },
+            { "frame": 68, "x": 2, "y": 7, "scale": 0.7, "rotationXDeg": -8, "rotationYDeg": 0, "rotationZDeg": 0, "opacity": 0, "perspectivePx": 900, "easing": "exit-swift" }
+          ]
+        },
+        {
+          "id": "privacy-copy-track",
+          "target": "vault-stage/privacy-copy",
+          "preset": "keyframe-track",
+          "override": { "reason": "The privacy claim stays level while the card rotates beneath it, then clears with the product reveal" },
+          "keyframes": [
+            { "frame": 0, "y": 2, "opacity": 0 },
+            { "frame": 19, "y": 2, "opacity": 0 },
+            { "frame": 29, "y": 0, "opacity": 1, "easing": "enter-settle" },
+            { "frame": 47, "y": 0, "opacity": 1, "easing": "move-through" },
+            { "frame": 60, "y": -1, "opacity": 0, "easing": "exit-swift" }
+          ]
+        },
+        {
+          "id": "phone-track",
+          "target": "vault-stage/phone",
+          "preset": "keyframe-track",
+          "override": { "reason": "The phone grows out of the card shot and later collapses into the brand mark on exact reference frames" },
+          "keyframes": [
+            { "frame": 0, "y": 2, "scale": 1.32, "rotationXDeg": 5, "opacity": 0, "perspectivePx": 1200 },
+            { "frame": 69, "y": 2, "scale": 1.32, "rotationXDeg": 5, "opacity": 0, "perspectivePx": 1200 },
+            { "frame": 82, "y": 1, "scale": 1.12, "rotationXDeg": 2, "opacity": 0.72, "perspectivePx": 1200, "easing": "enter-settle" },
+            { "frame": 96, "y": 0, "scale": 1, "rotationXDeg": 0, "opacity": 1, "perspectivePx": 1200, "easing": "enter-settle" },
+            { "frame": 199, "y": 0, "scale": 1, "rotationXDeg": 0, "opacity": 1, "perspectivePx": 1200, "easing": "move-through" },
+            { "frame": 216, "y": -2, "scale": 0.72, "rotationXDeg": 0, "opacity": 0.8, "perspectivePx": 1200, "easing": "move-through" },
+            { "frame": 230, "y": -4, "scale": 0.28, "rotationXDeg": 0, "opacity": 0, "perspectivePx": 1200, "easing": "exit-swift" }
+          ]
+        },
+        {
+          "id": "heading-track",
+          "target": "vault-stage/phone-heading",
+          "preset": "keyframe-track",
+          "override": { "reason": "The two-line claim lands after the phone shell and clears before the completed-form phase at measured frames" },
+          "keyframes": [
+            { "frame": 0, "y": 3, "opacity": 0 },
+            { "frame": 96, "y": 3, "opacity": 0 },
+            { "frame": 108, "y": 0, "opacity": 1, "easing": "enter-settle" },
+            { "frame": 147, "y": 0, "opacity": 1, "easing": "move-through" },
+            { "frame": 158, "y": -2, "opacity": 0, "easing": "exit-swift" }
+          ]
+        },
+        {
+          "id": "axis-card-track",
+          "target": "vault-stage/axis-card",
+          "preset": "keyframe-track",
+          "override": { "reason": "The first phone card holds, then exits left during the reference carousel handoff" },
+          "keyframes": [
+            { "frame": 0, "x": 0, "scale": 1, "opacity": 0 },
+            { "frame": 78, "x": 0, "scale": 1, "opacity": 0 },
+            { "frame": 91, "x": 0, "scale": 1, "opacity": 1, "easing": "enter-settle" },
+            { "frame": 132, "x": 0, "scale": 1, "opacity": 1, "easing": "move-through" },
+            { "frame": 136, "x": -30, "scale": 0.97, "opacity": 1, "easing": "move-through" },
+            { "frame": 142, "x": -48, "scale": 0.94, "opacity": 0, "easing": "move-through" }
+          ]
+        },
+        {
+          "id": "travel-card-track",
+          "target": "vault-stage/travel-card",
+          "preset": "keyframe-track",
+          "override": { "reason": "The second card enters from the right, centers, and remains aligned with the later card-detail form" },
+          "keyframes": [
+            { "frame": 0, "x": 46, "y": 0, "scale": 0.94, "opacity": 0 },
+            { "frame": 132, "x": 46, "y": 0, "scale": 0.94, "opacity": 0 },
+            { "frame": 133, "x": 46, "y": 0, "scale": 0.94, "opacity": 1, "easing": "enter-settle" },
+            { "frame": 136, "x": 30, "y": 0, "scale": 0.97, "opacity": 1, "easing": "move-through" },
+            { "frame": 142, "x": 0, "y": 0, "scale": 1, "opacity": 1, "easing": "move-through" },
+            { "frame": 168, "x": 0, "y": -16, "scale": 0.95, "opacity": 1, "easing": "move-through" },
+            { "frame": 199, "x": 0, "y": -16, "scale": 0.95, "opacity": 1, "easing": "move-through" },
+            { "frame": 226, "x": 0, "y": -16, "scale": 0.95, "opacity": 0, "easing": "exit-swift" }
+          ]
+        },
+        {
+          "id": "form-track",
+          "target": "vault-stage/phone-form",
+          "preset": "keyframe-track",
+          "override": { "reason": "The card-detail controls rise into the lower phone only after the carousel resolves" },
+          "keyframes": [
+            { "frame": 0, "y": 12, "opacity": 0 },
+            { "frame": 156, "y": 12, "opacity": 0 },
+            { "frame": 180, "y": 0, "opacity": 1, "easing": "enter-settle" },
+            { "frame": 199, "y": 0, "opacity": 1, "easing": "move-through" },
+            { "frame": 226, "y": 0, "opacity": 0, "easing": "exit-swift" }
+          ]
+        },
+        {
+          "id": "end-lockup-track",
+          "target": "vault-stage/end-lockup",
+          "preset": "keyframe-track",
+          "override": { "reason": "The registered close coalesces from the collapsing phone into a held dot-matrix mark and wordmark" },
+          "keyframes": [
+            { "frame": 0, "y": 5, "scale": 0.08, "rotationZDeg": -30, "opacity": 0 },
+            { "frame": 205, "y": 5, "scale": 0.08, "rotationZDeg": -30, "opacity": 0 },
+            { "frame": 215, "y": 2, "scale": 0.45, "rotationZDeg": -12, "opacity": 0.5, "easing": "move-through" },
+            { "frame": 230, "y": 0, "scale": 1, "rotationZDeg": 0, "opacity": 1, "easing": "enter-settle" },
+            { "frame": 273, "y": 0, "scale": 1, "rotationZDeg": 0, "opacity": 1, "easing": "move-through" }
+          ]
+        }
+      ],
+      "transitionOut": { "type": "cut", "duration": "standard" }
+    }
+  ]
+}

@@ -48,10 +48,11 @@ and CHANGELOG.
 - Reference Comparator benchmark: exact identical 12/12-frame report yields MAE
   0/SSIM 1/audio correlation 1; repeated report/diffs identical; colour drift
   caught; strict geometry rejection and normalized non-exhaustive mode proven.
-- Card Vault target registered by hash at 720×900/30fps/274 frames. Exhaustive
-  freeze baseline: MAE 0.024120, mean SSIM 0.269554, minimum SSIM 0.095306;
-  worst frames 36–45 expose the first large 3D card/light/type reveal. No Chitra
-  reconstruction candidate exists yet.
+- Card Vault target registered by hash at 720×900/30fps/274 frames. The first
+  clean-room Chitra candidate authors all 274 frames with eight typed tracks and
+  no reference pixels/audio: mean SSIM 0.353047 and minimum SSIM 0.132334 versus
+  freeze 0.269554/0.095306, while MAE remains worse at 0.027479 versus 0.024120.
+  Worst residuals moved to the frames 128–139 card carousel; exact is not met.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.
@@ -79,10 +80,11 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Card Vault reconstruction benchmark → 274 authored frames and published
-   metric results, exposing only capabilities the target proves missing.
-2. Then, evidence-led compositor additions: masks/mattes, nested compositions,
-   blend modes, motion blur, internal 3D tracks, and richer audio.
+1. Card Vault clean-room baseline is authored and measured; use its exhaustive
+   residuals to improve the candidate without treating one metric as quality.
+2. Evidence-led compositor additions now start with a custom particle trajectory
+   for the circular-cloud → dot-mark close, then motion blur/internal 3D/audio
+   only when an updated comparison isolates their value.
 
 ## Claim boundaries
 

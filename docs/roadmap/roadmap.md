@@ -55,7 +55,10 @@ mode, explicit normalized sampling, transparent visual/audio-energy metrics,
 deterministic per-frame diff evidence, and generated exact/drift fixtures.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
-The Chitra-authored reconstruction candidate remains open.
+Clean-room candidate 0.5 now authors and compares all 274 frames without copied
+reference pixels/audio: mean SSIM 0.353047 versus freeze 0.269554, but worse MAE
+0.027479 versus 0.024120. Exact reconstruction remains open; residual evidence
+prioritizes the custom particle close before broader compositor work.
 Remaining (priority order):
 - **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
 - **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.

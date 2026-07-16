@@ -24,6 +24,7 @@ run("Repository consistency", process.execPath, ["scripts/check-repo.mjs"]);
 run("Compiled skill integrity", process.execPath, ["scripts/build-skills.mjs", "--check"]);
 run("Launch example static gates", process.execPath, ["core/dist/cli/index.js", "validate", "examples/launch-film/score.json"]);
 run("Social example static gates", process.execPath, ["core/dist/cli/index.js", "validate", "examples/social-short/score.json"]);
+run("Card Vault candidate static gates", process.execPath, ["core/dist/cli/index.js", "validate", "benchmarks/card-vault/candidate/score.json"]);
 
 if (!quick) {
   run("Runtime probe", process.execPath, ["core/dist/cli/index.js", "probe"]);
