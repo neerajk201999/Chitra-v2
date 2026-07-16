@@ -2,6 +2,13 @@
 
 **Status (2026-07-16): M0 ✅ · M1 ✅ · M2 partial · M3 partial · M4 (Creative Intelligence) STARTED.** See [known-issues.md](known-issues.md) for the honest ledger.
 
+> **Program rebaseline (2026-07-16).** The architecture remains aligned, but the
+> active queue had narrowed around one Card Vault reconstruction. Review 0003
+> restores the product order: release integrity (A2/A3/A5) → calibrated Creative
+> QA + Style Memory → outside-user distribution → neutral ChitraBench. Card Vault
+> remains an immutable renderer probe; compositor features stay residual-driven.
+> See [the evidence-backed rebaseline](../reviews/0003-program-rebaseline.md).
+
 > **Course correction (2026-07-16, ADR-0012).** Two outside reviews + our own VISION confirmed a drift: ADR-0006→0011 were all renderer/expressiveness features (media, video, figures, particles, 3D, audio) while the creative-intelligence layer VISION calls "the product" (Direction → Design → taste) stayed unbuilt and the Direction tier stayed orphaned. **Renderer is now declared feature-complete unless a concrete target film exposes a specific missing capability.** Center of gravity shifts to M4. Honest self-scoring: Rendering ~90%, Determinism ~100%, Motion IR ~90%, Quality gates ~80% (leaks — see known-issues), **Creative Direction ~20%, Narrative ~10%, Taste model ~20%, Storyboarding ~10%, Brand ~10%.** The low numbers are the whole game now.
 
 ## M0 — Memory & thesis ✅ 2026-07-14
@@ -75,9 +82,13 @@ MAE locally without moving the unrelated worst frames. Exact remains open; the
 ADR-0021 parent transform groups then raise SSIM to 0.367146 while slightly
 regressing MAE/PSNR; the tradeoff is published rather than collapsed to a win.
 Remaining (priority order):
-- **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
-- **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.
-- **Then ChitraBench** end-to-end (benchmarking a creative system, not a renderer).
+- Close M2 release-integrity gaps A2/A3/A5 before calling the Quality Engine a
+  mandatory output floor.
+- **Creative QA**: independently label ≥20 cases and promote only calibrated
+  CC-* principles to gates (narrative/composition/pacing/rhythm).
+- **Style Memory**: learn explicit, reviewable deltas from accepted human
+  revisions so future films inherit taste without silent global mutation.
+- Prove outside-user first use, then run neutral **ChitraBench** end-to-end.
 - **Exit gate:** on a fixed brief + reference, blind evaluators cannot distinguish Chitra's creative *decisions* (storyboard, pacing, type, palette choices) from a professional's on ≥ the ChitraBench bar.
 
 ## M5 — ChitraBench (define "best")

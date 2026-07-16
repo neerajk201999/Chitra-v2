@@ -108,13 +108,20 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Keep the clean-room Card Vault baseline immutable as a renderer-capability
-   benchmark; its remaining carousel error is localized to asset fidelity.
-2. The source-assisted provenance path is built and proven on synthetic bytes.
-   Run it on Card Vault only after the owner explicitly confirms `owned` or
-   `licensed` rights; do not infer permission from possession of a reference.
-3. Add masks/clipping, internal 3D/light tracks, or motion blur only when a
-   rights-approved run isolates one of them beyond the asset-fidelity gain.
+1. Close release-integrity findings A2/A3/A5: choreography-boundary + interval
+   frame sampling, a hash-keyed `release` path that cannot bypass gates, and
+   final-mux loudness/peak measurement.
+2. Calibrate Creative QA on at least 20 independently labelled cases, then add
+   explicit Style Memory from accepted human revisions.
+3. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
+   a pre-registered neutral ChitraBench against real baselines.
+4. Keep Card Vault as an immutable renderer benchmark. Add masks, deeper comps,
+   blend modes, internal 3D/light tracks, motion blur, or richer audio only when
+   a rights-approved measured residual isolates that capability. Never infer
+   source-use rights from possession of a reference.
+
+The evidence and reasoning for this rebaseline are in
+[program review 0003](../reviews/0003-program-rebaseline.md).
 
 ## Claim boundaries
 
