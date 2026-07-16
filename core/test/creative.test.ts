@@ -6,6 +6,7 @@ import { validateDirection, validateScore, validateStoryboard } from "../src/ir/
 import { validateIntake } from "../src/intake/schema.js";
 import {
   runCreativeConformance,
+  runAssetProvenanceConformance,
   runDirectionStoryboardConformance,
   runIntakeDirectionConformance,
   runStoryboardScoreConformance,
@@ -134,5 +135,41 @@ describe("creative ladder conformance (ADR-0018)", () => {
     expect(ids).toContain("CC-SCORE-4");
     expect(ids).toContain("CC-SCORE-5");
     expect(ids).toContain("CC-SCORE-7");
+  });
+
+  it("separates clean-room from rights-approved source-assisted asset use", () => {
+    const value = fixtures();
+    value.intake.sources.push({ id: "licensed-card", kind: "reference-image", roles: ["content", "style"], origin: { type: "path", path: "assets/card.png", sha256: "0".repeat(64), bytes: 1 }, usage: "Supplies approved card artwork for the phone composition", rights: "licensed", evidence: [] });
+    value.direction.trace.sourceIds.push("licensed-card");
+    value.direction.scenes[0].sourceIds.push("licensed-card");
+    value.storyboard.shots[0].sourceIds.push("licensed-card");
+    value.score.meta.reconstruction = { mode: "source-assisted", referenceSourceIds: ["licensed-card"], reason: "Use licensed artwork to test asset fidelity separately from the clean-room renderer baseline" };
+    value.score.scenes[0].elements.push({
+      type: "image", id: "licensed-art", role: "support", src: "assets/card.png",
+      assetUse: { sourceId: "licensed-card", kind: "derived", note: "Crop the approved artwork into the planned hero composition" },
+      fit: "cover", position: { anchor: "center", x: 50, y: 50 }, width: 20, height: 20, radius: 0, scrim: 0,
+    });
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, value.score)).toEqual([]);
+
+    const untracked = structuredClone(value.score);
+    const untrackedImage = untracked.scenes[0].elements.find((element) => element.id === "licensed-art");
+    if (untrackedImage?.type === "image") untrackedImage.assetUse = undefined;
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, untracked).map((finding) => finding.ruleId)).toContain("CC-ASSET-1");
+
+    const mismatched = structuredClone(value.score);
+    const mismatchedImage = mismatched.scenes[0].elements.find((element) => element.id === "licensed-art");
+    if (mismatchedImage?.type === "image") { mismatchedImage.src = "assets/other.png"; mismatchedImage.assetUse!.kind = "direct"; }
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, mismatched).map((finding) => finding.ruleId)).toContain("CC-ASSET-1");
+
+    value.intake.sources.find((source) => source.id === "licensed-card")!.rights = "reference-only";
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, value.score).map((finding) => finding.ruleId)).toContain("CC-ASSET-2");
+    value.intake.sources.find((source) => source.id === "licensed-card")!.rights = "licensed";
+
+    value.score.meta.reconstruction.mode = "clean-room";
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, value.score).map((finding) => finding.ruleId)).toContain("CC-ASSET-3");
+    value.score.meta.reconstruction.mode = "source-assisted";
+
+    value.storyboard.shots[0].sourceIds = value.storyboard.shots[0].sourceIds.filter((id) => id !== "licensed-card");
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, value.score).map((finding) => finding.ruleId)).toContain("CC-ASSET-4");
   });
 });

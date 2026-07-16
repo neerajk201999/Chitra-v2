@@ -21,6 +21,20 @@ const id = z
   .regex(/^[a-z][a-z0-9-]*$/, "ids are kebab-case, start with a letter");
 const reason = z.string().min(8, "every creative decision carries a real reason");
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "6-digit hex color");
+const projectAssetPath = z.string().min(1).refine(
+  (value) => {
+    const parts = value.split("/");
+    return !value.startsWith("/") && !value.includes("\\") &&
+      !/^[a-z][a-z0-9+.-]*:/i.test(value) &&
+      parts.every((part) => part.length > 0 && part !== "." && part !== "..");
+  },
+  "asset path must be a normalized project-relative POSIX path without traversal"
+);
+const AssetUse = z.object({
+  sourceId: id,
+  kind: z.enum(["direct", "derived"]),
+  note: reason,
+});
 
 const durationToken = z.enum(Object.keys(DURATIONS) as [string, ...string[]]);
 const easingToken = z.enum(Object.keys(EASINGS) as [string, ...string[]]);
@@ -234,12 +248,8 @@ const ImageElement = z.object({
   role: z.enum(["hero", "support", "ambient"]).default("support"),
   // Project-relative path only. Remote URLs are forbidden by ADR-0006: the render
   // path never touches the network — acquisition is `chitra fetch`/`chitra snap`.
-  src: z
-    .string()
-    .min(1)
-    .refine((s) => !/^[a-z][a-z0-9+.-]*:\/\//i.test(s) && !s.startsWith("/"), {
-      message: "image src must be a project-relative path (use `chitra fetch <url>` to download assets first)",
-    }),
+  src: projectAssetPath,
+  assetUse: AssetUse.optional(),
   fit: z.enum(["cover", "contain"]).default("cover"),
   position: Position.default({ anchor: "center" }),
   width: z.number().min(1).max(140).default(100),
@@ -253,12 +263,8 @@ const VideoElement = z.object({
   id,
   role: z.enum(["hero", "support", "ambient"]).default("hero"),
   // Same hermetic rule as images (ADR-0006/0007): project-relative only.
-  src: z
-    .string()
-    .min(1)
-    .refine((s) => !/^[a-z][a-z0-9+.-]*:\/\//i.test(s) && !s.startsWith("/"), {
-      message: "video src must be a project-relative path (acquire clips first, e.g. ffmpeg trim of a recording)",
-    }),
+  src: projectAssetPath,
+  assetUse: AssetUse.optional(),
   startMs: z.number().int().min(0).default(0), // offset into the source clip
   fit: z.enum(["cover", "contain"]).default("cover"),
   position: Position.default({ anchor: "center" }),
@@ -305,18 +311,19 @@ const FigureElement = z.object({
   type: z.literal("figure"),
   id,
   role: z.enum(["hero", "support"]).default("hero"),
-  src: z
-    .string()
-    .min(1)
-    .regex(/\.html$/, "figure src must be an .html fragment")
-    .refine((s) => !/^[a-z][a-z0-9+.-]*:\/\//i.test(s) && !s.startsWith("/"), {
-      message: "figure src must be a project-relative .html fragment",
-    }),
+  src: projectAssetPath.refine((value) => value.endsWith(".html"), "figure src must be an .html fragment"),
+  assets: z.array(z.object({ src: projectAssetPath, assetUse: AssetUse })).max(32).default([]),
   position: Position.default({ anchor: "center" }),
   width: z.number().min(5).max(140).default(60),
   height: z.number().min(5).max(140).default(60),
   radius: z.number().min(0).max(50).default(0),
   shadow: z.boolean().default(true), // soft elevation, theme-aware
+}).superRefine((value, ctx) => {
+  const seen = new Set<string>();
+  value.assets.forEach((asset, index) => {
+    if (seen.has(asset.src)) ctx.addIssue({ code: "custom", path: ["assets", index, "src"], message: `duplicate figure asset ${asset.src}` });
+    seen.add(asset.src);
+  });
 });
 
 /** ADR-0008: stylized pointer for staged interaction moments. */
@@ -494,12 +501,8 @@ export const Animation = z.object({
    *  Sparse by rule (MO-AUD-3) — hero entrances and transitions, not every move. */
   sfx: z
     .object({
-      src: z
-        .string()
-        .min(1)
-        .refine((s) => !/^[a-z][a-z0-9+.-]*:\/\//i.test(s) && !s.startsWith("/"), {
-          message: "sfx src must be a project-relative path (generate a kit with `chitra sfx-kit`)",
-        }),
+      src: projectAssetPath,
+      assetUse: AssetUse.optional(),
       gainDb: z.number().min(-40).max(6).default(-14),
     })
     .optional(),
@@ -515,12 +518,20 @@ export const Scene = z.object({
   reason, // why this scene exists (OpenMontage's best idea)
   durationMs: z.number().int().min(500).max(20000),
   background: z.enum(["bg", "surface", "primary", "image"]).default("bg"),
-  backgroundImage: z.string().optional(),
+  backgroundImage: projectAssetPath.optional(),
+  backgroundAssetUse: AssetUse.optional(),
   elements: z.array(Element).min(1).max(12),
   choreography: z.array(Animation).default([]),
   transitionOut: z
     .object({ type: transition, duration: durationToken.default("standard") })
     .default({ type: "cut", duration: "standard" }),
+}).superRefine((value, ctx) => {
+  if (value.background === "image" && !value.backgroundImage)
+    ctx.addIssue({ code: "custom", path: ["backgroundImage"], message: "image background requires backgroundImage" });
+  if (value.background !== "image" && (value.backgroundImage || value.backgroundAssetUse))
+    ctx.addIssue({ code: "custom", path: ["backgroundImage"], message: "backgroundImage and backgroundAssetUse require background image" });
+  if (value.backgroundAssetUse && !value.backgroundImage)
+    ctx.addIssue({ code: "custom", path: ["backgroundAssetUse"], message: "backgroundAssetUse requires backgroundImage" });
 });
 export type SceneT = z.infer<typeof Scene>;
 
@@ -560,6 +571,11 @@ export const Score = z.object({
     fps: z.union([z.literal(24), z.literal(30), z.literal(60)]).default(30),
     seed: z.number().int().min(0).default(1),
     safeZone: z.enum(Object.keys(SAFE_ZONES) as [string, ...string[]]).default("16x9-standard"),
+    reconstruction: z.object({
+      mode: z.enum(["clean-room", "source-assisted"]),
+      referenceSourceIds: z.array(id).min(1).refine((ids) => new Set(ids).size === ids.length, "reference source IDs must be unique"),
+      reason,
+    }).optional(),
   }),
   style: Style,
   scenes: z.array(Scene).min(1),
@@ -568,7 +584,8 @@ export const Score = z.object({
     .object({
       music: z
         .object({
-          src: z.string().min(1), // path relative to the score's directory
+          src: projectAssetPath,
+          assetUse: AssetUse.optional(),
           gainDb: z.number().min(-30).max(0).default(-6), // pre-normalization trim
           bpm: z.number().min(40).max(220).optional(), // declared tempo → enables MO-AUD-2 beat-cut gate
           firstBeatMs: z.number().int().min(0).default(0), // offset of beat 1 in the music file

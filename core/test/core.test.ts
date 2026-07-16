@@ -162,6 +162,10 @@ describe("media assets (ADR-0006)", () => {
     expect(validateScore(s).ok).toBe(false);
     s.scenes[0].elements[s.scenes[0].elements.length - 1].src = "/etc/a.png";
     expect(validateScore(s).ok).toBe(false);
+    s.scenes[0].elements[s.scenes[0].elements.length - 1].src = "../outside.png";
+    expect(validateScore(s).ok).toBe(false);
+    s.scenes[0].elements[s.scenes[0].elements.length - 1].src = "assets\\outside.png";
+    expect(validateScore(s).ok).toBe(false);
   });
   it("MO-MED-1: text over unscrimmed media is a P2; scrim clears it", () => {
     const bad = runStaticGates(withImage(0)).filter((f) => f.ruleId === "MO-MED-1");
@@ -228,6 +232,49 @@ describe("figures & interaction choreography (ADR-0008)", () => {
     expect(clean).toContain('class="card"');
     expect(clean).toContain("var(--surface)");
     expect(clean).toContain("<button");
+  });
+  it("declares, contains, and hashes every nested figure asset", async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } = await import("node:fs");
+    const os = await import("node:os");
+    const project = mkdtempSync(path.join(os.tmpdir(), "chitra-figure-assets-"));
+    const outside = mkdtempSync(path.join(os.tmpdir(), "chitra-figure-outside-"));
+    try {
+      mkdirSync(path.join(project, "assets"));
+      writeFileSync(path.join(project, "figure.html"), '<img src="assets/card.png" style="width:100%">');
+      writeFileSync(path.join(project, "assets/card.png"), "card-v1");
+      const score = validFixture();
+      score.scenes[0].elements.push({
+        type: "figure", id: "sourced-card", role: "hero", src: "figure.html",
+        assets: [{ src: "assets/card.png", assetUse: { sourceId: "licensed-card", kind: "derived", note: "Crop the licensed card artwork into the approved phone composition" } }],
+        position: { anchor: "center", x: 50, y: 50 }, width: 40, height: 40, radius: 0, shadow: false,
+      } as never);
+      expect(() => compile(score, project)).not.toThrow();
+      const before = sceneHash(score, 0, project);
+      writeFileSync(path.join(project, "assets/card.png"), "card-v2");
+      expect(sceneHash(score, 0, project)).not.toBe(before);
+
+      const undeclared = structuredClone(score);
+      const figure = undeclared.scenes[0].elements.find((element) => element.id === "sourced-card");
+      if (figure?.type === "figure") figure.assets = [];
+      expect(() => compile(undeclared, project)).toThrow(/undeclared asset/);
+
+      writeFileSync(path.join(project, "figure.html"), '<img src="data:image/png;base64,AAAA">');
+      expect(() => compile(score, project)).toThrow(/inline or file URL assets are forbidden/);
+
+      writeFileSync(path.join(project, "figure.html"), '<img srcset="assets/card.png 1x">');
+      expect(() => compile(score, project)).toThrow(/srcset.*unsupported/);
+
+      writeFileSync(path.join(outside, "escape.png"), "outside");
+      symlinkSync(path.join(outside, "escape.png"), path.join(project, "assets/escape.png"));
+      writeFileSync(path.join(project, "figure.html"), '<img src="assets/escape.png">');
+      const escaped = structuredClone(score);
+      const escapedFigure = escaped.scenes[0].elements.find((element) => element.id === "sourced-card");
+      if (escapedFigure?.type === "figure") escapedFigure.assets = [{ src: "assets/escape.png", assetUse: escapedFigure.assets[0].assetUse }];
+      expect(() => compile(escaped, project)).toThrow(/escapes project through a symlink/);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
   it("IR-CUR-1 gates waypoint misuse and wrong-kind targets", () => {
     const s = validFixture();

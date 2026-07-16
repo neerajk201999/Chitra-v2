@@ -14,9 +14,10 @@
  *   }
  */
 import { createRequire } from "node:module";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { AnimationT, SceneT, ScoreT, ElementT } from "../ir/schema.js";
+import { resolveProjectAsset } from "../assets/local.js";
 import {
   CHOREOGRAPHY,
   DURATIONS,
@@ -191,6 +192,21 @@ export function sanitizeFragment(html: string): string {
     .replace(/javascript:/gi, "");
 }
 
+function figureAssetReferences(html: string): string[] {
+  if (/\bsrcset\s*=/i.test(html) || /@import\b/i.test(html) || /image-set\s*\(/i.test(html))
+    throw new Error("figure srcset, CSS @import, and image-set assets are unsupported; use one declared src or url() dependency");
+  const references = new Set<string>();
+  const add = (raw: string) => {
+    const value = raw.trim();
+    if (!value || value.startsWith("#")) return;
+    if (/^(?:data:|blob:|file:)/i.test(value)) throw new Error(`figure inline or file URL assets are forbidden: ${value.slice(0, 80)}`);
+    references.add(value);
+  };
+  for (const match of html.matchAll(/(?:src|href|poster|xlink:href)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)) add(match[1] ?? match[2] ?? "");
+  for (const match of html.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]+))\s*\)/gi)) add(match[1] ?? match[2] ?? match[3] ?? "");
+  return [...references].sort();
+}
+
 /** ADR-0009: deterministic per-formation dot coordinates in element-box percent
  *  (0..100 within the particle element's own box). Pure math → identical every
  *  render. `n` is fixed per element (max of grid cols*rows and count) so a morph
@@ -300,9 +316,12 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       const w = (el.width * score.meta.width) / 100;
       const h = (el.height * score.meta.height) / 100;
       const r = `${(el.radius * Math.min(score.meta.width, score.meta.height)) / 100}px`;
-      const file = path.resolve(projectDir, el.src);
-      if (!existsSync(file)) throw new Error(`figure fragment not found: ${el.src} (resolved to ${file})`);
+      const file = resolveProjectAsset(projectDir, el.src);
       const fragment = sanitizeFragment(readFileSync(file, "utf8"));
+      const declared = new Set(el.assets.map((asset) => asset.src));
+      for (const reference of figureAssetReferences(fragment))
+        if (!declared.has(reference)) throw new Error(`figure ${el.id} references undeclared asset: ${reference}`);
+      for (const asset of el.assets) resolveProjectAsset(projectDir, asset.src);
       const shadow = el.shadow ? `box-shadow:0 ${18 * scale}px ${60 * scale}px rgba(0,0,0,0.45);` : "";
       // Token bridge: fragments style themselves ONLY through these variables.
       const vars =

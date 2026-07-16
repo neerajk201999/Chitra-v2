@@ -38,6 +38,10 @@ and CHANGELOG.
 - ADR-0022 named ROI diagnostics: aligned-reference bounds and optional pair
   ranges, regional metric summaries/worst pairs, deterministic cropped diffs,
   and strict validation. Whole-frame metrics remain authoritative.
+- ADR-0023 source-assisted reconstruction provenance: typed clean-room/source-
+  assisted labels, rendered-asset lineage and rights conformance, normalized
+  project-only paths, declared figure dependencies, and nested-byte cache
+  invalidation. It does not infer legal rights; it enforces the user's claim.
 - Package 0.3.0 has valid `main`/`types`/`exports`; global-style tarball install
   and `chitra probe` have been exercised locally.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
@@ -45,7 +49,7 @@ and CHANGELOG.
 
 ## Evidence, not claims
 
-- Unit suite: 53 tests.
+- Unit suite: 55 tests.
 - Multimodal Intake benchmark: inline, local, and URL origins; local evidence;
   preferences and anti-reference; repeated locks identical; traversal, symlink
   escape, stale hash, duplicate ID, and unknown provenance links rejected.
@@ -57,6 +61,10 @@ and CHANGELOG.
   caught; a localized defect is isolated from an untouched ROI; regional
   evidence repeats; invalid regions reject; strict geometry rejection,
   normalized non-exhaustive mode, and repeatable CLI regions are proven.
+- Source-assisted benchmark: a synthetic licensed Intake asset traces through
+  Direction/Storyboard/Score, renders inside a figure in a real browser,
+  invalidates the scene hash when its bytes change, and repeats the same frame
+  byte-identically. Reference-only use and a false clean-room label are blocked.
 - Card Vault target registered by hash at 720×900/30fps/274 frames. The first
   clean-room Chitra candidate authors all 274 frames with eight typed tracks,
   custom particles, and no reference pixels/audio: mean SSIM 0.363459 and
@@ -95,10 +103,12 @@ remains the center of gravity; renderer work requires a specific target-film gap
 Ordered next slices:
 
 1. Keep the clean-room Card Vault baseline immutable as a renderer-capability
-   benchmark; its remaining carousel error is now localized to asset fidelity.
-2. Design a separately labelled, rights-approved source-assisted reconstruction
-   track with asset provenance and hashing. Do not hide copied target pixels in
-   the clean-room score. Add masks/clipping only when that track proves the gap.
+   benchmark; its remaining carousel error is localized to asset fidelity.
+2. The source-assisted provenance path is built and proven on synthetic bytes.
+   Run it on Card Vault only after the owner explicitly confirms `owned` or
+   `licensed` rights; do not infer permission from possession of a reference.
+3. Add masks/clipping, internal 3D/light tracks, or motion blur only when a
+   rights-approved run isolates one of them beyond the asset-fidelity gain.
 
 ## Claim boundaries
 

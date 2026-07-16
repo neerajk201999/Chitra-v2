@@ -6,7 +6,7 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 2. **No paint-settle guarantee** between `seek()` and screenshot beyond empirical determinism on macOS; Linux/CI golden-frame verification pending (M5). Determinism claims are same-machine only.
 3. **Audio covers music + SFX + detected beat timing** (ADR-0007/0011) — still no narration/voiceover timeline, energy-envelope property tracks, or clip-audio pass-through. Loudness (−14 LUFS target), beat detection, `at.onBeat`, and beat-cut gates are live. (M2 remainder.)
 4. **VLM critic unproven**: no calibration set or measured human-agreement rate for `critique-video`; the deterministic layer's 10/10 seeded catch rate does not cover aesthetic judgment (M2/M4).
-5. **Expressiveness ceiling (partly closed)**: figures, video-in-scene, cursor/type choreography, real 3D primitives, reason-gated frame tracks, custom particles, and ADR-0021 one-level parent groups are built. Card Vault 0.7 authors all 274 frames, but not exactly: internal 3D/light tracks and motion blur remain measured gaps. Local-coordinate/deeper comps, masks/mattes, blend modes, and richer motif vocabulary remain typed-IR gaps.
+5. **Expressiveness ceiling (partly closed)**: figures, video-in-scene, cursor/type choreography, real 3D primitives, reason-gated frame tracks, custom particles, ADR-0021 one-level parent groups, and ADR-0023 rights-gated source-assisted figure assets are built. Card Vault 0.7 authors all 274 clean-room frames, but not exactly: internal 3D/light tracks and motion blur remain measured gaps. Local-coordinate/deeper comps, masks/mattes, blend modes, and richer motif vocabulary remain typed-IR gaps; source-assisted Card Vault measurement awaits an explicit rights decision.
 6. **Gate sampling is instant-based** (3 instants/scene): transient overlap or contrast dips between samples can slip through (M2: per-cut + interval sampling).
 7. **Public distribution is not released.** The npm registry returns 404 and
    GitHub is private. Source/tarball installation, native Claude/Codex/Cursor
@@ -34,7 +34,12 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 13. **GitHub governance is only partly enforceable.** Vulnerability alerts are
     enabled, but branch protection is unavailable while this repository remains
     private on the current GitHub plan. Local and CI verification are green;
-    repository visibility was not changed.
+   repository visibility was not changed.
+14. **Asset provenance validates declarations, not ownership independently.**
+    ADR-0023 binds rendered paths to locked Intake sources and blocks
+    `reference-only`/`unknown` bytes, but it cannot verify whether a user's
+    `owned` or `licensed` claim is legally correct or detect manually redrawn
+    vector paths hidden in authored HTML. Human/legal review remains required.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. Figure text bypasses the text gates (P1 integrity).** `textRegions()` only reads top-level IR text; text authored inside a `figure` fragment is NOT size/contrast/safe-zone/reading-time/overlap checked. This contradicted ADR-0008's "gates run on its pixels" wording (now corrected). The moat is "measurable quality" — this is a real hole. Fix: register figure DOM text after sanitization, enforce token-only styling with a real CSS parser. (M4 Creative QA.)

@@ -48,7 +48,7 @@ Reference intelligence: ADR-0015 `chitra decompose` → typed Style DNA with det
 Intake intelligence: ADR-0017 `chitra intake` → separately versioned multimodal Intake IR with objective/deliverable, mixed-source roles and rights, preferences/anti-references, brand constraints, assumptions/questions, evidence links, deterministic local hashes, and explicit unlocked URLs; 44 tests and a mixed-input benchmark.
 Creative ladder: ADR-0018 Direction 0.2 + Storyboard 0.1 → explicit concept and
 shot design, stable source/preference traces, three adjacent-tier conformance
-boundaries, `chitra creative-check`, 53 tests, and a benchmark that catches all
+boundaries, `chitra creative-check`, 55 tests, and a benchmark that catches all
 three seeded intent drifts.
 Reference comparison: ADR-0019 `chitra compare` → strict exhaustive frame-index
 mode, explicit normalized sampling, transparent visual/audio-energy metrics,
@@ -56,6 +56,12 @@ deterministic per-frame diff evidence, and generated exact/drift fixtures.
 ADR-0022 Comparison 0.2 adds validated named ROI/pair-range summaries and
 cropped diffs; the fixture proves localized-drift isolation and the Card Vault
 run measures 0.089867 ROI MAE versus 0.027557 whole-film MAE.
+Source-assisted reconstruction: ADR-0023 adds explicit clean-room/source-
+assisted labels, locked rendered-asset lineage and rights conformance, safe
+project-local paths, and declared/hash-invalidating figure dependencies. A
+synthetic licensed asset renders in a real browser; reference-only use and false
+clean-room claims fail. Card Vault source pixels remain uncommitted pending an
+explicit owner rights decision.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
 Clean-room candidate 0.6 now authors and compares all 274 frames without copied
