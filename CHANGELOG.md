@@ -31,6 +31,12 @@ versioned separately.
 
 - The Card Vault reconstruction benchmark.
 
+### Benchmarked
+
+- Registered the immutable 274-frame Card Vault target and published an
+  exhaustive freeze-frame lower baseline plus worst-frame indices. A Chitra
+  reconstruction candidate is not yet authored.
+
 ## [0.3.0] — 2026-07-16
 
 ### Added

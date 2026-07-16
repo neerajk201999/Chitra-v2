@@ -53,6 +53,9 @@ three seeded intent drifts.
 Reference comparison: ADR-0019 `chitra compare` → strict exhaustive frame-index
 mode, explicit normalized sampling, transparent visual/audio-energy metrics,
 deterministic per-frame diff evidence, and generated exact/drift fixtures.
+Card Vault benchmark target registered: immutable source hash, exact 274-frame
+geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
+The Chitra-authored reconstruction candidate remains open.
 Remaining (priority order):
 - **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
 - **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.

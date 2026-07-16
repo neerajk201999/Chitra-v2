@@ -48,6 +48,10 @@ and CHANGELOG.
 - Reference Comparator benchmark: exact identical 12/12-frame report yields MAE
   0/SSIM 1/audio correlation 1; repeated report/diffs identical; colour drift
   caught; strict geometry rejection and normalized non-exhaustive mode proven.
+- Card Vault target registered by hash at 720×900/30fps/274 frames. Exhaustive
+  freeze baseline: MAE 0.024120, mean SSIM 0.269554, minimum SSIM 0.095306;
+  worst frames 36–45 expose the first large 3D card/light/type reveal. No Chitra
+  reconstruction candidate exists yet.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.
