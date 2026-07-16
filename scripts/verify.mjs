@@ -32,6 +32,7 @@ if (!quick) {
   run("Multimodal Intake benchmark", process.execPath, ["benchmarks/intake/run.mjs", "--check"]);
   run("Creative ladder benchmark", process.execPath, ["benchmarks/creative-ladder/run.mjs", "--check"]);
   run("Creative Review contract benchmark", process.execPath, ["benchmarks/creative-review-contract/run.mjs", "--check"]);
+  run("Independent calibration contract benchmark", process.execPath, ["benchmarks/independent-calibration/run.mjs", "--check"]);
   run("Source-assisted provenance benchmark", process.execPath, ["benchmarks/source-assisted/run.mjs", "--check"]);
   run("Rendered figure text gate benchmark", process.execPath, ["benchmarks/figure-text-gates/run.mjs", "--check"]);
   run("Release integrity benchmark", process.execPath, ["benchmarks/release-integrity/run.mjs", "--check"]);

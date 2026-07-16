@@ -80,6 +80,7 @@ chitra render score.json -o draft.mp4 -q draft # diagnostic draft; only dirty sc
 chitra evidence score.json -o evidence/       # contact sheet + hero frames + cut strips
 chitra review-validate creative-review.json   # validate isolated, evidence-bound judgment
 chitra review-score labels-v2.json creative-review.json --case uniform-monotony
+chitra review-calibrate study.json -o calibration-result.json # independent panel/candidate agreement
 chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
 chitra verify-release out/release.json         # reject changed inputs, assets, output, or evidence
 chitra clean                     # remove work artifacts

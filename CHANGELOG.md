@@ -8,6 +8,11 @@ versioned separately.
 
 ### Added
 
+- ADR-0030 Independent Calibration Study 0.1: at least three blind reviewers per
+  case, reviewer/candidate provenance and consent, subject binding,
+  register/motion/audio coverage, explicit consensus/disagreement, separate
+  panel/candidate metrics, `chitra review-calibrate`, and a deterministic
+  contract benchmark.
 - ADR-0029 Creative Review 0.1 with 28 stable multidisciplinary craft
   principles, isolated visual-assessment provenance, subject digests, fourteen
   evidence-bound domains, actionable findings, deterministic hidden-label

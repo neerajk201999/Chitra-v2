@@ -23,3 +23,7 @@ new runs use `labels-v2.json`.
 - 4 cases is a smoke test, not a benchmark. Grow toward ~20 cases across registers before publishing agreement stats.
 - Labels are **author-labeled** (the case designer wrote the ground truth). Independent human labels are required before any public claim about critic reliability.
 - Static evidence cannot expose easing *feel* or sound craft; new cases need motion clips and audio evidence.
+
+This four-case author-labelled set remains a regression smoke test. New human
+work belongs in the [independent calibration protocol](../independent-calibration/README.md),
+not in `labels-v2.json`.
