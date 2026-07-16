@@ -1,4 +1,4 @@
-# Known Issues (v0.2.0 — 2026-07-15)
+# Known Issues (v0.3.0 — 2026-07-16)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 
@@ -12,6 +12,12 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 8. **Distribution/parallel rendering unimplemented** (design in ADR-0002 consequences; M5).
 9. **Ctrl-C mid-render** may briefly orphan the vendored Chrome process (no explicit signal handler).
 10. **Example corpus is 2 scores**; agents compose better from a gallery (M3).
+11. **Reference analysis is intentionally low-level.** FFmpeg scene scoring can
+    miss soft edits or treat large motion as a cut; palette is quantized RGB;
+    frame-difference energy is not optical flow; and ADR-0011 onset peaks can
+    over-count musical beats in dense or continuous audio. Thresholds and
+    analyzer methods are recorded in Style DNA, but ChitraBench accuracy and a
+    separate evidence-linked semantic pass remain open (M4).
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. Figure text bypasses the text gates (P1 integrity).** `textRegions()` only reads top-level IR text; text authored inside a `figure` fragment is NOT size/contrast/safe-zone/reading-time/overlap checked. This contradicted ADR-0008's "gates run on its pixels" wording (now corrected). The moat is "measurable quality" — this is a real hole. Fix: register figure DOM text after sanitization, enforce token-only styling with a real CSS parser. (M4 Creative QA.)

@@ -8,7 +8,20 @@ versioned separately.
 
 ### Planned
 
-- Reference Decomposer and automated reference comparison.
+- Automated reference comparison and the Card Vault reconstruction benchmark.
+
+## [0.3.0] — 2026-07-16
+
+### Added
+
+- `chitra decompose` for deterministic, typed Style DNA and per-shot evidence.
+- Generated three-shot benchmark covering cut timing, palette, motion energy,
+  semantic honesty, bounded sampling, and byte-identical repeated JSON/evidence.
+
+### Changed
+
+- Agent workflows now decompose supplied references before direction.
+- Package metadata points only to the isolated `Chitra-v2` repository.
 
 ## [0.2.0] — 2026-07-16
 

@@ -25,6 +25,8 @@ The Chitra repo provides `core/dist/cli/index.js` (invoke as `chitra` below via 
 Interrogate the brief (ask the user only what you cannot infer): subject, audience, **register** (`brand-film` | `product-demo` | `social-short`), duration target, brand constraints (colors/fonts/logo), the single message that must land.
 Write `direction.json` (schema: `tier:"direction"`): logline, narrativeArc (setup → tension → peak → release), tone words, per-scene `narrativeRole`, `shotIntent`, `heroMoment`, `pacingWeight`. 4–8 scenes for 25–45s. Show it to the user in one compact block; incorporate feedback before scoring.
 
+If the user supplies a reference, first run `chitra decompose reference.mp4 -o style-dna.json`, inspect its shot evidence, and ground direction in the measured timing, palette, luminance, motion-energy, and audio-landmark fields. The semantic review slots are deliberately `unmeasured`; annotate typography, camera intent, narrative, and emotion separately with evidence. Style DNA is not proof of an exact match—the comparator is a later release.
+
 ### 2 · Direction → Score (Tier 2)
 Write `score.json` (`tier:"score"`). Consult the motion language (`docs/motion/motion-language.md` in the Chitra repo) — cite rules by ID in your reasoning, never restate values.
 

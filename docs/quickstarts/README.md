@@ -10,6 +10,11 @@ chitra init . --style night --title "My film"
 chitra check score.json && chitra render score.json -o out.mp4 -q draft
 ```
 
+With a reference, run `chitra decompose reference.mp4 -o style-dna.json` first.
+It produces reproducible media, shot, palette, motion, and audio measurements
+plus one evidence frame per detected shot; semantic intent remains explicitly
+unmeasured for the agent to annotate from evidence.
+
 - **Claude Code** — install the plugin from `.claude-plugin/plugin.json` (or just open the repo; `AGENTS.md` routes to the `create-video` / `critique-video` skills). Say what you want; the agent runs the loop: direction → score → gates → draft → evidence → critique → revision → final.
 - **Cursor** — the compiled rule at `.cursor/rules/chitra.mdc` ships in-repo (regenerate with `node scripts/build-skills.mjs`). Open the repo, ask for a video.
 - **Codex / anything else** — point the agent at `AGENTS.md`; it is the harness-neutral entry point.

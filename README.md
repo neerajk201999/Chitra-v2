@@ -19,7 +19,7 @@ prompt → direction → design → motion → render → critique → revision 
 
 ## Status
 
-**v0.2.0 — the closed loop works and is measured.** Motion IR → deterministic render (byte-identical re-renders on the same machine, sha256-verified) → quality gates (**10/10 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md)) → evidence sheets → critique loop → music bed normalized to −14 LUFS with detected-beat choreography. Exact shots can use reason-gated, typed [frame-addressed transform tracks](benchmarks/keyframe-track/results.md); curated presets remain the default. The [flagship example](examples/launch-film/score.json) was directed, gated, critiqued, and revised entirely by an AI agent using this pipeline. See the [roadmap](docs/roadmap/roadmap.md) and [known issues](docs/roadmap/known-issues.md) — claims we haven't measured yet are marked as such there.
+**v0.3.0 — references become measurable inputs.** `chitra decompose` creates validated, deterministic Style DNA: source identity, shot rhythm, palette, luminance/saturation, frame-difference motion energy, audio onset landmarks, and evidence frames. Its [generated-fixture benchmark](benchmarks/reference-decomposer/results.md) reproduces exact known cuts and colors with byte-identical repeated JSON. Semantic intent stays explicitly unmeasured, and exact reconstruction still awaits the comparator. The existing closed loop retains its **10/10 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md) and exact authored transforms remain covered by the [keyframe benchmark](benchmarks/keyframe-track/results.md).
 
 ## Use it from your coding agent
 
@@ -35,6 +35,7 @@ Then, in Claude Code / Codex / Cursor, point your agent at the repo and ask for 
 ```bash
 # what the agent runs under the hood
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
+chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
 chitra validate score.json      # schema + static gates (fast)
 chitra check score.json         # + rendered-frame gates: contrast, safe zones, overlap, blanks
 chitra frame score.json -t 1800 -o peek.png   # one-frame preview in seconds
