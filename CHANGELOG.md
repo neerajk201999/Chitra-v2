@@ -6,6 +6,8 @@ versioned separately.
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-07-17
+
 ### Added
 
 - ADR-0030 Independent Calibration Study 0.1: at least three blind reviewers per

@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-17 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0
+**Verified:** 2026-07-17 · **Package:** 0.4.0 release candidate · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -57,8 +57,9 @@ and CHANGELOG.
   choreography/transition neighborhoods, cross-scene overlap checks, staged
   target-safe outputs, final-mux loudness/peak measurement, and receipts that
   bind the creative artifacts, resolved render inputs, video, and evidence.
-- Package 0.3.0 has valid `main`/`types`/`exports`; global-style tarball install
-  and `chitra probe` have been exercised locally.
+- Package 0.4.0 release candidate has valid `main`/`types`/`exports`; global-
+  style tarball install and `chitra probe` have been exercised locally. Public
+  registry verification remains a release action.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
   `AGENTS.md`/`GEMINI.md`, and the cross-harness `npx skills` installer.
 - ADR-0029 Creative Review 0.1: 28 stable multidisciplinary `CR-*`

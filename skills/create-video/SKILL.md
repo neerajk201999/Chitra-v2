@@ -21,7 +21,10 @@ then **watch the evidence and revise**. Never skip the critique loop.
 ## Pipeline
 
 ### 0 · Locate the toolchain
-The Chitra repo provides `core/dist/cli/index.js` (invoke as `chitra` below via `node <repo>/core/dist/cli/index.js`). If `dist` is missing: `cd core && npm install && npx tsc`. Verify with `chitra probe`.
+Use the globally installed `chitra` command (`npm install -g chitra-video`). For
+repository development only, the fallback is
+`node <repo>/core/dist/cli/index.js`; if `dist` is missing, run
+`cd core && npm install && npx tsc`. Verify either path with `chitra probe`.
 
 ### 1 · Intake → Direction
 Inventory what the user actually supplied; a reference is optional and never overrides the user's objective or preferences.

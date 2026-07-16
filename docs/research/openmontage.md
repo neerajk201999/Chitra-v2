@@ -1,6 +1,8 @@
 # OpenMontage — Competitive/Idea-Mining Analysis for Chitra
 
-Repo analyzed: `/private/tmp/claude-501/-Users-macbook-Documents-Neeraj-s-Projects-Chitra/1302c09e-b491-430e-abd8-a3ab5beda127/scratchpad/repos/OpenMontage` (AGPLv3, ~2,010 files, Python tools + Node/Remotion renderer + ~400 markdown skills).
+Repo analyzed: [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage)
+(AGPLv3, ~2,010 files, Python tools + Node/Remotion renderer + ~400 markdown
+skills at the inspected revision).
 
 Upstream was re-inspected on 2026-07-16. Its strongest creative-intelligence
 artifacts remain the three-dial taste profile, cinematic edit-director craft,

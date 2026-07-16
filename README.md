@@ -21,7 +21,7 @@ prompt + optional sources → intake → direction → storyboard → motion →
 
 ## Status
 
-**v0.3.0 — typed intake, measurable references, and portable agent workflows.**
+**v0.4.0 — public creative-intelligence preview.**
 `chitra intake` preserves objectives, mixed-source provenance, preferences,
 anti-references, brand constraints, assumptions, and evidence as locked JSON;
 the [intake benchmark](benchmarks/intake/results.md) verifies deterministic local
@@ -45,22 +45,21 @@ measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects
 
 ## Use it from your coding agent
 
-Requirements: Node 22.12+, ffmpeg on PATH.
+Requirements: Node 22.12+ and FFmpeg on `PATH`.
 
 ```bash
 git clone https://github.com/neerajk201999/Chitra-v2.git
 cd Chitra-v2
-npm install -g ./core
+npm install -g chitra-video
 chitra probe
 ```
 
-Open this repository directly in your agent, or from another project run
-`npx skills add /absolute/path/to/Chitra-v2 --skill '*' --copy --yes`.
-
-The repository is currently private and the npm package is not published; the
-source commands require GitHub access. See the honest, tested platform matrix in
-[Install and use Chitra](docs/INSTALL.md), including Claude Code and Codex plugin
-commands, Cursor/Gemini skills installation, sample prompts, and release blockers.
+Open the cloned folder in your coding agent. The npm package supplies the
+deterministic CLI; the repository supplies the skills, creative memory,
+examples, and agent entry points. See [Install and use Chitra](docs/INSTALL.md)
+for explicit Claude Code, Codex, Cursor, and Gemini CLI commands, or [run the
+friend test](docs/quickstarts/README.md) with two ready-to-use prompts and a
+compact feedback checklist.
 
 Then ask for the outcome in your own language. A plain direction prompt is
 enough; references, images, links, screenshots, footage, audio, brand material,
