@@ -196,9 +196,11 @@ export function sanitizeFragment(html: string): string {
  *  render. `n` is fixed per element (max of grid cols*rows and count) so a morph
  *  never adds or drops dots. */
 type Dot = { x: number; y: number };
-function formationDots(el: { formation: string; cols: number; rows: number; count: number; radius: number; seed: number }, formation: string, n: number, boxWpct: number, boxHpct: number): Dot[] {
+function formationDots(el: { formation: string; cols: number; rows: number; count: number; radius: number; seed: number; points?: Dot[] }, formation: string, n: number, boxWpct: number, boxHpct: number, customPoints?: Dot[]): Dot[] {
   const dots: Dot[] = [];
-  if (formation === "grid") {
+  if (formation === "custom") {
+    return (customPoints ?? el.points ?? []).map((point) => ({ x: point.x, y: point.y }));
+  } else if (formation === "grid") {
     const cols = el.cols, rows = el.rows;
     for (let i = 0; i < n; i++) {
       const c = i % cols, r = Math.floor(i / cols) % rows;
@@ -314,7 +316,7 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
     case "particles": {
       const w = (el.width * score.meta.width) / 100;
       const h = (el.height * score.meta.height) / 100;
-      const n = el.formation === "grid" ? el.cols * el.rows : el.count;
+      const n = el.formation === "grid" ? el.cols * el.rows : el.formation === "custom" ? el.points!.length : el.count;
       const dots = formationDots(el, el.formation, n, el.width, el.height);
       const ds = Math.round(el.dotSize * scale);
       const col = colorOf(p, el.color);
@@ -507,11 +509,13 @@ function presetTweens(
       const to = (anim as { morphTo?: string }).morphTo ?? "grid";
       let deltas: Array<{ x: number; y: number }> = [];
       if (pEl && pEl.type === "particles") {
-        const n = pEl.formation === "grid" ? pEl.cols * pEl.rows : pEl.count;
+        const n = pEl.formation === "grid" ? pEl.cols * pEl.rows : pEl.formation === "custom" ? pEl.points!.length : pEl.count;
         const boxW = (pEl.width * score.meta.width) / 100;
         const boxH = (pEl.height * score.meta.height) / 100;
         const from = formationDots(pEl, pEl.formation, n, pEl.width, pEl.height);
-        const dst = formationDots(pEl, to, n, pEl.width, pEl.height);
+        const dst = formationDots(pEl, to, n, pEl.width, pEl.height, (anim as { morphPoints?: Dot[] }).morphPoints);
+        if (dst.length !== from.length)
+          throw new Error(`Scene "${scene.id}": particle-morph "${anim.id}" has ${dst.length} destination points for ${from.length} source dots`);
         deltas = from.map((d, i) => ({ x: ((dst[i].x - d.x) / 100) * boxW, y: ((dst[i].y - d.y) / 100) * boxH }));
       }
       return [{ ...base, targets: `${sel} .pdot`, vars: { __morphDeltas: deltas } }];

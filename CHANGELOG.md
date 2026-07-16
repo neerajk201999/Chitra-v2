@@ -26,16 +26,16 @@ versioned separately.
   frame-index mode, explicitly normalized progress mode, per-frame RGB MAE/
   PSNR/global-luma SSIM, deterministic difference images, worst-frame evidence,
   and limited audio energy-envelope alignment.
-
-### Planned
-
-- The Card Vault reconstruction benchmark.
+- ADR-0020 typed custom particle constellations and same-count custom morph
+  targets with deterministic point-index mapping.
 
 ### Benchmarked
 
 - Registered the immutable 274-frame Card Vault target and published an
-  exhaustive freeze-frame lower baseline plus worst-frame indices. A Chitra
-  reconstruction candidate is not yet authored.
+  exhaustive freeze-frame lower baseline plus worst-frame indices.
+- Authored clean-room Card Vault 0.6 across all 274 frames without copied
+  reference pixels/audio. Custom particles improved mean SSIM from 0.353047 to
+  0.363459; exact reconstruction and competitive-quality claims remain open.
 
 ## [0.3.0] — 2026-07-16
 

@@ -1,7 +1,7 @@
-# Card Vault reconstruction benchmark — target registration and lower baseline
+# Card Vault reconstruction benchmark — target and clean-room baseline
 
-**Run:** 2026-07-16 · **Status:** target registered; reconstruction not yet
-authored · **Input redistributed:** no
+**Run:** 2026-07-16 · **Status:** first authored candidate measured; exact
+reconstruction not achieved · **Input redistributed:** no
 
 Target identity:
 
@@ -14,28 +14,43 @@ The lower baseline freezes decoded frame 0 for all 274 frames and reuses the
 reference audio, isolating visual motion/content error. Exhaustive exact-mode
 results:
 
-| Metric | Freeze baseline |
-|---|---:|
-| Compared frames | 274/274 |
-| Mean RGB MAE | 0.024120 |
-| P95 RGB MAE | 0.035325 |
-| Mean global-luma SSIM | 0.269554 |
-| Minimum global-luma SSIM | 0.095306 |
-| Mean PSNR | 25.013 dB |
-| Worst frame indices | 38, 40, 36, 41, 37, 42, 39, 44, 43, 45 |
-| Audio envelope correlation | 0.997872 |
+| Metric | Freeze baseline | Clean-room 0.5 | Clean-room 0.6 |
+|---|---:|---:|---:|
+| Compared frames | 274/274 | 274/274 | 274/274 |
+| Mean RGB MAE | 0.024120 | 0.027479 | 0.027408 |
+| P95 RGB MAE | 0.035325 | 0.036008 | 0.036008 |
+| Mean global-luma SSIM | 0.269554 | 0.353047 | 0.363459 |
+| Minimum global-luma SSIM | 0.095306 | 0.132334 | 0.132334 |
+| Mean PSNR | 25.013 dB | 23.663 dB | 23.678 dB |
+| Worst frame indices | 38, 40, 36, 41, 37, 42, 39, 44, 43, 45 | 138, 137, 139, 112, 136, 111, 130, 128, 129, 131 | 138, 137, 139, 112, 136, 111, 130, 128, 129, 131 |
+| Audio | reference reused | missing, reported | missing, reported |
 
-Worst frames 36–45 show the first major product-card reveal: large 3D card
-translation/rotation, specular light sweep, glow, bank/network marks, and two
-lines of type. A later sampled frame shows a phone shell containing the card.
-These are measured target requirements, not yet Chitra capabilities.
+The clean-room candidate contains no decoded reference pixels, extracted visual
+assets, or reference audio. Version 0.6 is a 720×900 Chitra figure driven by
+eight typed frame tracks plus a typed 40-point custom constellation. Against the
+freeze, mean SSIM improves by 35% and minimum SSIM by 39%, while MAE and PSNR
+remain worse because imperfect bright reconstructed content creates more pixel
+error than a nearly black freeze. No single metric is promoted as the quality
+score.
+
+The worst residual moved from frames 36–45 to the rapid phone-card carousel at
+frames 128–139. Side-by-side inspection also shows three semantic compositor
+gaps not captured well by the global metrics: the hero card lacks true internal
+3D/light tracks and the phone collapse lacks motion blur. ADR-0020 closes the
+custom particle destination gap and improves mean SSIM from 0.353047 to
+0.363459. Its residual ring-size mismatch now isolates a general nesting need:
+the parent constellation must scale while child points morph, which a single
+exclusively-owned target cannot express.
 
 Reproduce locally with the exact target bytes:
 
 ```bash
 node benchmarks/card-vault/run.mjs /path/to/nJY81Asb24doUFnW.mp4
+node benchmarks/card-vault/run-candidate.mjs /path/to/nJY81Asb24doUFnW.mp4
 ```
 
-The next benchmark candidate must be a Chitra-authored 274-frame Score. Feature
-work is justified only by its per-frame diff evidence. This document makes no
-reconstruction or competitive-quality claim.
+The candidate score and figure live in `candidate/`; the runner prints its
+temporary evidence directory for local diff inspection. The next compositor
+slice is the now-measured parent-transform + child-morph nesting gap rather than
+the whole aspirational feature list. This document makes no exact-reconstruction
+or competitive-quality claim.

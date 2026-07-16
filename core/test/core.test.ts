@@ -303,6 +303,31 @@ describe("particle fields (ADR-0009)", () => {
     s.scenes[0].choreography.push({ id: "wrong", target: "thesis", preset: "particle-form", at: { after: "scene-start", offsetMs: 0 } } as never);
     expect(runStaticGates(s).some((x) => x.ruleId === "MO-PART-1")).toBe(true);
   });
+  it("ADR-0020 compiles ordered custom points and deterministic custom morph deltas", () => {
+    const points = [{ x: 10, y: 20 }, { x: 80, y: 20 }, { x: 80, y: 70 }, { x: 10, y: 70 }];
+    const s = withField({ formation: "custom", points, count: 4 });
+    s.scenes[0].choreography.push({ id: "to-ring", target: "field", preset: "particle-morph", morphTo: "ring", duration: "emphasis", at: { after: "scene-start", offsetMs: 0 } } as never);
+    const v = validateScore(s);
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+    const a = compile(v.score).html, b = compile(v.score).html;
+    expect(a).toBe(b);
+    expect((a.match(/class="pdot"/g) || []).length).toBe(4);
+    expect(a).toContain("left:10.000%;top:20.000%");
+    expect(a).toContain("__morphDeltas");
+  });
+  it("ADR-0020 rejects missing/out-of-bounds custom points and gates count drift", () => {
+    const missing = structuredClone(flagship);
+    missing.scenes[0].elements.push({ type: "particles", id: "custom", formation: "custom" });
+    expect(validateScore(missing).ok).toBe(false);
+    missing.scenes[0].elements.at(-1).points = [{ x: -1, y: 0 }, { x: 10, y: 10 }, { x: 20, y: 20 }, { x: 30, y: 30 }];
+    expect(validateScore(missing).ok).toBe(false);
+
+    const s = withField();
+    s.scenes[0].choreography.push({ id: "bad-custom", target: "field", preset: "particle-morph", morphTo: "custom", morphPoints: [{ x: 0, y: 0 }, { x: 100, y: 100 }, { x: 50, y: 50 }, { x: 25, y: 25 }], at: { after: "scene-start", offsetMs: 0 } } as never);
+    expect(runStaticGates(s).some((x) => x.ruleId === "MO-PART-1" && /destination points/.test(x.message))).toBe(true);
+    expect(() => compile(s)).toThrow(/4 destination points for 48 source dots/);
+  });
 });
 
 describe("audio-reactive timeline (ADR-0011)", () => {
