@@ -31,6 +31,12 @@ versioned separately.
   targets with deterministic point-index mapping.
 - ADR-0021 one-level transform composition groups with stable child ownership
   and independent parent/child choreography.
+- ADR-0023 typed clean-room/source-assisted reconstruction metadata, rendered-
+  asset Intake lineage and rights gates, normalized project-only paths, safe
+  local resolution, and declared figure dependencies included in scene hashes.
+- Generated source-assisted benchmark proving licensed nested-asset rendering,
+  cache invalidation, exact repeated capture, and rejection of reference-only
+  use and false clean-room labels.
 
 ### Benchmarked
 

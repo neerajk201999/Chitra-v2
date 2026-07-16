@@ -16,6 +16,7 @@ import path from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import type { ScoreT } from "../ir/schema.js";
 import { compile, resolveSceneTimeline, type CompileResult } from "../compile/index.js";
+import { resolveProjectAsset } from "../assets/local.js";
 
 /**
  * Chrome flags mined from HyperFrames' engine (docs/research/stack-validation.md §2).
@@ -75,13 +76,16 @@ function assetDigests(score: ScoreT, sceneIndex: number, projectDir: string): Re
   for (const idx of [sceneIndex - 1, sceneIndex, sceneIndex + 1]) {
     const scene = score.scenes[idx];
     if (!scene) continue;
-    const srcs = scene.elements.filter((e) => e.type === "image" || e.type === "video" || e.type === "figure").map((e) => (e as { src: string }).src);
+    const srcs: string[] = [];
+    for (const element of scene.elements) {
+      if (element.type === "image" || element.type === "video") srcs.push(element.src);
+      if (element.type === "figure") srcs.push(element.src, ...element.assets.map((asset) => asset.src));
+    }
     if (scene.background === "image" && scene.backgroundImage) srcs.push(scene.backgroundImage);
     for (const a of scene.choreography) if (a.sfx) srcs.push(a.sfx.src);
     for (const src of srcs) {
       if (out[src]) continue;
-      const file = path.resolve(projectDir, src);
-      if (!existsSync(file)) throw new Error(`asset not found: ${src} (resolved to ${file})`);
+      const file = resolveProjectAsset(projectDir, src);
       out[src] = fileDigest(file);
     }
   }
@@ -144,8 +148,7 @@ export function prepareMedia(
   for (const scene of score.scenes) {
     for (const el of scene.elements) {
       if (el.type !== "video") continue;
-      const file = path.resolve(projectDir, el.src);
-      if (!existsSync(file)) throw new Error(`video asset not found: ${el.src}`);
+      const file = resolveProjectAsset(projectDir, el.src);
       const boxW = Math.round((el.width * score.meta.width) / 100);
       const maxCount = Math.ceil((scene.durationMs / 1000) * fps) + 1;
       const mediaHash = createHash("sha256")
@@ -177,6 +180,8 @@ export function prepareMedia(
 
 /** Compile the score, write the page next to the project assets, open a driven browser. */
 export async function openSession(score: ScoreT, projectDir: string, workDir: string): Promise<RenderSession> {
+  for (let index = 0; index < score.scenes.length; index++) assetDigests(score, index, projectDir);
+  if (score.audio?.music) resolveProjectAsset(projectDir, score.audio.music.src);
   const compiled = compile(score, projectDir);
   mkdirSync(workDir, { recursive: true });
   // Page lives in the project dir so relative asset paths (images) resolve.
@@ -305,7 +310,7 @@ export async function renderScore(
       await pipeEncode(framePaths, fps, silent, enc.preset, enc.crf);
       await muxAudio(silent, outFile, {
         durationS: compiled.durationMs / 1000,
-        music: music ? { file: path.resolve(projectDir, music.src), gainDb: music.gainDb, fadeOutMs: music.fadeOutMs } : null,
+        music: music ? { file: resolveProjectAsset(projectDir, music.src), gainDb: music.gainDb, fadeOutMs: music.fadeOutMs } : null,
         sfx,
       });
       rmSync(silent, { force: true });
@@ -356,8 +361,7 @@ export function collectSfx(score: ScoreT, projectDir: string, compiled: CompileR
     for (const r of resolveSceneTimeline(scene, { sceneStartMs: sceneStart, beats })) {
       const sfx = (r.anim as { sfx?: { src: string; gainDb: number } }).sfx;
       if (!sfx) continue;
-      const file = path.resolve(projectDir, sfx.src);
-      if (!existsSync(file)) throw new Error(`sfx asset not found: ${sfx.src}`);
+      const file = resolveProjectAsset(projectDir, sfx.src);
       events.push({ file, atMs: Math.round(sceneStart + r.startMs), gainDb: sfx.gainDb });
     }
   });

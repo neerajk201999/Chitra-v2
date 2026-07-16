@@ -772,11 +772,90 @@ export function runStoryboardScoreConformance(storyboard: StoryboardT, score: Sc
   return findings;
 }
 
+type AssetUse = { sourceId: string; kind: "direct" | "derived"; note: string };
+type RenderedAsset = { path: string; assetUse?: AssetUse; irPath: string; sceneId?: string };
+
+function renderedAssets(score: ScoreT): RenderedAsset[] {
+  const assets: RenderedAsset[] = [];
+  score.scenes.forEach((scene, sceneIndex) => {
+    if (scene.background === "image" && scene.backgroundImage)
+      assets.push({ path: scene.backgroundImage, assetUse: scene.backgroundAssetUse, irPath: `score.scenes[${sceneIndex}].backgroundImage`, sceneId: scene.id });
+    scene.elements.forEach((element, elementIndex) => {
+      const base = `score.scenes[${sceneIndex}].elements[${elementIndex}]`;
+      if (element.type === "image" || element.type === "video")
+        assets.push({ path: element.src, assetUse: element.assetUse, irPath: `${base}.src`, sceneId: scene.id });
+      if (element.type === "figure") element.assets.forEach((asset, assetIndex) =>
+        assets.push({ path: asset.src, assetUse: asset.assetUse, irPath: `${base}.assets[${assetIndex}].src`, sceneId: scene.id }));
+    });
+    scene.choreography.forEach((animation, animationIndex) => {
+      if (animation.sfx) assets.push({ path: animation.sfx.src, assetUse: animation.sfx.assetUse, irPath: `score.scenes[${sceneIndex}].choreography[${animationIndex}].sfx.src`, sceneId: scene.id });
+    });
+  });
+  if (score.audio?.music) assets.push({ path: score.audio.music.src, assetUse: score.audio.music.assetUse, irPath: "score.audio.music.src" });
+  return assets;
+}
+
+/** ADR-0023: rendered bytes must preserve Intake rights and reconstruction mode. */
+export function runAssetProvenanceConformance(intake: IntakeT, direction: DirectionT, storyboard: StoryboardT, score: ScoreT): Finding[] {
+  const findings: Finding[] = [];
+  const sources = new Map(intake.sources.map((source) => [source.id, source]));
+  const reconstruction = score.meta.reconstruction;
+  const assets = renderedAssets(score);
+  const referenceIds = new Set(reconstruction?.referenceSourceIds ?? []);
+
+  for (const sourceId of referenceIds) {
+    const source = sources.get(sourceId);
+    if (!source) {
+      findings.push({ ruleId: "CC-ASSET-1", severity: "P1", path: "score.meta.reconstruction.referenceSourceIds", message: `Reconstruction cites unknown Intake source "${sourceId}"` });
+      continue;
+    }
+    if (!direction.trace.sourceIds.includes(sourceId) || !direction.scenes.some((beat) => beat.sourceIds.includes(sourceId)) || !storyboard.shots.some((shot) => shot.sourceIds.includes(sourceId)))
+      findings.push({ ruleId: "CC-ASSET-4", severity: "P1", path: "score.meta.reconstruction.referenceSourceIds", message: `Reconstruction source "${sourceId}" was not planned in both Direction and Storyboard` });
+    if (reconstruction?.mode === "source-assisted" && source.rights !== "owned" && source.rights !== "licensed")
+      findings.push({ ruleId: "CC-ASSET-2", severity: "P1", path: "score.meta.reconstruction.referenceSourceIds", message: `Source-assisted reconstruction cannot render "${sourceId}" with rights "${source.rights}"` });
+  }
+
+  let renderedReference = false;
+  for (const asset of assets) {
+    if (reconstruction && !asset.assetUse) {
+      findings.push({ ruleId: "CC-ASSET-1", severity: "P1", path: asset.irPath, message: `Declared ${reconstruction.mode} reconstruction must trace rendered asset "${asset.path}"` });
+      continue;
+    }
+    if (!asset.assetUse) continue;
+    const source = sources.get(asset.assetUse.sourceId);
+    if (!source) {
+      findings.push({ ruleId: "CC-ASSET-1", severity: "P1", path: asset.irPath, message: `Rendered asset "${asset.path}" cites unknown Intake source "${asset.assetUse.sourceId}"` });
+      continue;
+    }
+    if (source.rights !== "owned" && source.rights !== "licensed")
+      findings.push({ ruleId: "CC-ASSET-2", severity: "P1", path: asset.irPath, message: `Rendered asset "${asset.path}" cannot use source "${source.id}" with rights "${source.rights}"` });
+    const shot = asset.sceneId ? storyboard.shots.find((item) => item.id === asset.sceneId) : undefined;
+    const beat = shot ? direction.scenes.find((item) => item.id === shot.directionBeatId) : undefined;
+    const planned = direction.trace.sourceIds.includes(source.id) && (shot
+      ? !!beat?.sourceIds.includes(source.id) && shot.sourceIds.includes(source.id)
+      : direction.scenes.some((item) => item.sourceIds.includes(source.id)) && storyboard.shots.some((item) => item.sourceIds.includes(source.id)));
+    if (!planned)
+      findings.push({ ruleId: "CC-ASSET-4", severity: "P1", path: asset.irPath, message: `Rendered source "${source.id}" was not planned for ${asset.sceneId ? `shot "${asset.sceneId}"` : "the Storyboard"}` });
+    const localSource = source.origin.type === "path" ? source.origin.path : source.origin.type === "url" ? source.origin.capturedPath : undefined;
+    if (!localSource || !source.origin.sha256 || source.origin.bytes == null)
+      findings.push({ ruleId: "CC-ASSET-1", severity: "P1", path: asset.irPath, message: `Rendered source "${source.id}" must be a locked local path or URL capture` });
+    else if (asset.assetUse.kind === "direct" && asset.path !== localSource)
+      findings.push({ ruleId: "CC-ASSET-1", severity: "P1", path: asset.irPath, message: `Direct asset "${asset.path}" does not match locked source path "${localSource}"` });
+    if (referenceIds.has(source.id)) renderedReference = true;
+    if (reconstruction?.mode === "clean-room" && referenceIds.has(source.id))
+      findings.push({ ruleId: "CC-ASSET-3", severity: "P1", path: asset.irPath, message: `Clean-room reconstruction cannot render bytes from reference source "${source.id}"` });
+  }
+  if (reconstruction?.mode === "source-assisted" && !renderedReference)
+    findings.push({ ruleId: "CC-ASSET-3", severity: "P1", path: "score.meta.reconstruction", message: "Source-assisted reconstruction must trace at least one rendered asset to a named reference source" });
+  return findings;
+}
+
 export function runCreativeConformance(intake: IntakeT, direction: DirectionT, storyboard: StoryboardT, score: ScoreT): Finding[] {
   return [
     ...runIntakeDirectionConformance(intake, direction),
     ...runDirectionStoryboardConformance(direction, storyboard),
     ...runStoryboardScoreConformance(storyboard, score),
+    ...runAssetProvenanceConformance(intake, direction, storyboard, score),
   ];
 }
 
