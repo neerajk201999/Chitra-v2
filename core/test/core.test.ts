@@ -330,6 +330,34 @@ describe("particle fields (ADR-0009)", () => {
   });
 });
 
+describe("transform composition groups (ADR-0021)", () => {
+  it("renders a child once under an independently targetable parent", () => {
+    const s = validFixture();
+    s.scenes[0].elements.push(
+      { type: "shape", id: "grouped-dot", role: "support", shape: "circle", color: "accent", opacity: 1, position: { anchor: "center", x: 50, y: 50 }, width: 8, height: 8, radius: 50 } as never,
+      { type: "group", id: "dot-comp", role: "support", children: ["grouped-dot"] } as never,
+    );
+    s.scenes[0].choreography.push({ id: "comp-in", target: "dot-comp", preset: "scale-settle", at: { after: "scene-start", offsetMs: 0 } } as never);
+    const v = validateScore(s);
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+    const html = compile(v.score).html;
+    expect(html).toContain('id="cold-open--dot-comp"');
+    expect(html.indexOf('id="cold-open--grouped-dot"')).toBe(html.lastIndexOf('id="cold-open--grouped-dot"'));
+    expect(html.indexOf('id="cold-open--dot-comp"')).toBeLessThan(html.indexOf('id="cold-open--grouped-dot"'));
+    expect(runStaticGates(v.score).filter((finding) => finding.ruleId === "IR-GROUP-1")).toEqual([]);
+  });
+  it("blocks missing, multiply-owned, and nested children", () => {
+    const s = validFixture();
+    s.scenes[0].elements.push(
+      { type: "group", id: "group-a", children: ["thesis", "missing"] } as never,
+      { type: "group", id: "group-b", children: ["thesis", "group-a"] } as never,
+    );
+    expect(runStaticGates(s).filter((finding) => finding.ruleId === "IR-GROUP-1").length).toBe(3);
+    expect(() => compile(s)).toThrow(/missing child|belongs to both groups|cannot contain group/);
+  });
+});
+
 describe("audio-reactive timeline (ADR-0011)", () => {
   it("onBeat resolves to scene-relative time and errors without beats", async () => {
     const { resolveSceneTimeline } = await import("../src/compile/index.js");

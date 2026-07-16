@@ -29,7 +29,7 @@ try {
     maxFrames: 274,
   });
   assert.equal(report.alignment.comparedFrames, 274);
-  console.log(JSON.stringify({ candidate: "clean-room-0.6", render, visual: report.visual, audio: report.audio, alignment: report.alignment, artifacts: work }, null, 2));
+  console.log(JSON.stringify({ candidate: "clean-room-0.7", render, visual: report.visual, audio: report.audio, alignment: report.alignment, artifacts: work }, null, 2));
 } catch (error) {
   rmSync(work, { recursive: true, force: true });
   throw error;

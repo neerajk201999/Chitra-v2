@@ -26,6 +26,8 @@ and CHANGELOG.
   opacity, perspective, origin, and token easing.
 - ADR-0020 ordered custom particle constellations and same-count custom morph
   targets, deterministically mapped by point index with bounded coordinates.
+- ADR-0021 one-level full-stage transform groups with single child ownership,
+  stable nested IDs, and compiler failures for invalid hierarchy.
 - ADR-0015 Reference Decomposer: `chitra decompose` emits validated Style DNA
   with source hash/media facts, hard-cut rhythm, quantized palette,
   luminance/saturation, frame-difference energy, audio onsets, and shot evidence.
@@ -40,7 +42,7 @@ and CHANGELOG.
 
 ## Evidence, not claims
 
-- Unit suite: 51 tests.
+- Unit suite: 53 tests.
 - Multimodal Intake benchmark: inline, local, and URL origins; local evidence;
   preferences and anti-reference; repeated locks identical; traversal, symlink
   escape, stale hash, duplicate ID, and unknown provenance links rejected.
@@ -54,7 +56,8 @@ and CHANGELOG.
   clean-room Chitra candidate authors all 274 frames with eight typed tracks,
   custom particles, and no reference pixels/audio: mean SSIM 0.363459 and
   minimum SSIM 0.132334 versus freeze 0.269554/0.095306, while MAE remains worse
-  at 0.027408 versus 0.024120.
+  at 0.027557 versus 0.024120. Candidate 0.7 raises mean SSIM to 0.367144
+  through parent-scale + child-morph grouping, but slightly regresses MAE/PSNR.
   Worst residuals moved to the frames 128–139 card carousel; exact is not met.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
@@ -85,9 +88,9 @@ Ordered next slices:
 
 1. Card Vault clean-room baseline is authored and measured; use its exhaustive
    residuals to improve the candidate without treating one metric as quality.
-2. Custom particle trajectories are measured. The next isolated gap is a typed
-   parent composition that can scale while child dots morph; motion blur,
-   internal 3D, and audio follow only when updated evidence isolates their value.
+2. Custom particles and parent transform groups are measured. Return to the
+   unchanged carousel worst frames; motion blur, internal 3D, and audio follow
+   only when updated evidence isolates their value.
 
 ## Claim boundaries
 
