@@ -260,6 +260,49 @@ const Stagger = z.object({
   from: z.enum(["start", "center", "end"]).default("start"),
 });
 
+/** ADR-0013: an exact, frame-addressed transform state. Values are deliberately
+ *  typed and bounded; this is not an arbitrary GSAP/JavaScript escape hatch. */
+const TransformKeyframe = z
+  .object({
+    frame: z.number().int().min(0).max(1200), // max scene: 20s × 60fps
+    x: z.number().min(-200).max(200).optional(), // stage-unit offset
+    y: z.number().min(-200).max(200).optional(),
+    scale: z.number().min(0.01).max(20).optional(),
+    scaleX: z.number().min(0.01).max(20).optional(),
+    scaleY: z.number().min(0.01).max(20).optional(),
+    rotationXDeg: z.number().min(-1440).max(1440).optional(),
+    rotationYDeg: z.number().min(-1440).max(1440).optional(),
+    rotationZDeg: z.number().min(-1440).max(1440).optional(),
+    opacity: z.number().min(0).max(1).optional(),
+    perspectivePx: z.number().min(100).max(5000).optional(),
+    origin: Anchor.optional(),
+    easing: easingToken.optional(), // easing of the segment arriving here
+  })
+  .refine(
+    (k) =>
+      k.x != null || k.y != null || k.scale != null || k.scaleX != null ||
+      k.scaleY != null || k.rotationXDeg != null || k.rotationYDeg != null ||
+      k.rotationZDeg != null || k.opacity != null || k.perspectivePx != null ||
+      k.origin != null,
+    { message: "a keyframe must set at least one transform/compositing property" }
+  )
+  .refine((k) => k.scale == null || (k.scaleX == null && k.scaleY == null), {
+    message: "a keyframe cannot combine uniform scale with axis scale",
+  });
+
+const KeyframeTrack = z
+  .array(TransformKeyframe)
+  .min(2)
+  .max(1201)
+  .superRefine((frames, ctx) => {
+    if (frames[0]?.frame !== 0)
+      ctx.addIssue({ code: "custom", path: [0, "frame"], message: "a keyframe track must begin at frame 0" });
+    for (let i = 1; i < frames.length; i++) {
+      if (frames[i].frame <= frames[i - 1].frame)
+        ctx.addIssue({ code: "custom", path: [i, "frame"], message: "keyframe indices must be strictly increasing" });
+    }
+  });
+
 export const Animation = z.object({
   id,
   /** Element id; group prefix with trailing '*'; or `figureId/innerId` to
@@ -284,6 +327,9 @@ export const Animation = z.object({
     .optional(),
   /** ADR-0009: particle-morph only (gated MO-PART-1) — target formation for a dot field. */
   morphTo: z.enum(["grid", "ring", "scatter"]).optional(),
+  /** ADR-0013: only valid with `keyframe-track`; MO-KEY-1 enforces the pairing,
+   *  explicit reason, and scene bounds. */
+  keyframes: KeyframeTrack.optional(),
   /** Escape hatch (MO-EASE-1): raw values allowed ONLY with a reason. Flagged by gates. */
   override: z
     .object({ reason, durationMs: z.number().min(50).max(5000).optional(), gsapEase: z.string().optional() })

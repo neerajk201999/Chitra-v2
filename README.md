@@ -19,7 +19,7 @@ prompt → direction → design → motion → render → critique → revision 
 
 ## Status
 
-**v0.2.0 — the closed loop works and is measured.** Motion IR → deterministic render (byte-identical re-renders on the same machine, sha256-verified) → quality gates (**10/10 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md)) → evidence sheets → critique loop → music bed normalized to −14 LUFS with beat-grid cut gating. The [flagship example](examples/launch-film/score.json) was directed, gated, critiqued, and revised entirely by an AI agent using this pipeline, and the whole repo survived an [adversarial adoption review](docs/reviews/0001-adversarial-review.md) whose findings are fixed or tracked. See the [roadmap](docs/roadmap/roadmap.md) and [known issues](docs/roadmap/known-issues.md) — claims we haven't measured yet are marked as such there.
+**v0.2.0 — the closed loop works and is measured.** Motion IR → deterministic render (byte-identical re-renders on the same machine, sha256-verified) → quality gates (**10/10 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md)) → evidence sheets → critique loop → music bed normalized to −14 LUFS with detected-beat choreography. Exact shots can use reason-gated, typed [frame-addressed transform tracks](benchmarks/keyframe-track/results.md); curated presets remain the default. The [flagship example](examples/launch-film/score.json) was directed, gated, critiqued, and revised entirely by an AI agent using this pipeline. See the [roadmap](docs/roadmap/roadmap.md) and [known issues](docs/roadmap/known-issues.md) — claims we haven't measured yet are marked as such there.
 
 ## Use it from your coding agent
 
@@ -46,3 +46,5 @@ chitra clean                     # remove work artifacts
 ## Repository memory
 
 This repo is built AI-first: all context an agent needs lives in version-controlled markdown. Builders start at [CLAUDE.md](CLAUDE.md); users' agents start at [AGENTS.md](AGENTS.md).
+
+Contributors use one acceptance contract locally and in CI: `node scripts/verify.mjs` (`--quick` while iterating). See [CONTRIBUTING.md](CONTRIBUTING.md).

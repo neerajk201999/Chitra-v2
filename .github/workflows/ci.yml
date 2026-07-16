@@ -4,13 +4,17 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  core:
+  verify:
     runs-on: ubuntu-latest
-    env:
-      # Unit tests, gates, and validation are browser-free; skip the ~170MB
-      # Chrome download. Browser-dependent golden-frame CI is a tracked M5 item.
-      PUPPETEER_SKIP_DOWNLOAD: "1"
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,18 +25,5 @@ jobs:
       - name: Install
         working-directory: core
         run: npm ci
-      - name: Build
-        working-directory: core
-        run: npx tsc
-      - name: Unit tests (schema, gates, compiler, cache semantics)
-        working-directory: core
-        run: npx vitest run
-      - name: Compiled skill artifacts are fresh
-        run: node scripts/build-skills.mjs --check
-      - name: Examples pass static gates
-        run: |
-          node core/dist/cli/index.js validate examples/launch-film/score.json
-          node core/dist/cli/index.js validate examples/social-short/score.json
-      - name: Package is publishable
-        working-directory: core
-        run: npm pack --dry-run
+      - name: Full repository verification
+        run: node scripts/verify.mjs

@@ -348,6 +348,75 @@ describe("real 3D scene (ADR-0010)", () => {
   });
 });
 
+describe("frame-addressed transform tracks (ADR-0013)", () => {
+  const withTrack = () => {
+    const s = validFixture();
+    s.scenes[0].elements.push({ type: "shape", id: "tracked-card", role: "support", shape: "rect", color: "surface", opacity: 1, position: { anchor: "center", x: 50, y: 50 }, width: 20, height: 12, radius: 2 } as never);
+    s.scenes[0].choreography.push({
+      id: "exact-card-turn",
+      target: "tracked-card",
+      preset: "keyframe-track",
+      at: { after: "scene-start", offsetMs: 0 },
+      override: { reason: "reference-matched card turn needs frame-exact perspective" },
+      keyframes: [
+        { frame: 0, x: 0, y: 0, scale: 1, rotationYDeg: -18, opacity: 0, perspectivePx: 900, origin: "center" },
+        { frame: 15, x: 5, rotationYDeg: 4, opacity: 1, easing: "enter-settle" },
+        { frame: 30, x: 10, y: -5, scale: 1.08, rotationXDeg: 6, rotationYDeg: 0, rotationZDeg: 2 },
+      ],
+    } as never);
+    return s;
+  };
+
+  it("validates typed states and derives duration from output frames", () => {
+    const raw = withTrack();
+    const v = validateScore(raw);
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+    const track = resolveSceneTimeline(v.score.scenes[0], { sceneStartMs: 0, fps: v.score.meta.fps }).at(-1)!;
+    expect(track.durationMs).toBe(1000); // frame 30 at 30fps
+    expect(runStaticGates(v.score).filter((x) => x.ruleId === "MO-KEY-1")).toEqual([]);
+  });
+
+  it("rejects malformed ordering and gates unreasoned or misplaced tracks", () => {
+    const malformed = withTrack() as unknown as { scenes: Array<{ choreography: Array<{ keyframes: Array<{ frame: number }> }> }> };
+    malformed.scenes[0].choreography.at(-1)!.keyframes[0].frame = 2;
+    expect(validateScore(malformed).ok).toBe(false);
+
+    const conflictingScale = withTrack();
+    conflictingScale.scenes[0].choreography.at(-1)!.keyframes![0].scaleX = 1.1;
+    expect(validateScore(conflictingScale).ok).toBe(false);
+
+    const missingReason = withTrack();
+    missingReason.scenes[0].choreography.at(-1)!.override = undefined;
+    expect(runStaticGates(missingReason).some((x) => x.ruleId === "MO-KEY-1" && x.severity === "P1")).toBe(true);
+
+    const misplaced = withTrack();
+    misplaced.scenes[0].choreography.at(-1)!.preset = "fade-in";
+    expect(runStaticGates(misplaced).some((x) => x.ruleId === "MO-KEY-1" && /require keyframe-track/.test(x.message))).toBe(true);
+
+    const overlong = withTrack();
+    overlong.scenes[0].choreography.at(-1)!.keyframes!.at(-1)!.frame = 1200;
+    expect(runStaticGates(overlong).some((x) => x.ruleId === "MO-KEY-1" && /beyond scene/.test(x.message))).toBe(true);
+
+    const stacked = withTrack();
+    stacked.scenes[0].choreography.push({ id: "also-card", target: "tracked*", preset: "pulse", at: { after: "scene-start", offsetMs: 500 } } as never);
+    expect(runStaticGates(stacked).some((x) => x.ruleId === "MO-KEY-1" && /exclusively own/.test(x.message))).toBe(true);
+  });
+
+  it("serializes stage units and typed 3D transforms into the seek runtime deterministically", () => {
+    const s = withTrack();
+    const a = compile(s).html;
+    const b = compile(s).html;
+    expect(a).toBe(b);
+    expect(a).toContain("__keyframeTrack");
+    expect(a).toContain('"x":192'); // 10 stage units at 1920px
+    expect(a).toContain('"y":-54'); // -5 stage units at 1080px
+    expect(a).toContain('"rotationY":-18');
+    expect(a).toContain('"transformPerspective":900');
+    expect(a).toContain('"transformOrigin":"50% 50%"');
+  });
+});
+
 describe("creative conformance (ADR-0012)", () => {
   const dir = {
     irVersion: "0.1.0", tier: "direction", title: "T", register: "brand-film",

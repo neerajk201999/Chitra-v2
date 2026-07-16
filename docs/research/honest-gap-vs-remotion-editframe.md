@@ -17,38 +17,35 @@ limitation, and it matches what they do. This is not where we lose.
 
 ### 1. Real 3D (WebGL / Three.js). CLOSED 2026-07-15 (ADR-0010).
 The reference card is a 3D render — true perspective, specular highlights that
-travel as it rotates, depth of field, soft shadows. We fake it with CSS
-`perspective` + layered gradients, which reads flat next to the real thing.
+travel as it rotates, depth of field, soft shadows. The original Chitra attempt
+faked it with CSS `perspective`; ADR-0010 closed that substrate gap.
 - **Remotion**: `@remotion/three` embeds a real Three.js canvas, frame-driven.
-- **Us**: figures strip all scripts (determinism + safety), so no WebGL today.
+- **Us**: figures still strip scripts; a separate curated `scene3d` element owns
+  vetted Three.js code and is driven only by Chitra's seek clock.
 - **Status**: BUILT. `scene3d` element (card/coin/slab primitives), Three.js
   inlined and driven by our seek clock, SwiftShader software-GL for
   cross-hardware determinism. Same-machine byte-identical render verified.
   Cross-machine golden-frame CI remains M5. Remaining 3D work is curated-
   primitive breadth (more shapes, GLTF import), not architecture.
 
-### 2. Audio-reactive / scored motion. THE timing gap.
-We render silent, then lay a track over the top with a fade. Motion never knows
-the audio. The reference's every hit lands on a beat.
+### 2. Audio-reactive / scored motion. PARTLY CLOSED (ADR-0011).
+The reference's every hit lands on a beat.
 - **Remotion**: `useAudioData` + `visualizeAudio` — read the waveform, drive any
   visual property off audio energy; motion is literally a function of the music.
-- **Us today**: a *declared*-BPM gate that only warns if a cut is off-grid. We
-  do not detect tempo from the actual file, and nothing snaps motion to beats.
-- **Honest verdict**: "how do we align audio to motion?" — we don't. Buildable
-  without new runtime risk: analyze the track → beat/energy envelope → bind
-  animation starts to beats. → ADR-0011 (building this now).
+- **Us today**: `chitra analyze-audio` detects a deterministic beat grid and
+  `at.onBeat` snaps choreography to it. MO-AUD-4 rejects missing grids.
+- **Remaining gap**: no energy-envelope property tracks, narration timeline,
+  clip-audio pass-through, or full multitrack automation.
 
 ## Self-imposed gaps (we CHOSE these to prevent slop; can add a gated pro tier)
 
-### 3. Arbitrary keyframes / custom easing curves.
+### 3. Arbitrary keyframes / custom easing curves. PARTLY CLOSED (ADR-0013).
 Remotion: `interpolate(frame,[0,15,30],[0,1,.4],{easing:bezier(...)})` — any
-property, any curve, per frame. We expose curated presets only. This was a
-deliberate anti-slop decision (ADR-0004/motion-language) and it is *why our
-output has a floor*. But it also caps a skilled director. The GSAP engine under
-us can already do everything Remotion's `interpolate`/spring can — we've fenced
-it. The honest fix is a gated "author" tier: raw keyframes allowed *with a
-reason*, flagged by gates, never the default. (The `override` field is a seed of
-this; it needs to grow to full keyframe arrays.)
+property, any curve, per frame. Chitra now exposes reason-gated, typed
+frame-addressed X/Y, scale, 3-axis rotation, opacity, perspective, origin, and
+token easing. The browser benchmark lands 3/3 authored states and reproduces a
+same-frame PNG byte-identically. It is intentionally not arbitrary JavaScript
+or raw curves. Internal Three camera/mesh properties remain outside this track.
 
 ### 4. Layered/continuous audio (multi-track, ducking, volume automation).
 We have one bed + SFX at delays. Remotion/EditFrame have full audio timelines.
@@ -62,9 +59,10 @@ Medium effort, no architectural risk. Roadmap, not urgent.
   particles: parity for 2D motion-graphics work.
 
 ## The honest bottom line
-For flat/2D motion-graphics launch films (most of the market) we are at parity
-and win on determinism + quality control. For anything built on **real 3D** or
-**music-scored motion**, they can and we currently cannot. Those are two named,
-buildable capabilities (ADR-0010, ADR-0011), not a vague "polish" deficit. Until
-they ship, the honest claim is: Chitra matches Remotion/EditFrame for 2D scored
-*after* ADR-0011, and for 3D only *after* ADR-0010. We do not yet.
+For flat/2D motion-graphics launch films, Chitra now has a credible parity
+surface and wins on deterministic gates. It also has curated real 3D and
+beat-addressed motion. It does **not** yet match Remotion's unrestricted
+composition surface: masks/mattes, nested compositions, blend modes, motion
+blur, internal 3D camera/mesh tracks, full audio, and a mature player/studio are
+open. No "beats Remotion" claim is valid until ChitraBench publishes neutral,
+head-to-head results.

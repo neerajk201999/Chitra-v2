@@ -26,8 +26,13 @@ Prompts are product code. Standards:
 
 Every substantive change: implement → self-review against standards → adversarial review pass (separate session/model when available — the reviewer's brief is to refute, not approve) → benchmark → update memory docs in the same commit. No exceptions for "small" changes to `docs/motion/` — taste changes are the highest-risk changes in this repo.
 
+- Inner loop: `node scripts/verify.mjs --quick`.
+- Pre-merge and release: `node scripts/verify.mjs`; CI runs the same command.
+- Benchmark `--check` mode must not rewrite evidence. A baseline refresh is an intentional reviewed diff.
+- Commits are coherent and revertable; use conventional intent prefixes. Package releases are SemVer-tagged, while Motion IR compatibility is versioned separately.
+
 ## Documentation
 
 - Every non-obvious choice gets an ADR before implementation.
 - Research snapshots are immutable; conclusions evolve in ADRs/architecture docs.
-- Broken internal links and orphan docs are CI failures (eventually; manually until then).
+- Broken internal links, version drift, stale skill manifests, and changelog drift are CI failures enforced by `scripts/check-repo.mjs`.

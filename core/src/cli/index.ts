@@ -7,6 +7,7 @@ import { readFileSync, existsSync, writeFileSync, rmSync, mkdirSync } from "node
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { Command } from "commander";
 import { validateScore, validateDirection, type ScoreT, type DirectionT } from "../ir/schema.js";
 import { runStaticGates, runFrameGates, runConformance, summarize, type Finding } from "../gates/index.js";
@@ -16,7 +17,8 @@ import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
 
 const program = new Command();
-program.name("chitra").description("Chitra deterministic core: validate, gate, render, and generate critic evidence for Motion IR scores").version("0.1.0");
+const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
+program.name("chitra").description("Chitra deterministic core: validate, gate, render, and generate critic evidence for Motion IR scores").version(packageVersion);
 
 function loadScore(file: string): { score: ScoreT; projectDir: string } {
   const abs = path.resolve(file);

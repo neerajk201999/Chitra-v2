@@ -18,7 +18,7 @@ Landed: evidence generator · critique-video skill · **seeded-defect eval measu
 Landed 2026-07-15 (later): critic-calibration harness — 4 labeled cases (control, monotony, slop-aesthetic, broken-hierarchy) whose defects pass deterministic gates by construction; run-001 scored 4/4 verdicts, 4/4 mustFinds, 0 false positives (author-biased — see run notes). Novelty/lineage/gap analysis in [docs/reviews/0002](../reviews/0002-novelty-and-gap.md). Run-001's gate candidate shipped as MO-EDIT-5 (no dead air).
 Remaining:
 - Independent critic runs (fresh sessions) + independent human labels; grow to ~20 cases across registers before publishing agreement stats.
-- Narration/voiceover (word timestamps), SFX hooks, beat detection (undeclared tempo).
+- Narration/voiceover (word timestamps), energy-envelope tracks, and clip-audio pass-through. SFX hooks + deterministic beat detection + `at.onBeat` are built (ADR-0007/0011).
 - Interval-based gate sampling (close the between-instants gap).
 - **Exit gate:** deterministic layer ≥80% on seeded defects (✅ 100%) AND critic layer measured against the calibration set with published agreement stats.
 
@@ -36,7 +36,8 @@ Remaining:
 
 ## M3.5 — Expressiveness & audio v2 (owner-directed priority, 2026-07-15) — LANDED same day
 Owner call: close the Remotion expressiveness gap and the HyperFrames workflow gap now, ahead of M4. Landed: **video-in-scene** (ADR-0007: ffmpeg frame pre-extraction, deterministic, content-hashed, MO-MED-gated) · **SFX on choreography** (sounds fire at resolved animation starts; MO-AUD-3 sparsity gate) · **deterministic starter audio** (`chitra sfx-kit`, `chitra bed` — zero-license ffmpeg synthesis) · workflow skills (product-launch, screen-demo, social-short) · renderer-frontier survey (docs/research/render-stack-frontier.md). Proven by the akta.pro launch film: transcribed voiceover → real UI stills + moving clip + bed + SFX, all gates green.
-Remaining honest gaps vs Remotion: keyframes/masks/nested comps (curated-preset policy, not a bug), clip audio pass-through, narration/TTS timeline.
+Landed 2026-07-16 by concrete-reference exception (ADR-0012): **ADR-0013 frame-addressed transform tracks** — typed X/Y, scale, 3-axis rotation, opacity, perspective, origin, and token easing; final-frame/FPS timing; reason-gated by MO-KEY-1; browser benchmark seeks exact authored frames 3/3 and repeats a PNG byte-identically ([results](../../benchmarks/keyframe-track/results.md)).
+Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes, nested compositions, blend modes, motion blur, internal 3D camera/mesh tracks, clip audio pass-through, narration/TTS timeline, and automated reference-frame comparison.
 
 ## M4 — ChitraBench (define "best")
 *Goal: the public benchmark for motion-design quality.*
@@ -50,7 +51,8 @@ Brand ingestion ("BRAND.md for motion": logo, palette, type, motion personality 
 
 ## M4 — Creative Intelligence (the missing brain) — STARTED 2026-07-16
 *Goal: Chitra makes the creative decisions a top director + motion designer would — before rendering. The pipeline begins at intent, not at Motion IR (ADR-0012).*
-Landed: ADR-0012 (creative pipeline architecture) · **docs/creative/creative-constitution.md** (the encoded WHY across narrative/rhythm/camera/type/colour/composition/brand — CC-* rules) · Direction tier wired into the CLI (`chitra plan`) · **Brief↔Score conformance gate** (`chitra conform`; CC-CONF-1..5: register match, no dropped beat, no scene without a WHY, hero moments executed, pacing peak gets air) · 37 tests.
+Landed: ADR-0012 (creative pipeline architecture) · **docs/creative/creative-constitution.md** (the encoded WHY across narrative/rhythm/camera/type/colour/composition/brand — CC-* rules) · Direction tier wired into the CLI (`chitra plan`) · **Brief↔Score conformance gate** (`chitra conform`; CC-CONF-1..5: register match, no dropped beat, no scene without a WHY, hero moments executed, pacing peak gets air) · ADR-0013 typed frame-addressed transform tracks · 40 tests.
+Engineering foundation: independent `Chitra-v2` lineage + ADR-0014 repository operating system, compact current-state memory, shared local/CI verification contract, executable link/version/manifest checks, and explicit SemVer/CHANGELOG discipline.
 Remaining (priority order):
 - **Reference Decomposer**: reference video → measurable Style DNA (camera, rhythm, typography, palette, motion, narrative, emotion). Unlocks "make it like this reference."
 - **Creative Director engine**: product brief → cinematic concept (emotion, arc, register) as a typed Brief IR the agent fills and gates check.

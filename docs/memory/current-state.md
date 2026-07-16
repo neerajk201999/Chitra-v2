@@ -1,0 +1,72 @@
+# Current State — read this after VISION
+
+**Verified:** 2026-07-16 · **Package:** 0.2.0 · **Motion IR:** 0.1.0
+
+This is the compact handoff for a fresh builder. It records current truth, not
+history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
+and CHANGELOG.
+
+## What is shipped
+
+- Deterministic Score → HTML/GSAP → seek-driven browser frames → FFmpeg video.
+- Direction and Score IRs, conformance gates, static/frame quality gates,
+  evidence generation, content-addressed scene cache, and agent-facing skills.
+- Images, frame-extracted video, sanitized UI figures, cursor/type interaction,
+  particles, curated Three.js primitives, music/SFX, beat detection, and
+  `at.onBeat` choreography.
+- ADR-0013 frame-addressed transform tracks: typed X/Y, scale, 3-axis rotation,
+  opacity, perspective, origin, and token easing.
+- Package 0.2.0 has valid `main`/`types`/`exports`; global-style tarball install
+  and `chitra probe` have been exercised locally.
+
+## Evidence, not claims
+
+- Unit suite: 40 tests.
+- Seeded deterministic defects: 10/10 caught.
+- Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
+  repeated same-frame PNG is byte-identical.
+- Skill manifest and package dry-run are verified by the repository contract.
+
+Run `node scripts/verify.mjs` before merge. Use `--quick` only while iterating.
+
+## Active product objective
+
+Make “create this grammar from a reference” measurable and repeatable, then
+prove competitive quality through neutral ChitraBench runs. Creative
+Intelligence (ADR-0012) remains the center of gravity; renderer work requires a
+specific target-film gap.
+
+Ordered next slices:
+
+1. Reference Decomposer → typed Style DNA (shots, rhythm, typography, palette,
+   motion, narrative, audio landmarks) with fixture-based evaluation.
+2. Automated reference comparator → aligned frame/audio metrics plus visual
+   diff artifacts; no “exact” claim without it.
+3. Card Vault reconstruction benchmark → 274 authored frames and published
+   metric results, exposing only capabilities the target proves missing.
+4. Then, evidence-led compositor additions: masks/mattes, nested compositions,
+   blend modes, motion blur, internal 3D tracks, and richer audio.
+
+## Claim boundaries
+
+- Chitra does not yet “beat Remotion/HyperFrames/EditFrame/Replit Video.” No
+  neutral head-to-head benchmark has established that.
+- Same-machine repeated-frame determinism is measured. Cross-machine golden
+  equivalence, interrupted-render equivalence, and broad critic calibration are
+  still open.
+- Exact reconstruction of either supplied reference is not yet achieved.
+
+## Invariants for every change
+
+- ADR before architecture; schema before compiler; gate and benchmark with every
+  new law/capability; compiler cache version changes with compiler output.
+- No LLM calls in `core/`; no network access in render; no silent degradation.
+- One coherent change per commit, with tests/evidence and memory updated in the
+  same commit. Preserve user changes and keep rollback possible with `git revert`.
+
+## Resume protocol
+
+Read `VISION.md` → this file → roadmap → relevant ADR/code. Confirm the active
+objective, run quick verification, write a bounded plan, and change the shared
+root rather than patching callers. At handoff, update this file only when current
+truth changed; do not turn it into a session diary.

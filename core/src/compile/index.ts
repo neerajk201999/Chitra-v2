@@ -78,16 +78,16 @@ export interface ResolvedAnim {
   ease: string;
 }
 
-/** ADR-0011: onBeat resolution needs the scene's absolute start and the beat
- *  grid. Callers that have them (compiler, gates) pass ctx; others get 0. */
-export function resolveSceneTimeline(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[] }): ResolvedAnim[] {
+/** ADR-0011/0013: onBeat needs absolute scene start + beat grid; frame tracks
+ *  need FPS. Callers that have them (compiler, gates) pass ctx. */
+export function resolveSceneTimeline(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[]; fps?: number }): ResolvedAnim[] {
   const byId = new Map<string, ResolvedAnim>();
   const out: ResolvedAnim[] = [];
   for (const anim of scene.choreography) {
     const preset = PRESETS[anim.preset as PresetName];
-    const durationMs =
-      anim.override?.durationMs ??
-      DURATIONS[(anim.duration ?? preset.defaultDuration) as DurationToken];
+    const durationMs = anim.preset === "keyframe-track" && anim.keyframes?.length
+      ? (anim.keyframes[anim.keyframes.length - 1].frame / (ctx?.fps ?? 30)) * 1000
+      : anim.override?.durationMs ?? DURATIONS[(anim.duration ?? preset.defaultDuration) as DurationToken];
     const ease =
       anim.override?.gsapEase ??
       EASINGS[(anim.easing ?? preset.defaultEasing) as EasingToken];
@@ -390,6 +390,18 @@ interface TweenSpec {
   kind: string;
 }
 
+const TRANSFORM_ORIGINS: Record<string, string> = {
+  center: "50% 50%",
+  "top-left": "0% 0%",
+  top: "50% 0%",
+  "top-right": "100% 0%",
+  left: "0% 50%",
+  right: "100% 50%",
+  "bottom-left": "0% 100%",
+  bottom: "50% 100%",
+  "bottom-right": "100% 100%",
+};
+
 function presetTweens(
   r: ResolvedAnim,
   scene: SceneT,
@@ -504,6 +516,32 @@ function presetTweens(
       }
       return [{ ...base, targets: `${sel} .pdot`, vars: { __morphDeltas: deltas } }];
     }
+    case "keyframe-track": {
+      if (!anim.keyframes?.length)
+        throw new Error(`Scene "${scene.id}": keyframe-track "${anim.id}" has no keyframes`);
+      const track = anim.keyframes.map((k, i) => {
+        const vars: Record<string, unknown> = {};
+        if (k.x != null) vars.x = (k.x * score.meta.width) / 100;
+        if (k.y != null) vars.y = (k.y * score.meta.height) / 100;
+        if (k.scale != null) vars.scale = k.scale;
+        if (k.scaleX != null) vars.scaleX = k.scaleX;
+        if (k.scaleY != null) vars.scaleY = k.scaleY;
+        if (k.rotationXDeg != null) vars.rotationX = k.rotationXDeg;
+        if (k.rotationYDeg != null) vars.rotationY = k.rotationYDeg;
+        if (k.rotationZDeg != null) vars.rotation = k.rotationZDeg;
+        if (k.opacity != null) vars.opacity = k.opacity;
+        if (k.perspectivePx != null) vars.transformPerspective = k.perspectivePx;
+        if (k.origin != null) vars.transformOrigin = TRANSFORM_ORIGINS[k.origin];
+        const prevFrame = i === 0 ? 0 : anim.keyframes![i - 1].frame;
+        return {
+          startMs: at + (prevFrame / score.meta.fps) * 1000,
+          durationMs: ((k.frame - prevFrame) / score.meta.fps) * 1000,
+          ease: EASINGS[(k.easing ?? anim.easing ?? "move-through") as EasingToken],
+          vars,
+        };
+      });
+      return [{ ...base, vars: { __keyframeTrack: track } }];
+    }
     case "hide":
       // Instant, invisible state declaration — used to carry figure-internal
       // end-states across match cuts (IR-FIG-1). Not a visible exit.
@@ -577,7 +615,7 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
       }
     }
 
-    const resolved = resolveSceneTimeline(scene, { sceneStartMs: cursor, beats: score.audio?.music?.beats });
+    const resolved = resolveSceneTimeline(scene, { sceneStartMs: cursor, beats: score.audio?.music?.beats, fps });
     // Elements with an enter animation start hidden; compiler sets initial state.
     for (const r of resolved) tweens.push(...presetTweens(r, scene, cursor, score));
 
@@ -745,6 +783,21 @@ SPECS.forEach(function (s) {
       var d = deltas[i] || { x: 0, y: 0 };
       tl.to(dot, { x: d.x, y: d.y, duration: s.durationMs / 1000, ease: s.ease, lazy: false }, s.atMs / 1000);
     });
+    return;
+  }
+  if (s.vars.__keyframeTrack) {
+    var track = s.vars.__keyframeTrack;
+    if (track.length < 2) return;
+    var firstFrom = { immediateRender: true, lazy: false };
+    for (var fk in track[0].vars) firstFrom[fk] = track[0].vars[fk];
+    var firstTo = { duration: track[1].durationMs / 1000, ease: track[1].ease, lazy: false };
+    for (var ftk in track[1].vars) firstTo[ftk] = track[1].vars[ftk];
+    tl.fromTo(targets, firstFrom, firstTo, track[1].startMs / 1000);
+    for (var ti = 2; ti < track.length; ti++) {
+      var tv = { duration: track[ti].durationMs / 1000, ease: track[ti].ease, lazy: false };
+      for (var tk in track[ti].vars) tv[tk] = track[ti].vars[tk];
+      tl.to(targets, tv, track[ti].startMs / 1000);
+    }
     return;
   }
   for (var k in s.vars) vars[k] = s.vars[k];

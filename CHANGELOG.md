@@ -1,0 +1,31 @@
+# Changelog
+
+All notable user-visible changes are recorded here. The format follows Keep a
+Changelog; versions follow Semantic Versioning. Motion IR compatibility is
+versioned separately.
+
+## [Unreleased]
+
+### Planned
+
+- Reference Decomposer and automated reference comparison.
+
+## [0.2.0] — 2026-07-16
+
+### Added
+
+- Creative Intelligence architecture, constitution, Direction planning, and
+  Direction↔Score conformance gates.
+- Deterministic particles, curated seek-driven Three.js scenes, beat detection,
+  `at.onBeat`, and typed frame-addressed transform tracks.
+- Browser benchmark for exact authored keyframe states.
+
+### Changed
+
+- Package entry points and version identity are publishable as 0.2.0.
+- Agent creation skill documents exact-track usage and honest capability limits.
+
+### Fixed
+
+- Compiler cache invalidates after transform-track runtime changes.
+- Shipped 3D/audio ADR status and capability-gap documentation are current.

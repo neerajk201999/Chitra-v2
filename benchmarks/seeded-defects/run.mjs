@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../..");
+const check = process.argv.includes("--check");
 const core = (m) => import(path.join(root, "core/dist", m));
 const { validateScore } = await core("ir/schema.js");
 const { runStaticGates, runFrameGates } = await core("gates/index.js");
@@ -175,7 +176,9 @@ NOT counted here — that layer's catch rate requires the M4 human-judged protoc
 
 Reproduce: \`node benchmarks/seeded-defects/run.mjs\` from the repo root (core built, ffmpeg on PATH).
 `;
-mkdirSync(here, { recursive: true });
-writeFileSync(path.join(here, "results.md"), md);
-console.log(`\ncatch rate: ${caught}/${DEFECTS.length} (${rate}%) → results.md`);
+if (!check) {
+  mkdirSync(here, { recursive: true });
+  writeFileSync(path.join(here, "results.md"), md);
+}
+console.log(`\ncatch rate: ${caught}/${DEFECTS.length} (${rate}%)${check ? "" : " → results.md"}`);
 process.exit(caught / DEFECTS.length >= 0.8 ? 0 : 1);
