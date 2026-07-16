@@ -32,7 +32,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "chitra": "./dist/cli/index.js"
+    "chitra": "dist/cli/index.js"
   },
   "dependencies": {
     "@fontsource/instrument-serif": "^5.2.8",

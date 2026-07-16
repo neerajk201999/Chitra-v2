@@ -58,6 +58,10 @@ for (const entry of [pkg.main, pkg.types, pkg.exports?.["."]?.import, pkg.export
   if (!entry || !existsSync(path.resolve(root, "core", entry)))
     failures.push(`package entry point is missing after build: ${entry ?? "<unset>"}`);
 }
+if (pkg.bin?.chitra !== "dist/cli/index.js")
+  failures.push('package bin must be the npm-normalized path "dist/cli/index.js"');
+else if (!existsSync(path.resolve(root, "core", pkg.bin.chitra)))
+  failures.push(`package bin is missing after build: ${pkg.bin.chitra}`);
 
 const tokens = readFileSync(path.join(root, "core/src/motion/tokens.ts"), "utf8");
 const irVersion = tokens.match(/IR_VERSION\s*=\s*"([^"]+)"/)?.[1];
