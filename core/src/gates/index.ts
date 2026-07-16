@@ -123,7 +123,7 @@ export function runStaticGates(score: ScoreT): Finding[] {
         f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" is an exact track without override.reason explaining why presets are insufficient` });
       if (a.duration || a.override?.durationMs || a.override?.gsapEase || a.stagger || a.distance || a.direction || a.waypoints || a.morphTo)
         f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" mixes keyframes with incompatible preset controls; final frame sets duration and keyframes use token easings` });
-      if (scene.choreography.some((other) => other !== a && (
+      if (scene.choreography.some((other) => other !== a && other.preset !== "three-keyframe-track" && (
         other.target === a.target ||
         (other.target.endsWith("*") && a.target.startsWith(other.target.slice(0, -1))) ||
         (a.target.endsWith("*") && other.target.startsWith(a.target.slice(0, -1)))
@@ -132,6 +132,30 @@ export function runStaticGates(score: ScoreT): Finding[] {
       const endMs = resolved.find((r) => r.anim.id === a.id);
       if (endMs && endMs.startMs + endMs.durationMs > scene.durationMs + 0.001)
         f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" ends at ${Math.round(endMs.startMs + endMs.durationMs)}ms, beyond scene duration ${scene.durationMs}ms` });
+    });
+
+    // MO-3D-2 (ADR-0028): internal Three state is a typed, single-owner track.
+    scene.choreography.forEach((a, ai) => {
+      const path = p(`.choreography[${ai}]`);
+      if (a.preset !== "three-keyframe-track") {
+        if (a.threeKeyframes)
+          f.push({ ruleId: "MO-3D-2", severity: "P1", path, message: `"${a.id}" carries threeKeyframes but preset is ${a.preset} — internal state requires three-keyframe-track` });
+        return;
+      }
+      const target = scene.elements.find((element) => element.id === a.target);
+      if (target?.type !== "scene3d")
+        f.push({ ruleId: "MO-3D-2", severity: "P1", path, message: `"${a.id}" requires one exact scene3d target; "${a.target}" resolves to ${target?.type ?? "a group or nested target"}` });
+      if (!a.threeKeyframes?.length)
+        f.push({ ruleId: "MO-3D-2", severity: "P1", path, message: `"${a.id}" is three-keyframe-track with no threeKeyframes` });
+      if (!a.override?.reason)
+        f.push({ ruleId: "MO-3D-2", severity: "P1", path, message: `"${a.id}" is an exact internal track without override.reason` });
+      if (a.duration || a.easing || a.override?.durationMs || a.override?.gsapEase || a.stagger || a.distance || a.direction || a.waypoints || a.morphTo || a.morphPoints || a.keyframes)
+        f.push({ ruleId: "MO-3D-2", severity: "P1", path, message: `"${a.id}" mixes internal keyframes with incompatible controls; final frame sets duration and segments use token easings` });
+      if (scene.choreography.some((other) => other !== a && other.preset === "three-keyframe-track" && other.target === a.target))
+        f.push({ ruleId: "MO-3D-2", severity: "P1", path, message: `"${a.id}" does not exclusively own internal state for target "${a.target}"` });
+      const end = resolved.find((item) => item.anim.id === a.id);
+      if (end && end.startMs + end.durationMs > scene.durationMs + 0.001)
+        f.push({ ruleId: "MO-3D-2", severity: "P1", path, message: `"${a.id}" ends at ${Math.round(end.startMs + end.durationMs)}ms, beyond scene duration ${scene.durationMs}ms` });
     });
 
     // MO-3D-1 (ADR-0010): a 3D subject must settle, not spin forever (perpetual
@@ -891,6 +915,8 @@ function renderedAssets(score: ScoreT): RenderedAsset[] {
         assets.push({ path: element.src, assetUse: element.assetUse, irPath: `${base}.src`, sceneId: scene.id });
       if (element.type === "figure") element.assets.forEach((asset, assetIndex) =>
         assets.push({ path: asset.src, assetUse: asset.assetUse, irPath: `${base}.assets[${assetIndex}].src`, sceneId: scene.id }));
+      if (element.type === "scene3d" && element.frontTexture)
+        assets.push({ path: element.frontTexture, assetUse: element.frontTextureAssetUse, irPath: `${base}.frontTexture`, sceneId: scene.id });
     });
     scene.choreography.forEach((animation, animationIndex) => {
       if (animation.sfx) assets.push({ path: animation.sfx.src, assetUse: animation.sfx.assetUse, irPath: `score.scenes[${sceneIndex}].choreography[${animationIndex}].sfx.src`, sceneId: scene.id });

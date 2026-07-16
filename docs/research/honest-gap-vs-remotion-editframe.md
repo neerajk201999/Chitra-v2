@@ -39,13 +39,14 @@ The reference's every hit lands on a beat.
 
 ## Self-imposed gaps (we CHOSE these to prevent slop; can add a gated pro tier)
 
-### 3. Arbitrary keyframes / custom easing curves. PARTLY CLOSED (ADR-0013).
+### 3. Arbitrary keyframes / custom easing curves. PARTLY CLOSED (ADR-0013/0028).
 Remotion: `interpolate(frame,[0,15,30],[0,1,.4],{easing:bezier(...)})` — any
 property, any curve, per frame. Chitra now exposes reason-gated, typed
 frame-addressed X/Y, scale, 3-axis rotation, opacity, perspective, origin, and
 token easing. The browser benchmark lands 3/3 authored states and reproduces a
-same-frame PNG byte-identically. It is intentionally not arbitrary JavaScript
-or raw curves. Internal Three camera/mesh properties remain outside this track.
+same-frame PNG byte-identically. ADR-0028 separately adds typed mesh, camera,
+key/fill-light, and exposure tracks plus card/slab front textures. It remains
+intentionally bounded rather than arbitrary JavaScript, properties, or curves.
 
 ### 4. Layered/continuous audio (multi-track, ducking, volume automation).
 We have one bed + SFX at delays. Remotion/EditFrame have full audio timelines.
@@ -63,6 +64,7 @@ For flat/2D motion-graphics launch films, Chitra now has a credible parity
 surface and wins on deterministic gates. It also has curated real 3D and
 beat-addressed motion. It does **not** yet match Remotion's unrestricted
 composition surface: masks/mattes, nested compositions, blend modes, motion
-blur, internal 3D camera/mesh tracks, full audio, and a mature player/studio are
-open. No "beats Remotion" claim is valid until ChitraBench publishes neutral,
+blur, full audio, broad 3D geometry/materials, and a mature player/studio are
+open. No
+"beats Remotion" claim is valid until ChitraBench publishes neutral,
 head-to-head results.

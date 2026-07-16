@@ -48,7 +48,15 @@ Remaining:
 ## M3.5 — Expressiveness & audio v2 (owner-directed priority, 2026-07-15) — LANDED same day
 Owner call: close the Remotion expressiveness gap and the HyperFrames workflow gap now, ahead of M4. Landed: **video-in-scene** (ADR-0007: ffmpeg frame pre-extraction, deterministic, content-hashed, MO-MED-gated) · **SFX on choreography** (sounds fire at resolved animation starts; MO-AUD-3 sparsity gate) · **deterministic starter audio** (`chitra sfx-kit`, `chitra bed` — zero-license ffmpeg synthesis) · workflow skills (product-launch, screen-demo, social-short) · renderer-frontier survey (docs/research/render-stack-frontier.md). Proven by the akta.pro launch film: transcribed voiceover → real UI stills + moving clip + bed + SFX, all gates green.
 Landed 2026-07-16 by concrete-reference exception (ADR-0012): **ADR-0013 frame-addressed transform tracks** — typed X/Y, scale, 3-axis rotation, opacity, perspective, origin, and token easing; final-frame/FPS timing; reason-gated by MO-KEY-1; browser benchmark seeks exact authored frames 3/3 and repeats a PNG byte-identically ([results](../../benchmarks/keyframe-track/results.md)).
-Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes, local-coordinate/deeper compositions, blend modes, motion blur, internal 3D camera/mesh tracks, clip audio pass-through, and narration/TTS timeline. Automated exhaustive reference comparison and named ROI diagnostics are now built (ADR-0019/0022).
+Landed 2026-07-16 from the measured Card Vault residual: **ADR-0028 textured
+3D property tracks** — rights-traced card/slab front artwork plus typed internal
+mesh, camera, key/fill light, and exposure states. The browser benchmark lands
+3/3 states under backward seeks and repeats a PNG byte-identically.
+Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes,
+local-coordinate/deeper compositions, blend modes, motion blur, back/side
+textures and custom 3D geometry/materials, clip audio pass-through, and
+narration/TTS timeline. Automated exhaustive reference comparison and named ROI
+diagnostics are built (ADR-0019/0022).
 
 ## M4 — Creative Intelligence (the missing brain) — STARTED 2026-07-16
 *Goal: Chitra makes the creative decisions a top director + motion designer would — before rendering. The pipeline begins at intent, not at Motion IR (ADR-0012).*

@@ -46,6 +46,13 @@ function threeSource(): string {
   return readFileSync(path.join(buildDir, "three.module.js"), "utf8");
 }
 
+function imageDataUrl(projectDir: string, source: string): string {
+  const file = resolveProjectAsset(projectDir, source);
+  const ext = path.extname(file).toLowerCase();
+  const mime = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
+  return `data:${mime};base64,${readFileSync(file).toString("base64")}`;
+}
+
 const FONT_FILES: Record<string, { pkg: string; file: string; weights: number[] }> = {
   Inter: { pkg: "@fontsource/inter", file: "inter-latin-{w}-normal.woff2", weights: [400, 500, 600] },
   "Space Grotesk": { pkg: "@fontsource/space-grotesk", file: "space-grotesk-latin-{w}-normal.woff2", weights: [400, 500, 700] },
@@ -86,8 +93,9 @@ export function resolveSceneTimeline(scene: SceneT, ctx?: { sceneStartMs: number
   const out: ResolvedAnim[] = [];
   for (const anim of scene.choreography) {
     const preset = PRESETS[anim.preset as PresetName];
-    const durationMs = anim.preset === "keyframe-track" && anim.keyframes?.length
-      ? (anim.keyframes[anim.keyframes.length - 1].frame / (ctx?.fps ?? 30)) * 1000
+    const exactFrames = anim.preset === "keyframe-track" ? anim.keyframes : anim.preset === "three-keyframe-track" ? anim.threeKeyframes : undefined;
+    const durationMs = exactFrames?.length
+      ? (exactFrames[exactFrames.length - 1].frame / (ctx?.fps ?? 30)) * 1000
       : anim.override?.durationMs ?? DURATIONS[(anim.duration ?? preset.defaultDuration) as DurationToken];
     const ease =
       anim.override?.gsapEase ??
@@ -595,6 +603,9 @@ function presetTweens(
       });
       return [{ ...base, vars: { __keyframeTrack: track } }];
     }
+    case "three-keyframe-track":
+      // Serialized separately into the scene3d runtime; it does not tween the canvas.
+      return [];
     case "hide":
       // Instant, invisible state declaration — used to carry figure-internal
       // end-states across match cuts (IR-FIG-1). Not a visible exit.
@@ -714,12 +725,38 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
     }
   }
 
-  // ADR-0010: collect scene3d specs (resolved colors + box + scene start).
+  // ADR-0010/0028: collect scene3d specs and typed internal state segments.
   let s3cursor = 0;
   const scene3dSpecs: Array<Record<string, unknown>> = [];
   for (const sc of score.scenes) {
+    const resolved3d = resolveSceneTimeline(sc, { sceneStartMs: s3cursor, beats: score.audio?.music?.beats, fps });
     for (const el of sc.elements) {
-      if (el.type === "scene3d")
+      if (el.type === "scene3d") {
+        const track = resolved3d.find((item) => item.anim.preset === "three-keyframe-track" && item.anim.target === el.id);
+        const frames = track?.anim.threeKeyframes;
+        const segments = frames?.map((frame, index) => {
+          const vars: Record<string, number> = {};
+          const axes = ["x", "y", "z"] as const;
+          for (const axis of axes) {
+            const cap = axis.toUpperCase();
+            if (frame.mesh?.position?.[axis] != null) vars[`meshPosition${cap}`] = frame.mesh.position[axis]!;
+            if (frame.mesh?.rotationDeg?.[axis] != null) vars[`meshRotation${cap}`] = frame.mesh.rotationDeg[axis]!;
+            if (frame.mesh?.scale?.[axis] != null) vars[`meshScale${cap}`] = frame.mesh.scale[axis]!;
+            if (frame.camera?.position?.[axis] != null) vars[`cameraPosition${cap}`] = frame.camera.position[axis]!;
+            if (frame.keyLight?.position?.[axis] != null) vars[`keyPosition${cap}`] = frame.keyLight.position[axis]!;
+            if (frame.fillLight?.position?.[axis] != null) vars[`fillPosition${cap}`] = frame.fillLight.position[axis]!;
+          }
+          if (frame.camera?.fov != null) vars.cameraFov = frame.camera.fov;
+          if (frame.keyLight?.intensity != null) vars.keyIntensity = frame.keyLight.intensity;
+          if (frame.fillLight?.intensity != null) vars.fillIntensity = frame.fillLight.intensity;
+          if (frame.exposure != null) vars.exposure = frame.exposure;
+          return {
+            atMs: (frame.frame / fps) * 1000,
+            durationMs: index ? ((frame.frame - frames[index - 1].frame) / fps) * 1000 : 0,
+            ease: EASINGS[(frame.easing ?? "move-through") as EasingToken],
+            vars,
+          };
+        });
         scene3dSpecs.push({
           key: `${sc.id}--${el.id}`,
           primitive: el.primitive,
@@ -730,10 +767,14 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
           spinDeg: el.spinDeg,
           tiltDeg: el.tiltDeg,
           exposure: el.exposure,
+          frontTexture: el.frontTexture ? imageDataUrl(projectDir, el.frontTexture) : null,
+          trackStartMs: track ? s3cursor + track.startMs : null,
+          segments: segments ?? null,
           w: Math.round((el.width * width) / 100),
           h: Math.round((el.height * height) / 100),
           sceneStartMs: s3cursor,
         });
+      }
     }
     s3cursor += sc.durationMs;
   }
@@ -1027,20 +1068,32 @@ window.__chitra = {
 </script>
 ${hasScene3d ? `<script type="module">
 ${threeSource()}
-(function(){
+(async function(){
   window.__three3d = [];
+  window.__three3dState = {};
+  window.__three3dTextureReady = {};
+  window.__chitra.threeState = function (key) {
+    var value = window.__three3dState[key];
+    if (!value) return null;
+    var copy = {};
+    Object.keys(value).forEach(function (name) {
+      if (name.charAt(0) !== "_" && typeof value[name] === "number") copy[name] = value[name];
+    });
+    copy.frontTextureReady = window.__three3dTextureReady[key] === true;
+    return copy;
+  };
   var SPECS3D = ${JSON.stringify(scene3dSpecs)};
   try {
     // Shared procedural environment per env tint (crimson/gold/neutral studio).
-    SPECS3D.forEach(function (s) {
-      var canvas = document.querySelector('canvas[data-3d="' + s.key + '"]');
-      if (!canvas) return;
-      var renderer = new WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    for (const s of SPECS3D) {
+      const canvas = document.querySelector('canvas[data-3d="' + s.key + '"]');
+      if (!canvas) continue;
+      const renderer = new WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
       renderer.setSize(s.w, s.h, false);
       renderer.toneMapping = ACESFilmicToneMapping;
       renderer.toneMappingExposure = s.exposure;
-      var scene = new Scene();
-      var cam = new PerspectiveCamera(30, s.w / s.h, 0.1, 100);
+      const scene = new Scene();
+      const cam = new PerspectiveCamera(30, s.w / s.h, 0.1, 100);
       cam.position.set(0, 0, 7.5);
       // PMREM environment from a vertical gradient tinted by envTint.
       var pmrem = new PMREMGenerator(renderer);
@@ -1055,27 +1108,73 @@ ${threeSource()}
       var envMat = new MeshBasicMaterial({ map: new CanvasTexture(cv), side: BackSide });
       envS.add(new Mesh(new SphereGeometry(50, 32, 32), envMat));
       scene.environment = pmrem.fromScene(envS).texture;
-      var key = new DirectionalLight(0xfff2ee, 4.2); key.position.set(5, 6, 4); scene.add(key);
-      var fill = new DirectionalLight(0xff5566, 1.6); fill.position.set(-6, -1, 3); scene.add(fill);
+      const key = new DirectionalLight(0xfff2ee, 4.2); key.position.set(5, 6, 4); scene.add(key);
+      const fill = new DirectionalLight(0xff5566, 1.6); fill.position.set(-6, -1, 3); scene.add(fill);
       scene.add(new AmbientLight(0x553033, 0.7));
       var geo;
       if (s.primitive === "coin") geo = new CylinderGeometry(1.7, 1.7, 0.18, 64);
       else if (s.primitive === "slab") geo = new BoxGeometry(2.2, 3.2, 0.14);
       else geo = new BoxGeometry(3.4, 2.14, 0.12); // card
       var mat = new MeshPhysicalMaterial({ color: parseInt(s.base.slice(1), 16), metalness: s.metalness, roughness: s.roughness, clearcoat: 1.0, clearcoatRoughness: 0.25, emissive: 0x0a0506, emissiveIntensity: 0.35 });
-      var mesh = new Mesh(geo, mat);
+      var materials = mat;
+      if (s.frontTexture) {
+        var texture = await new TextureLoader().loadAsync(s.frontTexture);
+        texture.colorSpace = SRGBColorSpace;
+        var front = mat.clone(); front.color.set(0xffffff); front.map = texture; front.needsUpdate = true;
+        materials = [mat, mat, mat, mat, front, mat];
+      }
+      window.__three3dTextureReady[s.key] = !!s.frontTexture;
+      const mesh = new Mesh(geo, materials);
       if (s.primitive === "coin") mesh.rotation.x = Math.PI / 2;
       scene.add(mesh);
-      var tilt = s.tiltDeg * Math.PI / 180, spin = s.spinDeg * Math.PI / 180;
-      var baseX = mesh.rotation.x;
+      const tilt = s.tiltDeg * Math.PI / 180, spin = s.spinDeg * Math.PI / 180;
+      const baseX = mesh.rotation.x;
+      const state = {
+        meshPositionX: 0, meshPositionY: 0, meshPositionZ: 0,
+        meshRotationX: (baseX + tilt * 0.4 + 0.04) * 180 / Math.PI,
+        meshRotationY: -0.5 * 180 / Math.PI, meshRotationZ: 0,
+        meshScaleX: 1, meshScaleY: 1, meshScaleZ: 1,
+        cameraPositionX: 0, cameraPositionY: 0, cameraPositionZ: 7.5, cameraFov: 30,
+        keyPositionX: 5, keyPositionY: 6, keyPositionZ: 4, keyIntensity: 4.2,
+        fillPositionX: -6, fillPositionY: -1, fillPositionZ: 3, fillIntensity: 1.6,
+        exposure: s.exposure
+      };
+      let stateTl = null, trackEndMs = 0;
+      if (s.segments) {
+        stateTl = window.gsap.timeline({ paused: true });
+        stateTl.set(state, s.segments[0].vars, 0);
+        for (var ti = 1; ti < s.segments.length; ti++) {
+          var segment = s.segments[ti];
+          stateTl.to(state, Object.assign({ duration: segment.durationMs / 1000, ease: segment.ease, lazy: false }, segment.vars), (segment.atMs - segment.durationMs) / 1000);
+        }
+        trackEndMs = s.segments[s.segments.length - 1].atMs;
+        stateTl.pause(0);
+      }
+      const applyState = function () {
+        var rad = Math.PI / 180;
+        mesh.position.set(state.meshPositionX, state.meshPositionY, state.meshPositionZ);
+        mesh.rotation.set(state.meshRotationX * rad, state.meshRotationY * rad, state.meshRotationZ * rad);
+        mesh.scale.set(state.meshScaleX, state.meshScaleY, state.meshScaleZ);
+        cam.position.set(state.cameraPositionX, state.cameraPositionY, state.cameraPositionZ);
+        cam.fov = state.cameraFov; cam.updateProjectionMatrix(); cam.lookAt(0, 0, 0);
+        key.position.set(state.keyPositionX, state.keyPositionY, state.keyPositionZ); key.intensity = state.keyIntensity;
+        fill.position.set(state.fillPositionX, state.fillPositionY, state.fillPositionZ); fill.intensity = state.fillIntensity;
+        renderer.toneMappingExposure = state.exposure;
+        window.__three3dState[s.key] = state;
+      };
       window.__three3d.push(function (ms) {
         var local = Math.max(0, ms - s.sceneStartMs);
-        mesh.rotation.y = -0.5 + Math.sin(local / 1400) * spin;
-        mesh.rotation.x = baseX + tilt * 0.4 + Math.cos(local / 1800) * 0.04;
+        if (stateTl && ms >= s.trackStartMs) {
+          stateTl.time(Math.min(Math.max(ms - s.trackStartMs, 0), trackEndMs) / 1000, false);
+          applyState();
+        } else {
+          mesh.rotation.y = -0.5 + Math.sin(local / 1400) * spin;
+          mesh.rotation.x = baseX + tilt * 0.4 + Math.cos(local / 1800) * 0.04;
+        }
         renderer.render(scene, cam);
       });
       window.__three3d[window.__three3d.length - 1](0);
-    });
+    }
     window.__three3dReady = true;
   } catch (e) { window.__three3dError = String(e && e.message || e); window.__three3dReady = true; }
 })();

@@ -44,6 +44,32 @@ describe("IR schema (Quality Engine layer 1)", () => {
     s2.style.palette.bg = "black";
     expect(validateScore(s2).ok).toBe(false);
   });
+  it("bounds scene3d textures and internal keyframes", () => {
+    const score = validFixture();
+    score.scenes[0].elements = [{
+      type: "scene3d", id: "product", role: "hero", primitive: "card",
+      frontTexture: "assets/front.png", baseColor: "surface", envTint: "accent",
+      metalness: 0.2, roughness: 0.3, spinDeg: 0, tiltDeg: 0, exposure: 1.2,
+      position: { anchor: "center" }, width: 70, height: 60,
+    }];
+    score.scenes[0].choreography = [{
+      id: "product-turn", target: "product", preset: "three-keyframe-track",
+      at: { after: "scene-start", offsetMs: 0 }, override: { reason: "exact authored studio turn is required" },
+      threeKeyframes: [
+        { frame: 0, mesh: { rotationDeg: { y: -20 } } },
+        { frame: 30, mesh: { rotationDeg: { y: 20 } }, camera: { fov: 32 }, exposure: 1.3 },
+      ],
+    }];
+    expect(validateScore(score).ok).toBe(true);
+    expect(runStaticGates(score).filter((finding) => finding.ruleId === "MO-3D-2")).toEqual([]);
+    const coin = structuredClone(score);
+    const product = coin.scenes[0].elements[0];
+    if (product.type === "scene3d") product.primitive = "coin";
+    expect(validateScore(coin).ok).toBe(false);
+    const grouped = structuredClone(score);
+    grouped.scenes[0].choreography[0].target = "product*";
+    expect(runStaticGates(grouped).some((finding) => finding.ruleId === "MO-3D-2" && finding.severity === "P1")).toBe(true);
+  });
 });
 
 describe("timeline resolution", () => {
@@ -131,6 +157,25 @@ describe("compiler determinism surface", () => {
     expect(sceneHash(edited, 4)).not.toBe(sceneHash(base, 4));
     expect(sceneHash(edited, 0)).toBe(sceneHash(base, 0));
     expect(sceneHash(edited, 5)).toBe(sceneHash(base, 5));
+  });
+  it("front texture bytes invalidate scene hashes", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "chitra-three-hash-"));
+    try {
+      writeFileSync(path.join(dir, "front.png"), "first");
+      const score = validFixture();
+      score.scenes = [score.scenes[0]];
+      score.scenes[0].elements = [{
+        type: "scene3d", id: "product", role: "hero", primitive: "card", frontTexture: "front.png",
+        baseColor: "surface", envTint: "accent", metalness: 0.2, roughness: 0.3,
+        spinDeg: 0, tiltDeg: 0, exposure: 1.2, position: { anchor: "center" }, width: 70, height: 60,
+      }];
+      score.scenes[0].choreography = [];
+      const before = sceneHash(score, 0, dir);
+      writeFileSync(path.join(dir, "front.png"), "second-version");
+      expect(sceneHash(score, 0, dir)).not.toBe(before);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
   it("beat timing invalidates cached frames", () => {
     const base = validFixture();

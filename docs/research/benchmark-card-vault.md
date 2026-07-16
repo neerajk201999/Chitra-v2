@@ -8,7 +8,7 @@ the diagnostic failure that motivated ADR-0009.
 |---|---|---|
 | Dot-matrix shimmer (card texture + end-card motif) | `particles` + `particle-shimmer`/`particle-form`/`particle-morph` | ✅ ADR-0009 |
 | Black + crimson palette, red glow | style palette + gradient-field ambients | ✅ |
-| Floating card with depth/lighting | `scene3d` primitive + reason-gated `keyframe-track` on the layer | ✅ genuine 3D primitive; internal mesh/camera track still a gap |
+| Floating card with depth/lighting | textured `scene3d` + reason-gated DOM and internal 3D tracks | ✅ mechanism built in ADR-0010/0013/0028; target improvement not yet rerun |
 | Phone wallet with card | phone-frame figure + card figure | ✅ (ADR-0008) |
 | Card-swap (Mastercard→VISA→RuPay) | figures + cross-fade/pulse choreography | ✅ |
 | Add-a-card form UI | figure fragment | ✅ (ADR-0008) |
@@ -29,8 +29,9 @@ prioritized roadmap and a proposed neutral benchmark suite for determining
 whether Chitra genuinely beats the compared projects.
 
 Current status: typed, frame-addressed DOM rotation/perspective/general
-transform tracks are now built and browser-benchmarked in ADR-0013. Masks,
-nested compositions, blend modes, motion blur, richer audio, internal 3D
-camera/mesh tracks, and automated frame-difference comparison remain open. An
+transform tracks are built in ADR-0013; textured internal mesh/camera/light/
+exposure tracks are built in ADR-0028; exhaustive and ROI frame comparison is
+built in ADR-0019/0022. Masks, nested compositions, blend modes, motion blur,
+richer audio, and additional 3D materials/geometry remain open. An
 "exact" claim is blocked until the full 274-frame output is compared against
 the reference with the neutral metric suite.

@@ -45,16 +45,17 @@ but not externally proven at (3), and has no evidence for (4).
 |---|---|---|
 | Anthropic/Claude product demo | UI figures, cursor/type choreography, video-in-scene, typography, cuts, beat grid, and evidence are expressible. The supplied 81.6s film decomposed into 12 detected shots. | No full recreation or preference score; dark network/globe motif is thin; semantic direction/critique and richer audio remain uncalibrated. |
 | Google-style 2D launch | Shapes, type, UI, image/video, particles, keyframes, palette, and relational choreography cover much of the grammar. | Brand ingestion/Style Memory, illustration/motif breadth, semantic composition judgment, and a strong example corpus are missing. |
-| CRED-style luxury fintech | Real 3D primitives, transform tracks, custom particles, groups, and exhaustive comparison can author the complete timeline. | Card Vault candidate 0.7 is still far from exact: mean SSIM 0.367146; phone/card ROI MAE 0.089867 and PSNR 14.212 dB. Asset fidelity, internal 3D/light tracks, motion blur, masks/mattes, local/deeper comps, blend modes, and sound design remain gaps. |
+| CRED-style luxury fintech | Real 3D primitives, DOM/internal 3D tracks, front textures, custom particles, groups, and exhaustive comparison can author the complete timeline. | Card Vault candidate 0.7 predates ADR-0028 and is still far from exact: mean SSIM 0.367146; phone/card ROI MAE 0.089867 and PSNR 14.212 dB. A measured rerun, motion blur, masks/mattes, local/deeper comps, blend modes, and sound design remain gaps. |
 | Apple-style product film | Sparse typography, pacing, footage placement, simple product slabs/cards, and brand-film motion tokens exist. | Broad product-CG geometry, material/lighting/camera animation, depth of field/motion blur, compositing/color pipeline, premium audio, and human-level editorial judgment do not. Supplied footage can be assembled; Chitra does not synthesize a world-class live-action or CG shoot. |
 
 “Exact reconstruction” remains a separate, higher bar. For exact reconstruction
 of the 274-frame reference, Chitra needs typed rotation/perspective tracks,
 general keyframes, masks, nested compositions, blend modes, motion blur, richer
 audio, and automated frame-difference comparison. Rotation/perspective/general
-DOM tracks, one-level groups, and automated whole-frame/ROI comparison are now
-built. Masks/mattes, deeper local compositions, blend modes, motion blur,
-internal 3D/light tracks, and richer audio remain open.
+DOM tracks, one-level groups, textured internal mesh/camera/light/exposure
+tracks, and automated whole-frame/ROI comparison are now built. Masks/mattes,
+deeper local compositions, blend modes, motion blur, and richer audio remain
+open.
 
 ## Competitive reality
 

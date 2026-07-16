@@ -24,6 +24,9 @@ and CHANGELOG.
   `at.onBeat` choreography.
 - ADR-0013 frame-addressed transform tracks: typed X/Y, scale, 3-axis rotation,
   opacity, perspective, origin, and token easing.
+- ADR-0028 project-local front textures for curated card/slab `scene3d`
+  subjects plus typed, frame-addressed internal mesh, camera, key/fill light,
+  and exposure tracks. Texture bytes participate in provenance and cache hashes.
 - ADR-0020 ordered custom particle constellations and same-count custom morph
   targets, deterministically mapped by point index with bounded coordinates.
 - ADR-0025 heterogeneous custom-particle appearance: bounded per-point size and
@@ -61,7 +64,7 @@ and CHANGELOG.
 
 ## Evidence, not claims
 
-- Unit suite: 61 tests.
+- Unit suite: 63 tests.
 - Release-integrity benchmark: generated four-tier project releases through the
   CLI at −13.98 LUFS/−12.51 dBTP; the receipt verifies immediately, changed
   Score/output bytes are rejected, and input-overwriting targets are blocked.
@@ -101,6 +104,9 @@ and CHANGELOG.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.
+- Textured 3D browser benchmark: generated artwork is ready before capture; 3/3
+  internal mesh/camera/light/exposure states land in seek order 30 → 0 → 15;
+  repeated frame 15 is byte-identical.
 - Reference benchmark: generated 3-shot film finds both exact cut times and all
   three colors; bounded sampling holds; repeated Style DNA JSON and all three
   evidence frames are byte-identical.
@@ -129,8 +135,9 @@ Ordered next slices:
    explicit Style Memory from accepted human revisions.
 2. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
    a pre-registered neutral ChitraBench against real baselines.
-3. Keep Card Vault as an immutable renderer benchmark. Add masks, deeper comps,
-   blend modes, internal 3D/light tracks, motion blur, or richer audio only when
+3. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
+   ADR-0028 before claiming improvement. Add masks, deeper comps, blend modes,
+   motion blur, or richer audio only when
    a rights-approved measured residual isolates that capability. Never infer
    source-use rights from possession of a reference.
 
