@@ -66,6 +66,8 @@ const directionVersion = motionSchema.match(/DIRECTION_VERSION\s*=\s*"([^"]+)"/)
 const storyboardVersion = motionSchema.match(/STORYBOARD_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const referenceSchema = readFileSync(path.join(root, "core/src/reference/schema.ts"), "utf8");
 const styleDnaVersion = referenceSchema.match(/STYLE_DNA_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const comparisonSchema = readFileSync(path.join(root, "core/src/reference/comparison-schema.ts"), "utf8");
+const comparisonVersion = comparisonSchema.match(/COMPARISON_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const intakeSchema = readFileSync(path.join(root, "core/src/intake/schema.ts"), "utf8");
 const intakeVersion = intakeSchema.match(/INTAKE_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
@@ -79,6 +81,8 @@ if (!storyboardVersion || !currentState.includes(`**Storyboard:** ${storyboardVe
   failures.push(`current-state Storyboard version is not ${storyboardVersion ?? "discoverable"}`);
 if (!styleDnaVersion || !currentState.includes(`**Style DNA:** ${styleDnaVersion}`))
   failures.push(`current-state Style DNA version is not ${styleDnaVersion ?? "discoverable"}`);
+if (!comparisonVersion || !currentState.includes(`**Comparison:** ${comparisonVersion}`))
+  failures.push(`current-state Comparison version is not ${comparisonVersion ?? "discoverable"}`);
 if (!intakeVersion || !currentState.includes(`**Intake IR:** ${intakeVersion}`))
   failures.push(`current-state Intake IR version is not ${intakeVersion ?? "discoverable"}`);
 

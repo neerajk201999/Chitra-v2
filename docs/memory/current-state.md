@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0
+**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -27,6 +27,10 @@ and CHANGELOG.
 - ADR-0015 Reference Decomposer: `chitra decompose` emits validated Style DNA
   with source hash/media facts, hard-cut rhythm, quantized palette,
   luminance/saturation, frame-difference energy, audio onsets, and shot evidence.
+- ADR-0019 Reference Comparator: strict exhaustive frame-index comparison or
+  explicit normalized-progress sampling; RGB MAE, PSNR, global-luma SSIM,
+  deterministic amplified diff PNGs, worst-frame evidence, and limited 20ms
+  mono audio-energy envelope correlation/RMSE.
 - Package 0.3.0 has valid `main`/`types`/`exports`; global-style tarball install
   and `chitra probe` have been exercised locally.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
@@ -41,6 +45,9 @@ and CHANGELOG.
 - Creative ladder benchmark: four typed tiers, three conformance boundaries,
   full CLI chain green, and dropped must-preference, dropped beat, and missing
   planned copy caught by stable rule IDs.
+- Reference Comparator benchmark: exact identical 12/12-frame report yields MAE
+  0/SSIM 1/audio correlation 1; repeated report/diffs identical; colour drift
+  caught; strict geometry rejection and normalized non-exhaustive mode proven.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.
@@ -68,11 +75,9 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Automated reference comparator → aligned frame/audio metrics plus visual
-   diff artifacts; no “exact” claim without it.
-2. Card Vault reconstruction benchmark → 274 authored frames and published
+1. Card Vault reconstruction benchmark → 274 authored frames and published
    metric results, exposing only capabilities the target proves missing.
-3. Then, evidence-led compositor additions: masks/mattes, nested compositions,
+2. Then, evidence-led compositor additions: masks/mattes, nested compositions,
    blend modes, motion blur, internal 3D tracks, and richer audio.
 
 ## Claim boundaries
@@ -83,6 +88,9 @@ Ordered next slices:
   equivalence, interrupted-render equivalence, and broad critic calibration are
   still open.
 - Exact reconstruction of either supplied reference is not yet achieved.
+- Comparator exactness is decoded-pixel equality. Its global SSIM and audio
+  envelope do not measure local perceptual features, optical flow, semantics,
+  speech, music quality, or professional preference.
 - Creative conformance proves structural coverage and traceability, not that a
   concept, narrative, composition, or copy is professionally good. Calibrated
   semantic Creative QA and cross-project Style Memory remain open.

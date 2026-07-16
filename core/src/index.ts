@@ -6,5 +6,7 @@ export { runStaticGates, runFrameGates, runConformance, runIntakeDirectionConfor
 export { generateEvidence, type EvidenceResult } from "./evidence/index.js";
 export { STYLE_DNA_VERSION, StyleDNA, type StyleDNAT } from "./reference/schema.js";
 export { decomposeReference, type DecomposeOptions } from "./reference/decompose.js";
+export { COMPARISON_VERSION, ReferenceComparison, type ReferenceComparisonT } from "./reference/comparison-schema.js";
+export { compareReference, type CompareMode, type CompareOptions } from "./reference/compare.js";
 export { INTAKE_VERSION, Intake, IntakeSource, validateIntake, type IntakeT, type IntakeSourceT } from "./intake/schema.js";
 export { materializeIntake } from "./intake/materialize.js";

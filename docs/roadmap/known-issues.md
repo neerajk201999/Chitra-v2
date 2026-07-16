@@ -21,7 +21,10 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     frame-difference energy is not optical flow; and ADR-0011 onset peaks can
     over-count musical beats in dense or continuous audio. Thresholds and
     analyzer methods are recorded in Style DNA, but ChitraBench accuracy and a
-    separate evidence-linked semantic pass remain open (M4).
+    separate evidence-linked semantic pass remain open (M4). Comparator 0.1 now
+    adds exhaustive/sampled RGB MAE, PSNR, global-luma SSIM, diff images, and
+    audio-energy envelopes, but not local perceptual features, optical flow,
+    semantic equivalence, speech/music understanding, or calibrated preference.
 12. **Creative conformance is structural, not semantic.** ADR-0018 now catches
     dropped sources/preferences/brand constraints, unresolved blockers,
     invented or reordered beats, missing shots/copy/heroes, and timing drift.

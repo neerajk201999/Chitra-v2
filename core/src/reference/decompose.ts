@@ -52,7 +52,7 @@ function command(name: string, args: string[], encoding: "utf8" | "buffer" = "ut
   return result;
 }
 
-function probeVideo(file: string) {
+export function probeVideo(file: string) {
   const result = command("ffprobe", ["-v", "error", "-show_streams", "-show_format", "-of", "json", file]);
   const data = JSON.parse(String(result.stdout)) as Probe;
   const video = data.streams?.find((s) => s.codec_type === "video");

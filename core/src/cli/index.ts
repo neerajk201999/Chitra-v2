@@ -16,6 +16,7 @@ import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
 import { decomposeReference } from "../reference/decompose.js";
+import { compareReference, type CompareMode } from "../reference/compare.js";
 import { validateIntake, type IntakeT } from "../intake/schema.js";
 import { materializeIntake } from "../intake/materialize.js";
 
@@ -438,6 +439,33 @@ program
       writeFileSync(out, JSON.stringify(dna, null, 2) + "\n");
       console.log(`✔ ${o.out} — ${dna.shots.length} shots, ${dna.rhythm.cutsPerMinute} cuts/min, ${dna.palette.dominantColors.length} palette colors, ${dna.audio.present ? `${dna.audio.beats.length} audio landmarks` : "no audio"}`);
       console.log(`  evidence: ${dna.evidence.directory} · semantic review remains explicitly unmeasured`);
+    } catch (e) {
+      fail((e as Error).message);
+    }
+  });
+
+program
+  .command("compare")
+  .argument("<reference>", "reference video file")
+  .argument("<candidate>", "candidate render file")
+  .requiredOption("-o, --out <file>", "typed comparison JSON output")
+  .option("--evidence <dir>", "difference-image directory (default: <out>.evidence)")
+  .option("--mode <mode>", "exact | normalized", "exact")
+  .option("--max-frames <n>", "exact-mode safety ceiling", (value) => parseInt(value, 10), 1200)
+  .option("--samples <n>", "normalized-mode uniform sample count", (value) => parseInt(value, 10), 120)
+  .description("Compare aligned reference/candidate frames and audio energy with explicit exact/normalized semantics (ADR-0019)")
+  .action(async (reference: string, candidate: string, options: { out: string; evidence?: string; mode: string; maxFrames: number; samples: number }) => {
+    if (!(["exact", "normalized"] as string[]).includes(options.mode)) fail("--mode must be exact or normalized");
+    if (!Number.isInteger(options.maxFrames) || options.maxFrames < 1) fail("--max-frames must be a positive integer");
+    if (!Number.isInteger(options.samples) || options.samples < 1 || options.samples > 2000) fail("--samples must be 1–2000");
+    try {
+      const out = path.resolve(options.out);
+      const evidenceDir = path.resolve(options.evidence ?? out.replace(/\.json$/i, "") + ".evidence");
+      const report = await compareReference(reference, candidate, { mode: options.mode as CompareMode, evidenceDir, artifactDir: path.dirname(out), maxFrames: options.maxFrames, samples: options.samples });
+      mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, JSON.stringify(report, null, 2) + "\n");
+      console.log(`✔ ${options.out} — ${report.alignment.mode} ${report.alignment.comparedFrames} frame pairs, MAE ${report.visual.meanAbsoluteError.toFixed(4)}, global SSIM ${report.visual.meanGlobalLumaSsim.toFixed(4)}`);
+      console.log(`  evidence: ${report.evidence.directory} · semantic similarity remains unmeasured`);
     } catch (e) {
       fail((e as Error).message);
     }
