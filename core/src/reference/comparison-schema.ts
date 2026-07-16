@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const COMPARISON_VERSION = "0.1.0";
+export const COMPARISON_VERSION = "0.2.0";
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
 const media = z.object({
   filename: z.string().min(1), sha256,
@@ -16,6 +16,12 @@ const FrameMetric = z.object({
   differenceImage: z.string().min(1),
 });
 
+const VisualSummary = z.object({
+  meanAbsoluteError: z.number().min(0).max(1), p95AbsoluteError: z.number().min(0).max(1),
+  meanGlobalLumaSsim: z.number().min(-1).max(1), minimumGlobalLumaSsim: z.number().min(-1).max(1),
+  meanPsnrDb: z.number().nonnegative().nullable(), worstPairIndices: z.array(z.number().int().nonnegative()).max(10),
+});
+
 export const ReferenceComparison = z.object({
   comparisonVersion: z.literal(COMPARISON_VERSION), tier: z.literal("reference-comparison"),
   reference: media, candidate: media,
@@ -29,11 +35,14 @@ export const ReferenceComparison = z.object({
     exhaustive: z.boolean(),
   }),
   frames: z.array(FrameMetric).min(1),
-  visual: z.object({
-    meanAbsoluteError: z.number().min(0).max(1), p95AbsoluteError: z.number().min(0).max(1),
-    meanGlobalLumaSsim: z.number().min(-1).max(1), minimumGlobalLumaSsim: z.number().min(-1).max(1),
-    meanPsnrDb: z.number().nonnegative().nullable(), worstPairIndices: z.array(z.number().int().nonnegative()).max(10),
-  }),
+  visual: VisualSummary,
+  regions: z.array(z.object({
+    id: z.string().regex(/^[a-z][a-z0-9-]*$/),
+    bounds: z.object({ x: z.number().int().nonnegative(), y: z.number().int().nonnegative(), width: z.number().int().positive(), height: z.number().int().positive() }),
+    pairRange: z.object({ start: z.number().int().nonnegative(), endInclusive: z.number().int().nonnegative() }),
+    frames: z.array(FrameMetric).min(1),
+    visual: VisualSummary,
+  })).default([]),
   audio: z.discriminatedUnion("status", [
     z.object({ status: z.literal("missing"), referencePresent: z.boolean(), candidatePresent: z.boolean() }),
     z.object({ status: z.literal("compared"), durationDeltaMs: z.number().int(), envelopeCorrelation: z.number().min(-1).max(1), normalizedRmse: z.number().min(0).max(1), comparedWindows: z.number().int().positive() }),

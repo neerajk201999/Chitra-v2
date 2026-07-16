@@ -1,6 +1,6 @@
 # Reference Comparator benchmark
 
-**Verified:** 2026-07-16 · **Comparison:** 0.1.0
+**Verified:** 2026-07-16 · **Comparison:** 0.2.0
 
 The generated-fixture benchmark proves:
 
@@ -10,10 +10,17 @@ The generated-fixture benchmark proves:
 - repeated reports and difference PNGs are byte-identical;
 - a same-structure colour drift produces non-zero visual error;
 - exact mode rejects mismatched dimensions;
-- normalized mode records five uniform progress samples, letterboxing, and
-  `exhaustive:false`;
-- the public `chitra compare` CLI writes the typed report and evidence.
+- normalized mode records five uniform progress samples, letterboxing,
+  aligned-canvas ROI extraction, and `exhaustive:false`;
+- a blue defect confined to the left side is detected by the left ROI while an
+  untouched right ROI remains at MAE 0;
+- regional pair ranges, report paths, and cropped difference PNGs repeat
+  deterministically;
+- duplicate IDs, invalid bounds, and inverted ranges fail loudly;
+- the public `chitra compare` CLI accepts repeatable `--region` options and
+  writes the typed report and evidence.
 
 These metrics measure decoded pixel and audio-energy alignment. They do not
-measure semantic equivalence, local perceptual features, optical flow, music,
-speech, camera meaning, or professional preference.
+measure semantic equivalence, local-window perceptual features, optical flow,
+music, speech, camera meaning, or professional preference. ROI metrics diagnose
+where error is concentrated; they never replace whole-frame exactness metrics.

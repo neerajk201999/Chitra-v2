@@ -21,10 +21,11 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     frame-difference energy is not optical flow; and ADR-0011 onset peaks can
     over-count musical beats in dense or continuous audio. Thresholds and
     analyzer methods are recorded in Style DNA, but ChitraBench accuracy and a
-    separate evidence-linked semantic pass remain open (M4). Comparator 0.1 now
-    adds exhaustive/sampled RGB MAE, PSNR, global-luma SSIM, diff images, and
-    audio-energy envelopes, but not local perceptual features, optical flow,
-    semantic equivalence, speech/music understanding, or calibrated preference.
+    separate evidence-linked semantic pass remain open (M4). Comparator 0.2 now
+    adds exhaustive/sampled RGB MAE, PSNR, global-luma SSIM, named ROI summaries
+    and cropped diffs, and audio-energy envelopes, but not local-window
+    perceptual features, optical flow, semantic equivalence, speech/music
+    understanding, automatic tracking, or calibrated preference.
 12. **Creative conformance is structural, not semantic.** ADR-0018 now catches
     dropped sources/preferences/brand constraints, unresolved blockers,
     invented or reordered beats, missing shots/copy/heroes, and timing drift.
@@ -41,5 +42,5 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 - **A3. `chitra render` doesn't run frame gates unless the user ran `check` (P2).** Add a `chitra release` that enforces validate→check→render→evidence with a hash-keyed receipt.
 - **A4. ✅ Packaging launch blocker fixed 2026-07-16:** `main`/`types` point at `dist`, an `exports` map is present, and package/README/skill-manifest identity is 0.3.0. Publishing and outside-tester install verification remain item 7.
 - **A5. Audio −14 LUFS is a target, not a verified invariant** — normalizes the bed, doesn't measure the final mux. Add two-pass final-loudness measurement/gate.
-- **A6. Determinism is same-machine-uninterrupted only.** Interrupted/resumed renders diverged slightly (SSIM 0.9987); cross-machine untested. Scope the claim; add interruption + golden-frame CI (M5).
+- **A6. Determinism is same-machine-uninterrupted only.** Interrupted/resumed renders diverged slightly (SSIM 0.9987); two current Card Vault reruns are byte-identical, but an earlier same-day artifact differs at MAE 0.000095/SSIM 0.999909 with no isolated cause. Cold/warm and cross-machine equivalence remain unproven. Scope the claim; add clean-environment, interruption, and golden-frame CI (M5).
 - **A7. Critic is unvalidated** — 4 author-biased cases. Needs ≥20 independent-labelled cases before any aesthetic-quality claim.
