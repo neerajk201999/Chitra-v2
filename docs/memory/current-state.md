@@ -26,6 +26,8 @@ and CHANGELOG.
   opacity, perspective, origin, and token easing.
 - ADR-0020 ordered custom particle constellations and same-count custom morph
   targets, deterministically mapped by point index with bounded coordinates.
+- ADR-0025 heterogeneous custom-particle appearance: bounded per-point size and
+  opacity plus a field glow multiplier, deterministic through browser capture.
 - ADR-0021 one-level full-stage transform groups with single child ownership,
   stable nested IDs, and compiler failures for invalid hierarchy.
 - ADR-0015 Reference Decomposer: `chitra decompose` emits validated Style DNA
@@ -81,6 +83,11 @@ and CHANGELOG.
   phone/card ROI over pairs 111–140 measures MAE 0.089867 and 14.212 dB PSNR
   versus whole-film 0.027557 and 23.637 dB, localizing the asset-fidelity gap;
   exact is not met.
+- A private, rights-approved source-assisted Card Vault 0.9 run uses three
+  declared still derivatives plus audio without replaying the reference video.
+  It improves whole-film MAE to 0.025749/SSIM to 0.401685, ROI MAE to 0.077290/
+  SSIM to 0.062493, and audio-envelope correlation to 0.961110. Exact remains
+  unmet; the non-redistributed evidence is summarized in the benchmark record.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.

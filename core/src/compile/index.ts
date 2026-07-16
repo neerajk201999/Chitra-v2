@@ -211,11 +211,11 @@ function figureAssetReferences(html: string): string[] {
  *  (0..100 within the particle element's own box). Pure math → identical every
  *  render. `n` is fixed per element (max of grid cols*rows and count) so a morph
  *  never adds or drops dots. */
-type Dot = { x: number; y: number };
+type Dot = { x: number; y: number; size?: number; opacity?: number };
 function formationDots(el: { formation: string; cols: number; rows: number; count: number; radius: number; seed: number; points?: Dot[] }, formation: string, n: number, boxWpct: number, boxHpct: number, customPoints?: Dot[]): Dot[] {
   const dots: Dot[] = [];
   if (formation === "custom") {
-    return (customPoints ?? el.points ?? []).map((point) => ({ x: point.x, y: point.y }));
+    return (customPoints ?? el.points ?? []).map((point) => ({ ...point }));
   } else if (formation === "grid") {
     const cols = el.cols, rows = el.rows;
     for (let i = 0; i < n; i++) {
@@ -337,13 +337,20 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       const h = (el.height * score.meta.height) / 100;
       const n = el.formation === "grid" ? el.cols * el.rows : el.formation === "custom" ? el.points!.length : el.count;
       const dots = formationDots(el, el.formation, n, el.width, el.height);
-      const ds = Math.round(el.dotSize * scale);
       const col = colorOf(p, el.color);
       // Seeded phase per dot for the shimmer — deterministic twinkle.
       let s = ((el.seed + 7) * 2654435761) >>> 0;
       const rnd = () => ((s = (1664525 * s + 1013904223) >>> 0) / 4294967296);
       const dotDivs = dots
-        .map((d, i) => `<div class="pdot" data-phase="${rnd().toFixed(4)}" style="left:${d.x.toFixed(3)}%;top:${d.y.toFixed(3)}%;width:${ds}px;height:${ds}px;margin-left:${-ds / 2}px;margin-top:${-ds / 2}px;background:${col};box-shadow:0 0 ${(ds * 1.5).toFixed(1)}px ${col};" data-i="${i}"></div>`)
+        .map((d, i) => {
+          // Preserve legacy rounding when size is absent; clamp authored
+          // appearance so the schema's minimum cannot disappear at small output.
+          const ds = d.size == null
+            ? Math.round(el.dotSize * scale)
+            : Math.max(1, Math.round(el.dotSize * scale * d.size));
+          const opacity = d.opacity == null ? "" : `opacity:${d.opacity.toFixed(3)};`;
+          return `<div class="pdot" data-phase="${rnd().toFixed(4)}" style="left:${d.x.toFixed(3)}%;top:${d.y.toFixed(3)}%;width:${ds}px;height:${ds}px;margin-left:${-ds / 2}px;margin-top:${-ds / 2}px;background:${col};${opacity}box-shadow:0 0 ${(ds * el.glow).toFixed(1)}px ${col};" data-i="${i}"></div>`;
+        })
         .join("");
       return wrap(`<div class="pfield" style="position:relative;width:${w}px;height:${h}px;">${dotDivs}</div>`);
     }
