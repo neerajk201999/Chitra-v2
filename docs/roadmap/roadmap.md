@@ -40,23 +40,13 @@ Owner call: close the Remotion expressiveness gap and the HyperFrames workflow g
 Landed 2026-07-16 by concrete-reference exception (ADR-0012): **ADR-0013 frame-addressed transform tracks** — typed X/Y, scale, 3-axis rotation, opacity, perspective, origin, and token easing; final-frame/FPS timing; reason-gated by MO-KEY-1; browser benchmark seeks exact authored frames 3/3 and repeats a PNG byte-identically ([results](../../benchmarks/keyframe-track/results.md)).
 Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes, nested compositions, blend modes, motion blur, internal 3D camera/mesh tracks, clip audio pass-through, narration/TTS timeline, and automated reference-frame comparison.
 
-## M4 — ChitraBench (define "best")
-*Goal: the public benchmark for motion-design quality.*
-- Fixed brief suite (per register), scoring harness (gates + calibrated VLM rubrics), blind A/B protocol.
-- Publish Chitra vs HyperFrames (and raw-Remotion-skill baselines) results, reproducibly.
-- **Exit gate:** ≥70% blind preference over HyperFrames on identical briefs; methodology withstands external scrutiny (pre-registered protocol).
-
-## M5 — Ecosystem → v1.0
-Brand ingestion ("BRAND.md for motion": logo, palette, type, motion personality → tokens), style/block registry with `chitra add`, remaining workflows (feature-demo, PR-to-video, screen-recording ingestion via video-use patterns), distributed rendering (chunk-and-concat), WebCodecs backend spike.
-
-
 ## M4 — Creative Intelligence (the missing brain) — STARTED 2026-07-16
 *Goal: Chitra makes the creative decisions a top director + motion designer would — before rendering. The pipeline begins at intent, not at Motion IR (ADR-0012).*
-Landed: ADR-0012 (creative pipeline architecture) · **docs/creative/creative-constitution.md** (the encoded WHY across narrative/rhythm/camera/type/colour/composition/brand — CC-* rules) · Direction tier wired into the CLI (`chitra plan`) · **Brief↔Score conformance gate** (`chitra conform`; CC-CONF-1..5: register match, no dropped beat, no scene without a WHY, hero moments executed, pacing peak gets air) · ADR-0013 typed frame-addressed transform tracks · 40 tests.
+Landed: ADR-0012 (creative pipeline architecture) · **docs/creative/creative-constitution.md** (the encoded WHY across narrative/rhythm/camera/type/colour/composition/brand — CC-* rules) · Direction tier wired into the CLI (`chitra plan`) · **Brief↔Score conformance gate** (`chitra conform`; CC-CONF-1..5: register match, no dropped beat, no scene without a WHY, hero moments executed, pacing peak gets air) · ADR-0013 typed frame-addressed transform tracks.
 Engineering foundation: independent `Chitra-v2` lineage + ADR-0014 repository operating system, compact current-state memory, shared local/CI verification contract, executable link/version/manifest checks, and explicit SemVer/CHANGELOG discipline.
 Reference intelligence: ADR-0015 `chitra decompose` → typed Style DNA with deterministic source/media facts, shot rhythm, palette, luminance/saturation, motion energy, audio onset landmarks, and evidence frames; generated benchmark reproduces known cuts/colors and identical repeated JSON.
+Intake intelligence: ADR-0017 `chitra intake` → separately versioned multimodal Intake IR with objective/deliverable, mixed-source roles and rights, preferences/anti-references, brand constraints, assumptions/questions, evidence links, deterministic local hashes, and explicit unlocked URLs; 44 tests and a mixed-input benchmark.
 Remaining (priority order):
-- **Multimodal Brief/Intake IR**: prompt + optional videos/images/links/screenshots/footage/audio/brand/preferences → typed objective, evidence, constraints, and provenance.
 - **Creative Director engine**: product brief → cinematic concept (emotion, arc, register) as a typed Brief IR the agent fills and gates check.
 - **Storyboard IR tier**: shot list (intent, hero, camera, type, timing) between Brief and Score, with conformance gates both directions.
 - **Reference comparator**: align reference/render frames and audio, emit visual diffs, and make similarity claims measurable.
@@ -64,6 +54,15 @@ Remaining (priority order):
 - **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.
 - **Then ChitraBench** end-to-end (benchmarking a creative system, not a renderer).
 - **Exit gate:** on a fixed brief + reference, blind evaluators cannot distinguish Chitra's creative *decisions* (storyboard, pacing, type, palette choices) from a professional's on ≥ the ChitraBench bar.
+
+## M5 — ChitraBench (define "best")
+*Goal: the public benchmark for motion-design quality.*
+- Fixed brief suite (per register), scoring harness (gates + calibrated VLM rubrics), blind A/B protocol.
+- Publish Chitra vs HyperFrames (and raw-Remotion-skill baselines) results, reproducibly.
+- **Exit gate:** ≥70% blind preference over HyperFrames on identical briefs; methodology withstands external scrutiny (pre-registered protocol).
+
+## M6 — Ecosystem → v1.0
+Brand ingestion ("BRAND.md for motion": logo, palette, type, motion personality → tokens), style/block registry with `chitra add`, remaining workflows (feature-demo, PR-to-video, screen-recording ingestion via video-use patterns), distributed rendering (chunk-and-concat), WebCodecs backend spike.
 
 ## Standing risks (tracked here, reviewed each milestone)
 1. **Taste ceiling** — encoded rules may plateau below "Apple-grade." Mitigation: ChitraBench measures it honestly; revision loop + growing rule registry; human escalation is a feature, not a failure.

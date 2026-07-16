@@ -6,9 +6,21 @@ versioned separately.
 
 ## [Unreleased]
 
+### Added
+
+- Typed multimodal Intake IR for objectives, mixed-source provenance, rights
+  state, preferences and anti-references, brand constraints, assumptions, open
+  questions, and evidence links.
+- `chitra intake <file> -o <lock>` deterministic source locking with SHA-256,
+  byte counts, claimed-hash verification, traversal/symlink protection, and no
+  implicit network acquisition.
+- Mixed-input benchmark covering inline prompts, local references, uncaptured
+  URLs, evidence, and repeatable locks.
+
 ### Planned
 
-- Automated reference comparison and the Card Vault reconstruction benchmark.
+- Creative Director and Storyboard tiers, automated reference comparison, and
+  the Card Vault reconstruction benchmark.
 
 ## [0.3.0] — 2026-07-16
 

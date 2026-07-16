@@ -2,7 +2,7 @@
 /** ADR-0016: install the packed package into an isolated prefix and prove the
  *  installed binary can initialize, validate, and capture a browser frame. */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,6 +35,17 @@ try {
   const version = run(chitra, ["--version"]);
   run(chitra, ["probe"]);
   const film = path.join(work, "film");
+  mkdirSync(film);
+  const intake = path.join(film, "intake.json");
+  const lockedIntake = path.join(film, "intake.lock.json");
+  writeFileSync(intake, JSON.stringify({
+    intakeVersion: "0.1.0", tier: "intake", projectId: "cold-start", title: "Cold start",
+    objective: { primary: "Create a verified installation film", audience: "new users", singleMessage: "The package works" },
+    deliverable: { register: "brand-film", targetDurationMs: 10000 },
+    sources: [{ id: "prompt", kind: "direction-prompt", roles: ["content"], origin: { type: "inline", content: "Calm and exact." }, usage: "Defines the cold-start direction", rights: "owned" }],
+  }, null, 2));
+  run(chitra, ["intake", intake, "-o", lockedIntake]);
+  if (!existsSync(lockedIntake)) throw new Error("installed package did not produce an intake lock");
   run(chitra, ["init", film, "--style", "night", "--register", "brand-film", "--title", "Cold start"]);
   run(chitra, ["validate", path.join(film, "score.json")]);
   const frame = path.join(work, "frame.png");
@@ -48,6 +59,7 @@ ADR-0016 source-package verification in a fresh temporary install prefix.
 
 - Packed and globally installed: **chitra-video ${version}**
 - Runtime probe: **passed**
+- Installed-package Intake validation and source lock: **passed**
 - Starter initialization and static validation: **passed**
 - Installed-package browser frame: **${Math.round(statSync(frame).size / 1024)} KiB, passed**
 - Elapsed on this machine with a warm npm dependency cache: **${elapsedSeconds.toFixed(1)}s**
@@ -56,7 +68,7 @@ This is a functional install check, not the M3 outside-user/network-cold timing 
 Reproduce: \`node benchmarks/cold-start/run.mjs\`.
 `;
   if (!check) writeFileSync(path.join(here, "results.md"), report);
-  console.log(`✔ isolated install ${version}: probe, init, validate, and browser frame (${elapsedSeconds.toFixed(1)}s)`);
+  console.log(`✔ isolated install ${version}: probe, intake lock, init, validate, and browser frame (${elapsedSeconds.toFixed(1)}s)`);
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
