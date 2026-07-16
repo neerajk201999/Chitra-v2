@@ -304,3 +304,22 @@ describe("particle fields (ADR-0009)", () => {
     expect(runStaticGates(s).some((x) => x.ruleId === "MO-PART-1")).toBe(true);
   });
 });
+
+describe("audio-reactive timeline (ADR-0011)", () => {
+  it("onBeat resolves to scene-relative time and errors without beats", async () => {
+    const { resolveSceneTimeline } = await import("../src/compile/index.js");
+    const s = validFixture();
+    s.scenes[1].choreography[0].at = { onBeat: 2, offsetMs: 0 } as never;
+    const beats = [0, 1000, 2000, 3000];
+    // scene 1 starts at scene0.duration; onBeat 2 = 2000ms absolute
+    const start = s.scenes[0].durationMs;
+    const r = resolveSceneTimeline(s.scenes[1], { sceneStartMs: start, beats });
+    expect(r[0].startMs).toBe(Math.max(0, 2000 - start));
+    expect(() => resolveSceneTimeline(s.scenes[1], { sceneStartMs: start })).toThrow(/beats/);
+  });
+  it("MO-AUD-4 blocks onBeat without a declared beat grid", () => {
+    const s = validFixture();
+    s.scenes[0].choreography[0].at = { onBeat: 1, offsetMs: 0 } as never;
+    expect(runStaticGates(s).some((x) => x.ruleId === "MO-AUD-4" && x.severity === "P1")).toBe(true);
+  });
+});

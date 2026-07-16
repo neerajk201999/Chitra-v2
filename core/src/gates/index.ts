@@ -38,9 +38,20 @@ export function runStaticGates(score: ScoreT): Finding[] {
   const scale = Math.min(score.meta.width, score.meta.height) / 1080;
   const minPx = TYPOGRAPHY.minTextPx1080[score.meta.register as Register] * scale;
 
+  const beats = score.audio?.music?.beats;
+  const sceneStart = (idx: number) => score.scenes.slice(0, idx).reduce((a, s) => a + s.durationMs, 0);
   score.scenes.forEach((scene, si) => {
     const p = (rest: string) => `scenes[${si}]${rest}`;
-    const resolved = safeResolve(scene);
+    // MO-AUD-4 (ADR-0011): onBeat needs a declared beat grid. Checked before
+    // timeline resolution so the specific message beats the generic IR-REF-1.
+    scene.choreography.forEach((a, ai) => {
+      if (a.at.onBeat == null) return;
+      if (!beats?.length)
+        f.push({ ruleId: "MO-AUD-4", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" uses at.onBeat but audio.music.beats is not declared — run \`chitra analyze-audio\`` });
+      else if (a.at.onBeat >= beats.length)
+        f.push({ ruleId: "MO-AUD-4", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" onBeat ${a.at.onBeat} exceeds ${beats.length} detected beats` });
+    });
+    const resolved = safeResolve(scene, { sceneStartMs: sceneStart(si), beats });
     if (!resolved) {
       f.push({ ruleId: "IR-REF-1", severity: "P1", path: p(".choreography"), message: "Choreography references an unknown animation id (broken relational timing)" });
       return;
@@ -248,7 +259,7 @@ export function runStaticGates(score: ScoreT): Finding[] {
           );
           if (!cont) break;
           const contExit = next.choreography.find((a) => a.target === cont.id && PRESETS[a.preset as PresetName].kind === "exit");
-          visibleTo += contExit ? safeResolve(next)?.find((r) => r.anim.id === contExit.id)?.startMs ?? next.durationMs : next.durationMs;
+          visibleTo += contExit ? safeResolve(next, { sceneStartMs: sceneStart(ni), beats })?.find((r) => r.anim.id === contExit.id)?.startMs ?? next.durationMs : next.durationMs;
           if (contExit) break;
         }
       }
@@ -312,9 +323,9 @@ export function runStaticGates(score: ScoreT): Finding[] {
   return f;
 }
 
-function safeResolve(scene: SceneT) {
+function safeResolve(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[] }) {
   try {
-    return resolveSceneTimeline(scene);
+    return resolveSceneTimeline(scene, ctx);
   } catch {
     return null;
   }

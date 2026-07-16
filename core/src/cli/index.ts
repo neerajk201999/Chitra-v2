@@ -13,6 +13,7 @@ import { runStaticGates, runFrameGates, summarize, type Finding } from "../gates
 import { openSession, renderScore, type Quality } from "../render/index.js";
 import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
+import { analyzeAudio } from "../audio/analyze.js";
 
 const program = new Command();
 program.name("chitra").description("Chitra deterministic core: validate, gate, render, and generate critic evidence for Motion IR scores").version("0.1.0");
@@ -274,6 +275,26 @@ program
       const r = spawnSync("ffmpeg", ["-y", "-v", "error", ...args, "-ar", "48000", target], { encoding: "utf8" });
       if (r.status !== 0) fail(`ffmpeg failed for ${name}: ${(r.stderr ?? "").slice(-300)}`);
       console.log(`✔ ${target}`);
+    }
+  });
+
+program
+  .command("analyze-audio")
+  .argument("<file>", "audio or video file")
+  .option("-o, --out <file>", "write analysis JSON sidecar")
+  .description("Detect tempo + beat times (ADR-0011). Paste beats into audio.music.beats to enable at.onBeat (motion snapped to the track).")
+  .action((file: string, o: { out?: string }) => {
+    try {
+      const a = analyzeAudio(file);
+      const json = JSON.stringify(a, null, 2);
+      if (o.out) {
+        writeFileSync(path.resolve(o.out), json);
+        console.log(`✔ ${o.out} — ${a.beats.length} beats, ~${a.bpm}bpm, first beat ${a.firstBeatMs}ms`);
+      } else {
+        console.log(json);
+      }
+    } catch (e) {
+      fail((e as Error).message);
     }
   });
 

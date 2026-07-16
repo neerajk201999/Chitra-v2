@@ -229,6 +229,9 @@ export type ElementT = z.infer<typeof Element>;
 const At = z.object({
   after: z.union([z.literal("scene-start"), id]).default("scene-start"),
   offsetMs: z.number().int().min(0).max(10000).default(0),
+  /** ADR-0011: fire at detected beat index N (absolute, from audio.music.beats),
+   *  converted to scene-relative at compile. Overrides `after` when present. */
+  onBeat: z.number().int().min(0).max(1999).optional(),
 });
 
 const Stagger = z.object({
@@ -343,6 +346,9 @@ export const Score = z.object({
           gainDb: z.number().min(-30).max(0).default(-6), // pre-normalization trim
           bpm: z.number().min(40).max(220).optional(), // declared tempo → enables MO-AUD-2 beat-cut gate
           firstBeatMs: z.number().int().min(0).default(0), // offset of beat 1 in the music file
+          // ADR-0011: detected beat times (ms from start) from `chitra analyze-audio`.
+          // Enables at.onBeat — motion snapped to the actual track.
+          beats: z.array(z.number().int().min(0)).max(2000).optional(),
           fadeOutMs: z.number().int().min(0).max(5000).default(800),
         })
         .optional(),

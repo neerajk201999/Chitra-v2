@@ -51,7 +51,7 @@ const ENCODE = {
  * markup changes, GSAP upgrades). Part of every scene hash — without it the
  * cache serves frames compiled by an older compiler.
  */
-export const COMPILER_CACHE_VERSION = "7";
+export const COMPILER_CACHE_VERSION = "8";
 
 /** Content digest of a file, memoized on (path, mtime, size) — video files are
  *  tens of MB and sceneHash runs per scene per render. */
@@ -341,9 +341,10 @@ export interface SfxEvent {
  *  inherits choreography's relational timing, no separate audio timeline. */
 export function collectSfx(score: ScoreT, projectDir: string, compiled: CompileResult): SfxEvent[] {
   const events: SfxEvent[] = [];
+  const beats = score.audio?.music?.beats;
   score.scenes.forEach((scene, i) => {
     const sceneStart = compiled.sceneBoundsMs[i].startMs;
-    for (const r of resolveSceneTimeline(scene)) {
+    for (const r of resolveSceneTimeline(scene, { sceneStartMs: sceneStart, beats })) {
       const sfx = (r.anim as { sfx?: { src: string; gainDb: number } }).sfx;
       if (!sfx) continue;
       const file = path.resolve(projectDir, sfx.src);

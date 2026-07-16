@@ -68,7 +68,9 @@ export interface ResolvedAnim {
   ease: string;
 }
 
-export function resolveSceneTimeline(scene: SceneT): ResolvedAnim[] {
+/** ADR-0011: onBeat resolution needs the scene's absolute start and the beat
+ *  grid. Callers that have them (compiler, gates) pass ctx; others get 0. */
+export function resolveSceneTimeline(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[] }): ResolvedAnim[] {
   const byId = new Map<string, ResolvedAnim>();
   const out: ResolvedAnim[] = [];
   for (const anim of scene.choreography) {
@@ -80,7 +82,12 @@ export function resolveSceneTimeline(scene: SceneT): ResolvedAnim[] {
       anim.override?.gsapEase ??
       EASINGS[(anim.easing ?? preset.defaultEasing) as EasingToken];
     let base = 0;
-    if (anim.at.after !== "scene-start") {
+    if (anim.at.onBeat != null) {
+      const beats = ctx?.beats;
+      if (!beats?.length) throw new Error(`Scene "${scene.id}": animation "${anim.id}" uses at.onBeat but audio.music.beats is not declared (run \`chitra analyze-audio\`)`);
+      if (anim.at.onBeat >= beats.length) throw new Error(`Scene "${scene.id}": animation "${anim.id}" onBeat ${anim.at.onBeat} exceeds ${beats.length} detected beats`);
+      base = Math.max(0, beats[anim.at.onBeat] - (ctx?.sceneStartMs ?? 0));
+    } else if (anim.at.after !== "scene-start") {
       const dep = byId.get(anim.at.after);
       if (!dep) throw new Error(`Scene "${scene.id}": animation "${anim.id}" waits on unknown animation "${anim.at.after}"`);
       base = dep.startMs + dep.durationMs;
@@ -552,7 +559,7 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
       }
     }
 
-    const resolved = resolveSceneTimeline(scene);
+    const resolved = resolveSceneTimeline(scene, { sceneStartMs: cursor, beats: score.audio?.music?.beats });
     // Elements with an enter animation start hidden; compiler sets initial state.
     for (const r of resolved) tweens.push(...presetTweens(r, scene, cursor, score));
 
