@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../..");
+const check = process.argv.includes("--check");
 const { validateScore } = await import(path.join(root, "core/dist/ir/schema.js"));
 const { runStaticGates } = await import(path.join(root, "core/dist/gates/index.js"));
 const { openSession } = await import(path.join(root, "core/dist/render/index.js"));
@@ -101,7 +102,7 @@ ${rows.join("\n")}
 
 Reproduce: \`cd core && npm run build && cd .. && node benchmarks/keyframe-track/run.mjs\`.
 `;
-  writeFileSync(path.join(here, "results.md"), report);
+  if (!check) writeFileSync(path.join(here, "results.md"), report);
   console.log("✔ exact keyframe states 3/3; repeated capture byte-identical");
 } finally {
   await session.close();

@@ -52,6 +52,7 @@ Brand ingestion ("BRAND.md for motion": logo, palette, type, motion personality 
 ## M4 — Creative Intelligence (the missing brain) — STARTED 2026-07-16
 *Goal: Chitra makes the creative decisions a top director + motion designer would — before rendering. The pipeline begins at intent, not at Motion IR (ADR-0012).*
 Landed: ADR-0012 (creative pipeline architecture) · **docs/creative/creative-constitution.md** (the encoded WHY across narrative/rhythm/camera/type/colour/composition/brand — CC-* rules) · Direction tier wired into the CLI (`chitra plan`) · **Brief↔Score conformance gate** (`chitra conform`; CC-CONF-1..5: register match, no dropped beat, no scene without a WHY, hero moments executed, pacing peak gets air) · ADR-0013 typed frame-addressed transform tracks · 40 tests.
+Engineering foundation: independent `Chitra-v2` lineage + ADR-0014 repository operating system, compact current-state memory, shared local/CI verification contract, executable link/version/manifest checks, and explicit SemVer/CHANGELOG discipline.
 Remaining (priority order):
 - **Reference Decomposer**: reference video → measurable Style DNA (camera, rhythm, typography, palette, motion, narrative, emotion). Unlocks "make it like this reference."
 - **Creative Director engine**: product brief → cinematic concept (emotion, arc, register) as a typed Brief IR the agent fills and gates check.
