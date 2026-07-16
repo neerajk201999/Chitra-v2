@@ -1,6 +1,6 @@
 ---
 name: create-video
-description: Direct and render a cinematic motion-design video from a prompt or any combination of reference videos, images, screenshots, links, brand assets, footage, audio, preferences, and anti-references. Use for launch films, product demos, promos, social clips, motion graphics, reference reconstruction, or end-to-end video creation. Runs intake, direction, storyboard, score, deterministic gates, render, evidence, and bounded critique.
+description: Direct and release a cinematic motion-design video from a prompt or any combination of reference videos, images, screenshots, links, brand assets, footage, audio, preferences, and anti-references. Use for launch films, product demos, promos, social clips, motion graphics, reference reconstruction, or end-to-end video creation. Runs intake, direction, storyboard, score, deterministic gates, draft render, evidence, bounded critique, and a hash-bound final release.
 ---
 
 # Chitra · Create Video
@@ -124,8 +124,18 @@ stated reason.” P3s are review notes—read them.
 Open and **look at** the evidence images (contact sheet first, then hero frames, then cut strips). Use the `critique-video` skill's rubric if installed; otherwise judge, per scene, in this order: composition & hierarchy → typography → color/contrast → motion legibility (compare in/mid/out states) → cut continuity (strips: does each cut land on a composed frame?) → the two-altitude slop test ("could you guess this look from the category alone? could you guess its evasion?").
 File each finding as: scene id, IR path, severity (P1 blocks, P2 should fix, P3 note), one-line fix. Patch **only the cited IR spans** in score.json — the per-scene cache makes surgical edits cheap. Re-run from step 4. Max 3 passes.
 
-### 8 · Final
-`chitra render score.json -o out/final.mp4 -q high`. Deliver: final.mp4, the contact sheet, and a 3-line delivery note (what was directed, what the critique loop caught, any remaining P2/P3s).
+### 8 · Verified release
+Deliver only through the ADR-0027 transaction:
+
+`chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json -q high`
+
+It re-runs creative/static/rendered gates at choreography boundaries and bounded
+intervals, measures the encoded final mux, stages outputs away from inputs, and
+writes a receipt binding the four creative artifacts, resolved render inputs,
+final video, and evidence. Run `chitra verify-release out/release.json` before
+delivery. `chitra render` remains a draft/diagnostic command and is never a
+release claim. Deliver final.mp4, release.json, the contact sheet, and a 3-line
+note (what was directed, what critique caught, any remaining P2/P3s).
 
 ## Failure honesty
 If a gate stays red, a font/asset is missing, or critique keeps finding the same defect — say so plainly with the finding attached. A degraded render presented as success is the one unforgivable output.

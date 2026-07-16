@@ -14,8 +14,10 @@ chitra decompose reference.mp4 -o style-dna.json # measured reference facts + sh
 chitra compare reference.mp4 out.mp4 -o comparison.json # aligned pixel/audio-energy evidence
 chitra check score.json                        # schema + static + rendered-frame gates
 chitra frame score.json -t 1800 -o peek.png    # one-frame preview
-chitra render score.json -o out.mp4 -q high    # deterministic; refuses P1 findings
+chitra render score.json -o draft.mp4 -q draft # diagnostic draft; refuses static P1 findings
 chitra evidence score.json -o evidence/        # contact sheet + hero frames + cut strips
+chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
+chitra verify-release out/release.json          # verify the bound release artifacts
 ```
 
 Do not run `npm i -g chitra-video` until the package is published; the registry

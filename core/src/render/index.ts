@@ -17,6 +17,7 @@ import puppeteer, { type Browser, type Page } from "puppeteer";
 import type { ScoreT } from "../ir/schema.js";
 import { compile, resolveSceneTimeline, type CompileResult } from "../compile/index.js";
 import { resolveProjectAsset } from "../assets/local.js";
+import { audioInvariantIssues, measureAudio, type AudioMeasurement } from "../audio/measure.js";
 
 /**
  * Chrome flags mined from HyperFrames' engine (docs/research/stack-validation.md §2).
@@ -67,6 +68,24 @@ function fileDigest(file: string): string {
   return d;
 }
 
+function sceneAssetSources(scene: ScoreT["scenes"][number]): string[] {
+  const srcs: string[] = [];
+  for (const element of scene.elements) {
+    if (element.type === "image" || element.type === "video") srcs.push(element.src);
+    if (element.type === "figure") srcs.push(element.src, ...element.assets.map((asset) => asset.src));
+  }
+  if (scene.background === "image" && scene.backgroundImage) srcs.push(scene.backgroundImage);
+  for (const animation of scene.choreography) if (animation.sfx) srcs.push(animation.sfx.src);
+  return srcs;
+}
+
+/** Every local byte source that can affect rendered pixels, timing, or audio. */
+export function renderInputFiles(score: ScoreT, projectDir = "."): string[] {
+  const sources = new Set(score.scenes.flatMap(sceneAssetSources));
+  if (score.audio?.music) sources.add(score.audio.music.src);
+  return [...sources].map((source) => resolveProjectAsset(projectDir, source)).sort();
+}
+
 /** Digest of every asset file a scene (or its transition-visible neighbors) references.
  *  Asset BYTES must be in the hash: editing an image in place must invalidate
  *  exactly the scenes that show it (ADR-0006). Missing files throw — a broken
@@ -76,14 +95,7 @@ function assetDigests(score: ScoreT, sceneIndex: number, projectDir: string): Re
   for (const idx of [sceneIndex - 1, sceneIndex, sceneIndex + 1]) {
     const scene = score.scenes[idx];
     if (!scene) continue;
-    const srcs: string[] = [];
-    for (const element of scene.elements) {
-      if (element.type === "image" || element.type === "video") srcs.push(element.src);
-      if (element.type === "figure") srcs.push(element.src, ...element.assets.map((asset) => asset.src));
-    }
-    if (scene.background === "image" && scene.backgroundImage) srcs.push(scene.backgroundImage);
-    for (const a of scene.choreography) if (a.sfx) srcs.push(a.sfx.src);
-    for (const src of srcs) {
+    for (const src of sceneAssetSources(scene)) {
       if (out[src]) continue;
       const file = resolveProjectAsset(projectDir, src);
       out[src] = fileDigest(file);
@@ -106,8 +118,28 @@ export function sceneHash(score: ScoreT, sceneIndex: number, projectDir = "."): 
     // scene's fade-through-black tail paints into this scene's first frames.
     nextScene: score.scenes[sceneIndex + 1] ?? null,
     prevScene: score.scenes[sceneIndex - 1] ?? null,
+    // `at.onBeat` changes pixels even when scenes are byte-identical.
+    audioTiming: score.audio?.music ? {
+      bpm: score.audio.music.bpm,
+      firstBeatMs: score.audio.music.firstBeatMs,
+      beats: score.audio.music.beats,
+    } : null,
   });
   return createHash("sha256").update(basis).digest("hex").slice(0, 16);
+}
+
+/** Full render-input identity for release receipts (including music bytes). */
+export function scoreHash(score: ScoreT, projectDir = "."): string {
+  // Release fingerprints must read current bytes, not trust a prior render's
+  // mtime/size memoization.
+  digestMemo.clear();
+  const music = score.audio?.music;
+  return createHash("sha256").update(JSON.stringify({
+    compilerV: COMPILER_CACHE_VERSION,
+    score,
+    scenes: score.scenes.map((_, index) => sceneHash(score, index, projectDir)),
+    music: music ? fileDigest(resolveProjectAsset(projectDir, music.src)) : null,
+  })).digest("hex");
 }
 
 export interface RenderSession {
@@ -117,6 +149,7 @@ export interface RenderSession {
   pageFile: string;
   close(): Promise<void>;
   seekAndCapture(ms: number): Promise<Buffer>;
+  contrastCapture(ms: number): Promise<Buffer>;
   textRegions(ms: number): Promise<TextRegion[]>;
 }
 
@@ -234,6 +267,17 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
       await page.evaluate(`window.__chitra.seek(${ms})`);
       return Buffer.from(await stage.screenshot({ type: "png" }));
     },
+    async contrastCapture(ms: number) {
+      await page.evaluate(`window.__chitra.seek(${ms})`);
+      await page.evaluate(() => {
+        const style = document.createElement("style");
+        style.id = "__chitra-contrast-mask";
+        style.textContent = ".text .txt,.figure *,.figure *::before,.figure *::after{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;text-decoration-color:transparent!important}";
+        document.head.appendChild(style);
+      });
+      try { return Buffer.from(await stage.screenshot({ type: "png" })); }
+      finally { await page.evaluate(() => document.getElementById("__chitra-contrast-mask")?.remove()); }
+    },
     async textRegions(ms: number) {
       await page.evaluate(`window.__chitra.seek(${ms})`);
       return (await page.evaluate("window.__chitra.textRegions()")) as TextRegion[];
@@ -248,6 +292,7 @@ export interface RenderResult {
   cachedFrames: number;
   durationMs: number;
   wallMs: number;
+  audio: AudioMeasurement;
 }
 
 export interface RenderOptions {
@@ -309,6 +354,7 @@ export async function renderScore(
     mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
     const music = score.audio?.music;
     const sfx = collectSfx(score, projectDir, compiled);
+    let audio: AudioMeasurement = { status: "missing" };
     if (music || sfx.length) {
       const silent = outFile.replace(/(\.[a-z0-9]+)?$/i, ".video-only.mp4");
       await pipeEncode(framePaths, fps, silent, enc.preset, enc.crf);
@@ -318,6 +364,9 @@ export async function renderScore(
         sfx,
       });
       rmSync(silent, { force: true });
+      audio = measureAudio(outFile);
+      const audioIssues = audioInvariantIssues(audio, !!music, sfx.length > 0);
+      if (audioIssues.length) throw new Error(`final mux violates MO-AUD-1: ${audioIssues.join("; ")}`);
     } else {
       await pipeEncode(framePaths, fps, outFile, enc.preset, enc.crf);
     }
@@ -343,6 +392,7 @@ export async function renderScore(
       cachedFrames: cached,
       durationMs: compiled.durationMs,
       wallMs: Date.now() - t0,
+      audio,
     };
   } finally {
     await session.close();
@@ -372,16 +422,15 @@ export function collectSfx(score: ScoreT, projectDir: string, compiled: CompileR
   return events;
 }
 
-/** Mix bed + SFX under the silent video. Bed is loudness-normalized to −14 LUFS;
- *  SFX ride on top; a limiter holds true peaks (MO-AUD-3). */
-function muxAudio(
+/** ADR-0027: lossless premix followed by measured final-bus normalization. */
+async function muxAudio(
   videoFile: string,
   outFile: string,
   opts: { durationS: number; music: { file: string; gainDb: number; fadeOutMs: number } | null; sfx: SfxEvent[] }
 ): Promise<void> {
   const D = opts.durationS.toFixed(3);
-  const inputs: string[] = ["-i", videoFile];
-  let idx = 1;
+  const inputs: string[] = [];
+  let idx = 0;
   let bedLabel: string;
   const filters: string[] = [];
   if (opts.music) {
@@ -390,7 +439,7 @@ function muxAudio(
     const fadeS = opts.music.fadeOutMs / 1000;
     const fadeStart = Math.max(0, opts.durationS - fadeS);
     filters.push(
-      `[${idx}:a]volume=${opts.music.gainDb}dB,loudnorm=I=-14:TP=-1.5:LRA=11,apad,atrim=0:${D},` +
+      `[${idx}:a]volume=${opts.music.gainDb}dB,apad,atrim=0:${D},` +
         `afade=t=out:st=${fadeStart.toFixed(3)}:d=${fadeS.toFixed(3)},aresample=48000,aformat=channel_layouts=stereo[bed]`
     );
     idx++;
@@ -409,18 +458,31 @@ function muxAudio(
     idx++;
   });
   const mixInputs = 1 + sfxLabels.length;
-  filters.push(
-    `${bedLabel}${sfxLabels.join("")}amix=inputs=${mixInputs}:duration=first:normalize=0,alimiter=limit=0.89,atrim=0:${D}[a]`
-  );
-  return runFfmpeg([
-    "-y",
-    ...inputs,
-    "-filter_complex", filters.join(";"),
-    "-map", "0:v", "-c:v", "copy",
-    "-map", "[a]", "-c:a", "aac", "-b:a", "192k",
-    "-movflags", "+faststart",
-    outFile,
-  ]);
+  filters.push(`${bedLabel}${sfxLabels.join("")}amix=inputs=${mixInputs}:duration=first:normalize=0,atrim=0:${D}[a]`);
+  const premix = outFile.replace(/(\.[a-z0-9]+)?$/i, ".premix.wav");
+  try {
+    await runFfmpeg(["-y", ...inputs, "-filter_complex", filters.join(";"), "-map", "[a]", "-c:a", "pcm_s24le", premix]);
+    let finalFilter: string;
+    if (opts.music) {
+      const measured = measureAudio(premix);
+      if (measured.status !== "present" || measured.integratedLufs == null || measured.truePeakDbtp == null ||
+          measured.loudnessRangeLu == null || measured.thresholdLufs == null || measured.targetOffsetLu == null)
+        throw new Error("music-led premix is silent or cannot be measured for two-pass normalization");
+      finalFilter = `loudnorm=I=-14:TP=-1.8:LRA=11:measured_I=${measured.integratedLufs}:measured_TP=${measured.truePeakDbtp}:` +
+        `measured_LRA=${measured.loudnessRangeLu}:measured_thresh=${measured.thresholdLufs}:offset=${measured.targetOffsetLu}:linear=true,aresample=48000`;
+    } else {
+      // Sparse SFX must not be amplified toward a music-program loudness target.
+      finalFilter = "alimiter=limit=0.75,aresample=48000";
+    }
+    await runFfmpeg([
+      "-y", "-i", videoFile, "-i", premix,
+      "-map", "0:v", "-c:v", "copy",
+      "-map", "1:a", "-af", finalFilter, "-c:a", "aac", "-b:a", "192k",
+      "-movflags", "+faststart", outFile,
+    ]);
+  } finally {
+    rmSync(premix, { force: true });
+  }
 }
 
 function runFfmpeg(args: string[]): Promise<void> {

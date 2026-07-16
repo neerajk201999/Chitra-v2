@@ -943,19 +943,49 @@ window.__chitra = {
   textRegions: function () {
     var stageEl = document.getElementById("stage");
     var stage = stageEl.getBoundingClientRect();
+    function insetValue(value, axis) {
+      value = String(value || "0");
+      if (value.slice(-1) === "%") return parseFloat(value) * axis / 100;
+      return parseFloat(value) || 0;
+    }
+    function visibleBox(el, rect) {
+      var left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom;
+      var opacity = 1, current = el;
+      while (current) {
+        var style = getComputedStyle(current);
+        opacity *= parseFloat(style.opacity || "1");
+        if (style.display === "none" || style.visibility === "hidden" || opacity <= 0.05) return { visible: false, left: left, top: top, right: right, bottom: bottom };
+        var box = current.getBoundingClientRect();
+        if (style.overflowX !== "visible") { left = Math.max(left, box.left); right = Math.min(right, box.right); }
+        if (style.overflowY !== "visible") { top = Math.max(top, box.top); bottom = Math.min(bottom, box.bottom); }
+        var clip = String(style.clipPath || style.webkitClipPath || "");
+        var match = clip.match(/^inset\\(([^)]*)\\)/i);
+        if (match) {
+          var parts = match[1].split(/\\s+round\\s+/i)[0].trim().split(/\\s+/);
+          var values = parts.length === 1 ? [parts[0], parts[0], parts[0], parts[0]]
+            : parts.length === 2 ? [parts[0], parts[1], parts[0], parts[1]]
+            : parts.length === 3 ? [parts[0], parts[1], parts[2], parts[1]] : parts.slice(0, 4);
+          top = Math.max(top, box.top + insetValue(values[0], box.height));
+          right = Math.min(right, box.right - insetValue(values[1], box.width));
+          bottom = Math.min(bottom, box.bottom - insetValue(values[2], box.height));
+          left = Math.max(left, box.left + insetValue(values[3], box.width));
+        }
+        if (left >= right || top >= bottom) return { visible: false, left: left, top: top, right: right, bottom: bottom };
+        if (current === stageEl) break;
+        current = current.parentElement;
+      }
+      return { visible: true, left: left, top: top, right: right, bottom: bottom };
+    }
     var regions = TEXTMETA.map(function (m) {
       var el = document.querySelector(m.sel);
       if (!el) return null;
       var st = getComputedStyle(el);
-      var vis = st.visibility !== "hidden" && parseFloat(st.opacity || "1") > 0.05;
-      // walk up: scene hidden ⇒ not visible
-      var scene = document.getElementById("scene-" + m.sceneId);
-      if (scene && getComputedStyle(scene).visibility === "hidden") vis = false;
       var r = el.getBoundingClientRect();
+      var box = visibleBox(el, r);
       var inner = el.querySelector(".txt") || el;
       var fs = parseFloat(getComputedStyle(inner).fontSize);
-      return { sel: m.sel, scene: m.sceneId, visible: vis, overMedia: m.overMedia, color: m.color,
-        fontSizePx: fs, x: r.left - stage.left, y: r.top - stage.top, w: r.width, h: r.height,
+      return { sel: m.sel, scene: m.sceneId, visible: box.visible, overMedia: m.overMedia, color: m.color,
+        fontSizePx: fs, x: box.left - stage.left, y: box.top - stage.top, w: Math.max(0, box.right - box.left), h: Math.max(0, box.bottom - box.top),
         origin: "score", text: (inner.textContent || "").trim() };
     }).filter(Boolean);
     function colorInfo(value) {
@@ -977,27 +1007,16 @@ window.__chitra = {
         var range = document.createRange();
         range.selectNodeContents(node);
         var r = range.getBoundingClientRect();
-        var visible = true, current = parent;
-        var left = r.left, top = r.top, right = r.right, bottom = r.bottom;
-        while (current) {
-          var currentStyle = getComputedStyle(current);
-          if (currentStyle.display === "none" || currentStyle.visibility === "hidden" || parseFloat(currentStyle.opacity || "1") <= 0.05) { visible = false; break; }
-          var currentRect = current.getBoundingClientRect();
-          if (currentStyle.overflowX !== "visible") { left = Math.max(left, currentRect.left); right = Math.min(right, currentRect.right); }
-          if (currentStyle.overflowY !== "visible") { top = Math.max(top, currentRect.top); bottom = Math.min(bottom, currentRect.bottom); }
-          if (left >= right || top >= bottom) { visible = false; break; }
-          if (current === stageEl) break;
-          current = current.parentElement;
-        }
+        var box = visibleBox(parent, r);
         var style = getComputedStyle(parent), color = colorInfo(style.color);
-        if (color.alpha <= 0.05) visible = false;
+        if (color.alpha <= 0.05) box.visible = false;
         var inner = parent.closest("[id]");
         var innerId = inner && inner.id !== sceneId + "--" + figureId && /^[a-z][a-z0-9-]*$/.test(inner.id) ? inner.id : null;
         var target = innerId ? figureId + "/" + innerId : figureId;
         regions.push({
           sel: "#" + sceneId + "--" + figureId + "/" + (innerId || "text") + "::text[" + index + "]",
-          scene: sceneId, visible: visible, overMedia: true, color: color.hex,
-          fontSizePx: parseFloat(style.fontSize), x: left - stage.left, y: top - stage.top, w: Math.max(0, right - left), h: Math.max(0, bottom - top),
+          scene: sceneId, visible: box.visible, overMedia: true, color: color.hex,
+          fontSizePx: parseFloat(style.fontSize), x: box.left - stage.left, y: box.top - stage.top, w: Math.max(0, box.right - box.left), h: Math.max(0, box.bottom - box.top),
           origin: "figure", figureId: figureId, target: target, text: text
         });
       }

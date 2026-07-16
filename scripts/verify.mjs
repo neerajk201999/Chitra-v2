@@ -33,6 +33,7 @@ if (!quick) {
   run("Creative ladder benchmark", process.execPath, ["benchmarks/creative-ladder/run.mjs", "--check"]);
   run("Source-assisted provenance benchmark", process.execPath, ["benchmarks/source-assisted/run.mjs", "--check"]);
   run("Rendered figure text gate benchmark", process.execPath, ["benchmarks/figure-text-gates/run.mjs", "--check"]);
+  run("Release integrity benchmark", process.execPath, ["benchmarks/release-integrity/run.mjs", "--check"]);
   run("Heterogeneous particle appearance benchmark", process.execPath, ["benchmarks/particle-appearance/run.mjs", "--check"]);
   run("Reference Decomposer benchmark", process.execPath, ["benchmarks/reference-decomposer/run.mjs", "--check"]);
   run("Reference Comparator benchmark", process.execPath, ["benchmarks/reference-comparator/run.mjs", "--check"]);

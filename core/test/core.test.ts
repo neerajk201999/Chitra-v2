@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 import { validateScore, type ScoreT } from "../src/ir/schema.js";
 import { compile, resolveSceneTimeline, totalDurationMs } from "../src/compile/index.js";
-import { runStaticGates, runConformance } from "../src/gates/index.js";
-import { sceneHash } from "../src/render/index.js";
+import { frameGateSampleTimes, runFrameGates, runStaticGates, runConformance } from "../src/gates/index.js";
+import { sceneHash, type RenderSession } from "../src/render/index.js";
+import { assertReleaseTargets } from "../src/release/index.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const flagship = JSON.parse(
@@ -129,6 +132,13 @@ describe("compiler determinism surface", () => {
     expect(sceneHash(edited, 0)).toBe(sceneHash(base, 0));
     expect(sceneHash(edited, 5)).toBe(sceneHash(base, 5));
   });
+  it("beat timing invalidates cached frames", () => {
+    const base = validFixture();
+    base.audio = { music: { src: "assets/bed.wav", gainDb: -6, firstBeatMs: 0, fadeOutMs: 800, beats: [100, 600] } };
+    const edited = structuredClone(base);
+    edited.audio!.music!.beats = [150, 650];
+    expect(sceneHash(edited, 0)).not.toBe(sceneHash(base, 0));
+  });
   it("total duration is the sum of scenes", () => {
     const s = validFixture();
     expect(totalDurationMs(s)).toBe(s.scenes.reduce((a, x) => a + x.durationMs, 0));
@@ -142,6 +152,89 @@ describe("compiler determinism surface", () => {
     const runtime = html.split("<script>").pop()!;
     expect(runtime).not.toContain("Date.now");
     expect(runtime).not.toContain("Math.random");
+    expect(runtime).toContain("clip.match(/^inset\\(([^)]*)\\)/i)");
+  });
+});
+
+describe("ADR-0027 temporal frame gates", () => {
+  it("samples choreography neighborhoods and catches a transient overlap missed by three scene instants", async () => {
+    const score = validFixture();
+    score.meta.width = 320;
+    score.meta.height = 320;
+    const scene = score.scenes[0];
+    scene.durationMs = 1200;
+    scene.transitionOut = { type: "cut", duration: "standard" };
+    scene.choreography = [{ id: "brief-move", target: scene.elements[0].id, preset: "slide-in", direction: "left", duration: "quick", at: { after: "scene-start", offsetMs: 100 } }];
+    score.scenes = [scene];
+    const times = frameGateSampleTimes(score);
+    expect(Math.max(...times.slice(1).map((time, index) => time - times[index]))).toBeLessThanOrEqual(250);
+    expect(times.some((time) => time >= 100 && time <= 300)).toBe(true);
+
+    const frame = await sharp({ create: { width: 320, height: 320, channels: 3, background: "#050607" } })
+      .composite([{ input: Buffer.from('<svg width="80" height="80"><rect width="80" height="80" fill="#ffffff"/></svg>'), left: 120, top: 120 }])
+      .png().toBuffer();
+    const session = {
+      compiled: { html: "", durationMs: 1200, fps: 30, width: 320, height: 320, sceneBoundsMs: [{ id: scene.id, startMs: 0, endMs: 1200 }] },
+      textRegions: async (time: number) => [
+        { sel: "#a", scene: scene.id, visible: true, overMedia: false, color: "#ffffff", fontSizePx: 24, x: 60, y: 120, w: 90, h: 30, text: "First" },
+        { sel: "#b", scene: scene.id, visible: true, overMedia: false, color: "#ffffff", fontSizePx: 24, x: time >= 100 && time <= 300 ? 100 : 180, y: 120, w: 90, h: 30, text: "Second" },
+      ],
+      seekAndCapture: async () => frame,
+    } as unknown as RenderSession;
+    const findings = await runFrameGates(score, session);
+    expect(findings.some((finding) => finding.ruleId === "QE-OVERLAP-1" && finding.timecodeMs! <= 300)).toBe(true);
+  });
+
+  it("checks over-media contrast at the bounded interval samples", async () => {
+    const score = validFixture();
+    score.meta.width = 320;
+    score.meta.height = 320;
+    const scene = score.scenes[0];
+    scene.durationMs = 1200;
+    scene.transitionOut = { type: "cut", duration: "standard" };
+    score.scenes = [scene];
+    const frame = (background: string, accent: string) => sharp({ create: { width: 320, height: 320, channels: 3, background } })
+      .composite([{ input: Buffer.from(`<svg width="20" height="20"><rect width="20" height="20" fill="${accent}"/></svg>`), left: 10, top: 10 }])
+      .png().toBuffer();
+    const dark = await frame("#000000", "#333333");
+    const bright = await frame("#ffffff", "#dddddd");
+    const session = {
+      compiled: { html: "", durationMs: 1200, fps: 30, width: 320, height: 320, sceneBoundsMs: [{ id: scene.id, startMs: 0, endMs: 1200 }] },
+      textRegions: async () => [{ sel: "#media-copy", scene: scene.id, visible: true, overMedia: true, color: "#ffffff", fontSizePx: 24, x: 100, y: 120, w: 120, h: 30, text: "Signal" }],
+      contrastCapture: async (time: number) => Math.abs(time - 700) < 1 ? bright : dark,
+      seekAndCapture: async () => dark,
+    } as unknown as RenderSession;
+    const findings = await runFrameGates(score, session);
+    expect(findings.some((finding) => finding.ruleId === "MO-TYPE-2" && finding.timecodeMs === 700)).toBe(true);
+  });
+});
+
+describe("ADR-0027 release target safety", () => {
+  it("refuses output paths that can overwrite creative or render inputs", () => {
+    const project = mkdtempSync(path.join(os.tmpdir(), "chitra-release-targets-"));
+    try {
+      mkdirSync(path.join(project, "assets"));
+      const asset = path.join(project, "assets/shot.png");
+      writeFileSync(asset, "asset");
+      const score = validFixture();
+      score.scenes[0].elements.push({
+        type: "image", id: "shot", role: "support", src: "assets/shot.png", fit: "cover",
+        position: { anchor: "center", x: 50, y: 50 }, width: 20, height: 20, radius: 0, scrim: 0,
+      });
+      const artifacts = { intake: path.join(project, "intake.json"), direction: path.join(project, "direction.json"), storyboard: path.join(project, "storyboard.json"), score: path.join(project, "score.json") };
+      for (const file of Object.values(artifacts)) writeFileSync(file, "{}");
+      const safe = { out: path.join(project, "out/final.mp4"), evidence: path.join(project, "out/evidence"), receipt: path.join(project, "out/release.json") };
+      expect(() => assertReleaseTargets(artifacts, score, project, safe)).not.toThrow();
+      expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, out: artifacts.score })).toThrow(/overwrite an input/);
+      expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, out: asset })).toThrow(/overwrite an input/);
+      expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, evidence: project })).toThrow(/contains an input/);
+      expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, out: path.join(safe.evidence, "final.mp4") })).toThrow(/not nested/);
+      expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, receipt: path.join(safe.evidence, "release.json") })).toThrow(/not nested/);
+      expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, evidence: path.join(safe.out, "evidence") })).toThrow(/not nested/);
+      expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, receipt: path.join(safe.out, "release.json") })).toThrow(/not nested/);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
   });
 });
 
