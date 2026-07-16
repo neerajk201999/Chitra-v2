@@ -17,10 +17,16 @@ versioned separately.
 - `chitra decompose` for deterministic, typed Style DNA and per-shot evidence.
 - Generated three-shot benchmark covering cut timing, palette, motion energy,
   semantic honesty, bounded sampling, and byte-identical repeated JSON/evidence.
+- Native Claude Code, Codex, and Cursor plugin manifests plus a Gemini entry
+  point, all sharing the canonical skills tree.
+- Isolated install benchmark covering package install, probe, init, validation,
+  and an installed-package browser frame.
 
 ### Changed
 
 - Agent workflows now decompose supplied references before direction.
+- Creation intake explicitly supports prompt-only direction or any combination
+  of references, assets, links, footage, audio, preferences, and anti-references.
 - Package metadata points only to the isolated `Chitra-v2` repository.
 
 ## [0.2.0] — 2026-07-16

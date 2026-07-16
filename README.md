@@ -19,18 +19,30 @@ prompt → direction → design → motion → render → critique → revision 
 
 ## Status
 
-**v0.3.0 — references become measurable inputs.** `chitra decompose` creates validated, deterministic Style DNA: source identity, shot rhythm, palette, luminance/saturation, frame-difference motion energy, audio onset landmarks, and evidence frames. Its [generated-fixture benchmark](benchmarks/reference-decomposer/results.md) reproduces exact known cuts and colors with byte-identical repeated JSON. Semantic intent stays explicitly unmeasured, and exact reconstruction still awaits the comparator. The existing closed loop retains its **10/10 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md) and exact authored transforms remain covered by the [keyframe benchmark](benchmarks/keyframe-track/results.md).
+**v0.3.0 — measurable references and portable agent workflows.** `chitra decompose` creates deterministic Style DNA and evidence; the [generated-fixture benchmark](benchmarks/reference-decomposer/results.md) reproduces exact known cuts/colors with byte-identical JSON and frames. The same canonical intake, direction, workflow, and critique skills now install through Claude Code, Codex, Cursor, Gemini CLI, or `npx skills`, while an [isolated install benchmark](benchmarks/cold-start/results.md) proves the packaged CLI through a real browser frame. Semantic intent and exact reconstruction remain honestly open. The existing closed loop retains its **10/10 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md).
 
 ## Use it from your coding agent
 
 Requirements: Node 22.12+, ffmpeg on PATH.
 
 ```bash
-git clone <this repo> chitra && cd chitra/core && npm install && npx tsc
-node dist/cli/index.js probe   # verify environment
+git clone https://github.com/neerajk201999/Chitra-v2.git
+cd Chitra-v2
+npm install -g ./core
+chitra probe
 ```
 
-Then, in Claude Code / Codex / Cursor, point your agent at the repo and ask for a video — the agent entry point is [AGENTS.md](AGENTS.md), which routes to the `create-video` and `critique-video` skills. Claude Code users can also install the plugin from [.claude-plugin/plugin.json](.claude-plugin/plugin.json).
+Open this repository directly in your agent, or from another project run
+`npx skills add /absolute/path/to/Chitra-v2 --skill '*' --copy --yes`.
+
+The repository is currently private and the npm package is not published; the
+source commands require GitHub access. See the honest, tested platform matrix in
+[Install and use Chitra](docs/INSTALL.md), including Claude Code and Codex plugin
+commands, Cursor/Gemini skills installation, sample prompts, and release blockers.
+
+Then ask for the outcome in your own language. A plain direction prompt is
+enough; references, images, links, screenshots, footage, audio, brand material,
+preferences, and anti-references are optional inputs—not mandatory ceremony.
 
 ```bash
 # what the agent runs under the hood

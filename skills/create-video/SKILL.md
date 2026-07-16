@@ -1,6 +1,6 @@
 ---
 name: create-video
-description: Direct and render a cinematic motion-design video from a brief using Chitra. Use when the user wants to create a video, launch film, product demo, promo, social clip, or any motion-design piece. Runs the full pipeline - direction, score, deterministic gates, render, evidence, critique loop.
+description: Direct and render a cinematic motion-design video from a prompt or any combination of reference videos, images, screenshots, links, brand assets, footage, audio, preferences, and anti-references. Use for launch films, product demos, promos, social clips, motion graphics, reference reconstruction, or end-to-end video creation. Runs intake, direction, score, deterministic gates, render, evidence, and bounded critique.
 ---
 
 # Chitra · Create Video
@@ -21,11 +21,20 @@ You are the **director**, not a generator. You produce two artifacts (Direction,
 ### 0 · Locate the toolchain
 The Chitra repo provides `core/dist/cli/index.js` (invoke as `chitra` below via `node <repo>/core/dist/cli/index.js`). If `dist` is missing: `cd core && npm install && npx tsc`. Verify with `chitra probe`.
 
-### 1 · Brief → Direction (Tier 1)
-Interrogate the brief (ask the user only what you cannot infer): subject, audience, **register** (`brand-film` | `product-demo` | `social-short`), duration target, brand constraints (colors/fonts/logo), the single message that must land.
+### 1 · Intake → Direction (Tier 1)
+Inventory what the user actually supplied; a reference is optional and never overrides the user's objective or preferences.
+
+- Prompt only: infer a strong concept from the product, audience, objective, duration, and constraints; ask only for a missing decision that would materially change the film.
+- Reference video: run `chitra decompose reference.mp4 -o style-dna.json`, inspect shot evidence, and separate transferable grammar from reference-specific content.
+- Images/screenshots/brand assets: copy them into project-local `assets/`, inspect them directly, preserve logos/UI faithfully, and record provenance.
+- Links: research them with the host agent; use `chitra snap` or `chitra fetch` only when the visual should enter the film. Never put a URL in Score IR.
+- Footage/audio: probe first; transcribe speech when narrative depends on it; analyze audio landmarks before beat-addressed choreography.
+- Preferences and anti-references: treat both as hard creative constraints and reflect them in Direction choices, not as a note appended after scoring.
+
+Interrogate only what you cannot safely infer: subject, audience, **register** (`brand-film` | `product-demo` | `social-short`), duration target, brand constraints (colors/fonts/logo), the single message that must land.
 Write `direction.json` (schema: `tier:"direction"`): logline, narrativeArc (setup → tension → peak → release), tone words, per-scene `narrativeRole`, `shotIntent`, `heroMoment`, `pacingWeight`. 4–8 scenes for 25–45s. Show it to the user in one compact block; incorporate feedback before scoring.
 
-If the user supplies a reference, first run `chitra decompose reference.mp4 -o style-dna.json`, inspect its shot evidence, and ground direction in the measured timing, palette, luminance, motion-energy, and audio-landmark fields. The semantic review slots are deliberately `unmeasured`; annotate typography, camera intent, narrative, and emotion separately with evidence. Style DNA is not proof of an exact match—the comparator is a later release.
+Style DNA grounds timing, palette, luminance, motion-energy, and audio landmarks. Its semantic slots are deliberately `unmeasured`; annotate typography, camera intent, narrative, and emotion separately with evidence. Style DNA is not proof of an exact match—the comparator is a later release.
 
 ### 2 · Direction → Score (Tier 2)
 Write `score.json` (`tier:"score"`). Consult the motion language (`docs/motion/motion-language.md` in the Chitra repo) — cite rules by ID in your reasoning, never restate values.

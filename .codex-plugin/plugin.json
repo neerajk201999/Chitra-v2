@@ -1,0 +1,29 @@
+{
+  "name": "chitra",
+  "version": "0.3.0",
+  "description": "Direct, render, inspect, and revise cinematic motion-design videos with a deterministic quality floor.",
+  "author": {
+    "name": "Neeraj Kanoi",
+    "url": "https://github.com/neerajk201999"
+  },
+  "homepage": "https://github.com/neerajk201999/Chitra-v2",
+  "repository": "https://github.com/neerajk201999/Chitra-v2",
+  "license": "MIT",
+  "keywords": ["video", "motion-design", "direction", "rendering", "quality"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Chitra",
+    "shortDescription": "Direct and critique cinematic videos",
+    "longDescription": "Turn briefs and optional references, assets, links, or footage into directed motion-design videos through typed plans, deterministic rendering, quality gates, evidence, and surgical revision.",
+    "developerName": "Chitra",
+    "category": "Creativity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/neerajk201999/Chitra-v2",
+    "defaultPrompt": [
+      "Create a cinematic product launch video from this brief",
+      "Use these references and brand assets to direct a video",
+      "Critique this Chitra render and fix the highest-impact issues"
+    ],
+    "brandColor": "#111111"
+  }
+}
