@@ -1,0 +1,74 @@
+{
+  "intakeVersion": "0.1.0",
+  "tier": "intake",
+  "projectId": "calm-launch",
+  "title": "Calm product launch",
+  "objective": {
+    "primary": "Create a precise cinematic launch film for the product",
+    "audience": "product leaders and operators",
+    "singleMessage": "Complex work becomes clear"
+  },
+  "deliverable": {
+    "register": "brand-film",
+    "targetDurationMs": 20000,
+    "width": 1920,
+    "height": 1080
+  },
+  "sources": [
+    {
+      "id": "user-direction",
+      "kind": "direction-prompt",
+      "roles": ["content", "constraint"],
+      "origin": {
+        "type": "inline",
+        "content": "Calm, exact, black and warm white. Make the workflow the hero, not the logo."
+      },
+      "usage": "Defines the message, hierarchy, palette direction, and restraint",
+      "rights": "owned"
+    },
+    {
+      "id": "product-site",
+      "kind": "webpage",
+      "roles": ["content", "brand"],
+      "origin": {
+        "type": "url",
+        "url": "https://example.com"
+      },
+      "usage": "Supplies product facts after an approved local capture is made",
+      "rights": "unknown"
+    }
+  ],
+  "preferences": [
+    {
+      "id": "premium-restraint",
+      "statement": "Prefer one considered camera move per shot",
+      "polarity": "prefer",
+      "priority": "must",
+      "sourceIds": ["user-direction"]
+    },
+    {
+      "id": "no-logo-open",
+      "statement": "Avoid opening on the logo or wordmark",
+      "polarity": "avoid",
+      "priority": "must",
+      "sourceIds": ["user-direction"]
+    }
+  ],
+  "brand": {
+    "constraints": []
+  },
+  "constraints": {
+    "mustInclude": ["Show the workflow changing the outcome"],
+    "mustAvoid": ["Generic feature-list slideshow"],
+    "legal": [],
+    "accessibility": ["Keep all essential copy readable without audio"]
+  },
+  "assumptions": [],
+  "openQuestions": [
+    {
+      "id": "approved-product-state",
+      "question": "Which product state is approved for capture?",
+      "blocksDirection": false
+    }
+  ]
+}

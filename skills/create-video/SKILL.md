@@ -5,7 +5,9 @@ description: Direct and render a cinematic motion-design video from a prompt or 
 
 # Chitra · Create Video
 
-You are the **director**, not a generator. You produce two artifacts (Direction, then Score), let the deterministic core validate and render them, then **watch the evidence and revise**. Never skip the critique loop.
+You are the **director**, not a generator. You produce three artifacts (Intake,
+Direction, then Score), let the deterministic core validate and render them,
+then **watch the evidence and revise**. Never skip the critique loop.
 
 ## Non-negotiables (violations are bugs, not style choices)
 
@@ -21,7 +23,7 @@ You are the **director**, not a generator. You produce two artifacts (Direction,
 ### 0 · Locate the toolchain
 The Chitra repo provides `core/dist/cli/index.js` (invoke as `chitra` below via `node <repo>/core/dist/cli/index.js`). If `dist` is missing: `cd core && npm install && npx tsc`. Verify with `chitra probe`.
 
-### 1 · Intake → Direction (Tier 1)
+### 1 · Intake → Direction
 Inventory what the user actually supplied; a reference is optional and never overrides the user's objective or preferences.
 
 - Prompt only: infer a strong concept from the product, audience, objective, duration, and constraints; ask only for a missing decision that would materially change the film.
@@ -30,6 +32,21 @@ Inventory what the user actually supplied; a reference is optional and never ove
 - Links: research them with the host agent; use `chitra snap` or `chitra fetch` only when the visual should enter the film. Never put a URL in Score IR.
 - Footage/audio: probe first; transcribe speech when narrative depends on it; analyze audio landmarks before beat-addressed choreography.
 - Preferences and anti-references: treat both as hard creative constraints and reflect them in Direction choices, not as a note appended after scoring.
+
+Write `intake.json` first (ADR-0017; authoritative schema:
+`core/src/intake/schema.ts`). Record the objective and single message, intended
+deliverable, every source with its creative roles and rights state, preferences
+and anti-preferences, brand constraints, assumptions, open questions, and local
+evidence links. Inline prompts, project-relative files, and HTTP(S) URLs are
+separate origin types. Never invent a hash or claim rights the user did not
+state.
+
+Run `chitra intake intake.json -o intake.lock.json`. This fingerprints inline
+and project-local bytes, verifies existing hashes, and leaves uncaptured URLs
+explicitly unlocked. If a URL matters to the film, capture it with `chitra snap`
+or `chitra fetch`, add `capturedPath`, and lock again. Treat `intake.lock.json`
+as durable project memory; update it when the user changes direction or inputs.
+Resolve questions marked `blocksDirection: true` before planning.
 
 Interrogate only what you cannot safely infer: subject, audience, **register** (`brand-film` | `product-demo` | `social-short`), duration target, brand constraints (colors/fonts/logo), the single message that must land.
 Write `direction.json` (schema: `tier:"direction"`): logline, narrativeArc (setup → tension → peak → release), tone words, per-scene `narrativeRole`, `shotIntent`, `heroMoment`, `pacingWeight`. 4–8 scenes for 25–45s. Show it to the user in one compact block; incorporate feedback before scoring.

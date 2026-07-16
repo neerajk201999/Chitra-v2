@@ -9,7 +9,7 @@ Install into your coding agent — Claude Code, Codex, Cursor, Gemini CLI — an
 Every existing tool solves *rendering*. Chitra solves **taste**:
 
 ```
-prompt → direction → design → motion → render → critique → revision → video
+prompt + optional sources → intake → direction → design → motion → render → critique → revision → video
 ```
 
 - A **two-tier Motion IR**: directorial intent + an executable, schema-validated score. Diffable, patchable, deterministic. (ADR-0003)
@@ -19,7 +19,18 @@ prompt → direction → design → motion → render → critique → revision 
 
 ## Status
 
-**v0.3.0 — measurable references and portable agent workflows.** `chitra decompose` creates deterministic Style DNA and evidence; the [generated-fixture benchmark](benchmarks/reference-decomposer/results.md) reproduces exact known cuts/colors with byte-identical JSON and frames. The same canonical intake, direction, workflow, and critique skills now install through Claude Code, Codex, Cursor, Gemini CLI, or `npx skills`, while an [isolated install benchmark](benchmarks/cold-start/results.md) proves the packaged CLI through a real browser frame. Semantic intent and exact reconstruction remain honestly open. The existing closed loop retains its **10/10 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md).
+**v0.3.0 — typed intake, measurable references, and portable agent workflows.**
+`chitra intake` preserves objectives, mixed-source provenance, preferences,
+anti-references, brand constraints, assumptions, and evidence as locked JSON;
+the [intake benchmark](benchmarks/intake/results.md) verifies deterministic local
+fingerprints and explicit unlocked URLs. `chitra decompose` creates deterministic
+Style DNA and evidence; the [generated-fixture benchmark](benchmarks/reference-decomposer/results.md)
+reproduces exact known cuts/colors with byte-identical JSON and frames. The same
+canonical skills install through Claude Code, Codex, Cursor, Gemini CLI, or
+`npx skills`, while an [isolated install benchmark](benchmarks/cold-start/results.md)
+proves the packaged CLI through a real browser frame. Semantic intent and exact
+reconstruction remain honestly open. The closed loop retains its **10/10
+measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md).
 
 ## Use it from your coding agent
 
@@ -46,6 +57,7 @@ preferences, and anti-references are optional inputs—not mandatory ceremony.
 
 ```bash
 # what the agent runs under the hood
+chitra intake intake.json -o intake.lock.json # validate + fingerprint supplied sources and evidence
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
 chitra validate score.json      # schema + static gates (fast)
@@ -55,6 +67,9 @@ chitra render score.json -o out.mp4 -q high   # refuses P1 findings; only dirty 
 chitra evidence score.json -o evidence/       # contact sheet + hero frames + cut strips
 chitra clean                     # remove work artifacts
 ```
+
+Start from [examples/intake/intake.json](examples/intake/intake.json) when an
+agent needs the complete Intake shape.
 
 ## Repository memory
 

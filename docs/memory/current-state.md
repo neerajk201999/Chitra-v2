@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0
+**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -9,6 +9,10 @@ and CHANGELOG.
 ## What is shipped
 
 - Deterministic Score → HTML/GSAP → seek-driven browser frames → FFmpeg video.
+- ADR-0017 typed multimodal Intake IR and `chitra intake`: objective,
+  deliverable, mixed-source roles/rights, preferences and anti-references, brand
+  constraints, assumptions, open questions, evidence links, and deterministic
+  local/inline content fingerprints. Uncaptured URLs stay explicitly unlocked.
 - Direction and Score IRs, conformance gates, static/frame quality gates,
   evidence generation, content-addressed scene cache, and agent-facing skills.
 - Images, frame-extracted video, sanitized UI figures, cursor/type interaction,
@@ -26,7 +30,10 @@ and CHANGELOG.
 
 ## Evidence, not claims
 
-- Unit suite: 40 tests.
+- Unit suite: 44 tests.
+- Multimodal Intake benchmark: inline, local, and URL origins; local evidence;
+  preferences and anti-reference; repeated locks identical; traversal, symlink
+  escape, stale hash, duplicate ID, and unknown provenance links rejected.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.
@@ -54,15 +61,13 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Typed multimodal Brief/Intake IR → source ledger, user objective,
-   preferences/anti-references, brand constraints, and evidence links.
-2. Creative Director + Storyboard tiers with conformance gates, so planning and
+1. Creative Director + Storyboard tiers with conformance gates, so planning and
    direction—not renderer improvisation—own the film.
-3. Automated reference comparator → aligned frame/audio metrics plus visual
+2. Automated reference comparator → aligned frame/audio metrics plus visual
    diff artifacts; no “exact” claim without it.
-4. Card Vault reconstruction benchmark → 274 authored frames and published
+3. Card Vault reconstruction benchmark → 274 authored frames and published
    metric results, exposing only capabilities the target proves missing.
-5. Then, evidence-led compositor additions: masks/mattes, nested compositions,
+4. Then, evidence-led compositor additions: masks/mattes, nested compositions,
    blend modes, motion blur, internal 3D tracks, and richer audio.
 
 ## Claim boundaries
@@ -73,9 +78,13 @@ Ordered next slices:
   equivalence, interrupted-render equivalence, and broad critic calibration are
   still open.
 - Exact reconstruction of either supplied reference is not yet achieved.
+- Intake now preserves per-project truth, but Intake→Direction source/preference
+  conformance and cross-project Style Memory are not yet implemented.
 - GitHub is private and `chitra-video` is unpublished; native manifests and
   isolated installs are verified, but public and three-harness outside-user
   installation are not.
+- GitHub vulnerability alerts are enabled. Enforced branch protection is not
+  available for this private repository on the current GitHub plan.
 
 ## Invariants for every change
 

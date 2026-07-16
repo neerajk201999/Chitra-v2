@@ -9,6 +9,7 @@ git clone https://github.com/neerajk201999/Chitra-v2.git && cd Chitra-v2
 npm install -g ./core
 chitra probe                   # verifies ffmpeg + vendored Chrome
 mkdir my-film && cd my-film
+chitra intake intake.json -o intake.lock.json # after the agent inventories the brief and sources
 chitra init . --style night --title "My film"
 chitra check score.json && chitra render score.json -o out.mp4 -q draft
 ```

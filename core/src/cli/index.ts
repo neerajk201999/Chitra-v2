@@ -16,6 +16,8 @@ import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
 import { decomposeReference } from "../reference/decompose.js";
+import { validateIntake } from "../intake/schema.js";
+import { materializeIntake } from "../intake/materialize.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -71,6 +73,45 @@ function loadDirection(file: string): DirectionT {
   }
   return v.direction;
 }
+
+program
+  .command("intake")
+  .argument("<intake>", "multimodal Intake IR JSON file")
+  .option("-o, --out <file>", "write a deterministic locked intake with local content hashes")
+  .option("--json", "print the locked intake as JSON")
+  .description("Validate and lock prompt/reference/assets/preferences provenance without fetching remote content (ADR-0017)")
+  .action(async (file: string, opts: { out?: string; json?: boolean }) => {
+    const abs = path.resolve(file);
+    if (!existsSync(abs)) fail(`No such file: ${abs}`);
+    let data: unknown;
+    try { data = JSON.parse(readFileSync(abs, "utf8")); } catch (e) { fail(`Invalid JSON in ${file}: ${(e as Error).message}`); }
+    const validation = validateIntake(data);
+    if (!validation.ok) {
+      console.error(`✖ Intake schema validation failed (${validation.issues.length}):`);
+      for (const issue of validation.issues) console.error(`  [INTAKE] ${issue.path}: ${issue.message}`);
+      process.exit(2);
+    }
+    try {
+      const intake = await materializeIntake(validation.intake, path.dirname(abs));
+      if (opts.out) {
+        const out = path.resolve(opts.out);
+        mkdirSync(path.dirname(out), { recursive: true });
+        writeFileSync(out, JSON.stringify(intake, null, 2) + "\n");
+      }
+      if (opts.json) {
+        console.log(JSON.stringify(intake, null, 2));
+        return;
+      }
+      const unlocked = intake.sources.filter((source) => source.origin.type === "url" && !source.origin.capturedPath).length;
+      const blockers = intake.openQuestions.filter((question) => question.blocksDirection).length;
+      console.log(`✔ intake valid — "${intake.title}", ${intake.sources.length} source${intake.sources.length === 1 ? "" : "s"}, ${intake.preferences.length} preference${intake.preferences.length === 1 ? "" : "s"}`);
+      if (opts.out) console.log(`  locked: ${opts.out}`);
+      if (unlocked) console.log(`  ${unlocked} remote URL${unlocked === 1 ? " remains" : "s remain"} unlocked until captured locally`);
+      if (blockers) console.log(`  ${blockers} open question${blockers === 1 ? " blocks" : "s block"} Direction`);
+    } catch (e) {
+      fail((e as Error).message);
+    }
+  });
 
 program
   .command("plan")

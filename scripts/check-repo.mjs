@@ -63,6 +63,8 @@ const tokens = readFileSync(path.join(root, "core/src/motion/tokens.ts"), "utf8"
 const irVersion = tokens.match(/IR_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const referenceSchema = readFileSync(path.join(root, "core/src/reference/schema.ts"), "utf8");
 const styleDnaVersion = referenceSchema.match(/STYLE_DNA_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const intakeSchema = readFileSync(path.join(root, "core/src/intake/schema.ts"), "utf8");
+const intakeVersion = intakeSchema.match(/INTAKE_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
 if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
@@ -70,6 +72,8 @@ if (!irVersion || !currentState.includes(`**Motion IR:** ${irVersion}`))
   failures.push(`current-state Motion IR version is not ${irVersion ?? "discoverable"}`);
 if (!styleDnaVersion || !currentState.includes(`**Style DNA:** ${styleDnaVersion}`))
   failures.push(`current-state Style DNA version is not ${styleDnaVersion ?? "discoverable"}`);
+if (!intakeVersion || !currentState.includes(`**Intake IR:** ${intakeVersion}`))
+  failures.push(`current-state Intake IR version is not ${intakeVersion ?? "discoverable"}`);
 
 const cli = path.join(root, "core/dist/cli/index.js");
 if (existsSync(cli)) {

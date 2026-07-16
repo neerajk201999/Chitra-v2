@@ -1,7 +1,7 @@
 {
   "name": "chitra-video",
   "version": "0.3.0",
-  "description": "Deterministic core for Chitra, the AI-native OS for cinematic video: Motion IR validation, quality gates, deterministic rendering, critic evidence",
+  "description": "Deterministic core for Chitra: typed multimodal intake, reference evidence, Motion IR gates, rendering, and critic evidence",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
