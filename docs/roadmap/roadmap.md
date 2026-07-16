@@ -1,6 +1,6 @@
 # Roadmap — MVP to v1.0
 
-**Status (2026-07-16): M0 ✅ · M1 ✅ · M2 partial · M3 partial · M4 (Creative Intelligence) STARTED.** See [known-issues.md](known-issues.md) for the honest ledger.
+**Status (2026-07-17): M0 ✅ · M1 ✅ · M2 partial · M3 partial · M4 (Creative Intelligence) STARTED.** See [known-issues.md](known-issues.md) for the honest ledger.
 
 > **Program rebaseline (2026-07-16).** The architecture remains aligned, but the
 > active queue had narrowed around one Card Vault reconstruction. Review 0003
@@ -40,9 +40,10 @@ Remaining:
 *Goal: `install → first non-embarrassing video < 10 minutes` in Claude Code, Cursor, Codex.*
 Landed 2026-07-15 (v3): **ADR-0008 figures & interaction choreography** — sanitized token-themed HTML-fragment mockups (agent-authored UI as first-class elements, gated on pixels), cursor element with waypoint moves + click rings, type-in preset (char cadence + caret); IR-CUR-1 gate; proven against the Anthropic Claude Design benchmark ([docs/research/benchmark-claude-design.md](../research/benchmark-claude-design.md)). Committed CC0-equivalent audio library (3 synthesized beds + SFX kit, core/audio-library/).
 Landed 2026-07-15 (later): **media asset pipeline (ADR-0006)** — `chitra fetch` (download+normalize via sharp) and `chitra snap` (webpage capture via vendored Chrome, consent overlays auto-hidden, never clicked); asset bytes content-hashed into scene hashes; MO-MED-1..4 rules + static gate; provenance ledger (`assets/sources.jsonl`); proven end-to-end by the Wokelo launch film (live wokelo.ai screenshot as a scored scene). Also: right/bottom-anchor compiler bug found by the critique loop and fixed (compiler cache v3).
-Landed: npm publish readiness (`chitra-video`, tarball verified; publish pending owner npmjs login) · MIT LICENSE · canonical skills with Claude Code/Codex/Cursor manifests, `AGENTS.md`/`GEMINI.md`, `npx skills` portability, hash manifest, and stale-version CI checks (ADR-0016) · isolated tarball install benchmark through a real browser frame · MO-EDIT-5 no-dead-air gate · render-cache auto-pruning.
+Landed: npm publish readiness (`chitra-video`, v0.4.0 release candidate) · MIT LICENSE · canonical skills with Claude Code/Codex/Cursor manifests, `AGENTS.md`/`GEMINI.md`, `npx skills` portability, hash manifest, and stale-version CI checks (ADR-0016) · isolated tarball install benchmark through a real browser frame · MO-EDIT-5 no-dead-air gate · render-cache auto-pruning.
 Remaining:
-- Make the GitHub repository public and `npm publish` (owner actions).
+- Merge the verified release candidate, make GitHub public, publish to npm, and
+  verify a clean public clone plus registry install.
 - Three outside testers across Claude Code, Codex, and Cursor; record network-cold install-to-first-frame time and first-use failures.
 - Router + per-register workflow skills (product-launch, social-short as separate workflows).
 - **Exit gate:** cold-start test in 3 harnesses by 3 outside testers hits the 10-minute bar.

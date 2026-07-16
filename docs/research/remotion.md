@@ -1,6 +1,9 @@
 # Remotion — Competitive Reverse-Engineering Report (for Chitra)
 
-**Analyzed:** commit `ae327ffe05aa4ca47fe20e2a6e440180ceb17ae5` (2026-07-14), monorepo root `/private/tmp/claude-501/-Users-macbook-Documents-Neeraj-s-Projects-Chitra/1302c09e-b491-430e-abd8-a3ab5beda127/scratchpad/repos/remotion` (all paths below relative to this root). ~130 packages, Turborepo + Bun, v5 breaking changes in flight (`packages/core/src/v5-flag.ts`).
+**Analyzed:** [remotion-dev/remotion](https://github.com/remotion-dev/remotion)
+at commit `ae327ffe05aa4ca47fe20e2a6e440180ceb17ae5` (2026-07-14).
+All paths below are repository-relative. ~130 packages, Turborepo + Bun, v5
+breaking changes in flight (`packages/core/src/v5-flag.ts`).
 
 ---
 

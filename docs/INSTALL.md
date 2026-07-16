@@ -7,20 +7,22 @@ Requirements: Git, Node.js 22.12 or newer, and FFmpeg on `PATH`. Confirm them
 with `git --version`, `node --version`, and `ffmpeg -version`; `chitra probe`
 checks the runtime again after installation.
 
-## Current source install
+## Recommended public-preview install
 
-The GitHub repository is currently private and `chitra-video` is not yet on
-npm. These commands work for users who have repository access:
+For the complete system, install the published CLI and open the public
+repository in the coding agent. Keeping the repository open gives the agent the
+skills, schemas, creative memory, examples, and honest capability boundaries.
 
 ```bash
 git clone https://github.com/neerajk201999/Chitra-v2.git
 cd Chitra-v2
-npm install -g ./core
+npm install -g chitra-video
 chitra probe
 ```
 
-To use Chitra in another project, run this from that project and point at the
-cloned Chitra repository:
+The CLI can be installed by itself with `npm install -g chitra-video`, but that
+does not install creative direction into a model. For another project, keep the
+public repository clone and install its canonical skills into the target agent:
 
 ```bash
 npx skills add /absolute/path/to/Chitra-v2 --skill '*' --copy --yes
@@ -37,20 +39,16 @@ npx skills add /absolute/path/to/Chitra-v2 --agent cursor --skill '*' --copy --y
 npx skills add /absolute/path/to/Chitra-v2 --agent gemini-cli --skill '*' --copy --yes
 ```
 
-Do not run `npm i -g chitra-video` yet: the registry currently returns 404.
-After the owner makes the repository public and publishes the package, the
-source URL can replace the local path and npm becomes the preferred core install.
-
 ## Native plugin paths
 
-Claude Code, after GitHub access is configured:
+Claude Code:
 
 ```bash
 claude plugin marketplace add neerajk201999/Chitra-v2
 claude plugin install chitra@chitra
 ```
 
-Codex, after GitHub access is configured:
+Codex:
 
 ```bash
 codex plugin marketplace add neerajk201999/Chitra-v2 --ref main
@@ -99,13 +97,12 @@ evidence, revise, and deliver only through `chitra release`. A
 reference is optional; it is never a substitute for the user's objective,
 preferences, brand constraints, or approval.
 
-## Release status
+## Public-preview status
 
 - Source install and isolated tarball install: verified.
+- v0.4.0 npm publication and public GitHub access: pending the release transaction.
 - Claude Code and Codex marketplace installation: exercised in isolated homes.
 - Claude Code, Codex, and Cursor manifests: validated/version-checked.
 - Canonical skills: installed locally for Claude Code, Codex, Cursor, and
   Gemini CLI with `npx skills`.
-- npm publication: not done.
-- Public GitHub access: not enabled.
 - Three outside users × three harnesses under ten minutes: not yet measured.

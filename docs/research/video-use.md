@@ -1,7 +1,8 @@
 # video-use (browser-use) — Competitive Research for Chitra
 
-Repo analyzed: `/private/tmp/claude-501/-Users-macbook-Documents-Neeraj-s-Projects-Chitra/1302c09e-b491-430e-abd8-a3ab5beda127/scratchpad/repos/video-use`
-33 files, ~5,600 lines total. Python 3.10+, MIT-style license, single-maintainer commits visible in the shallow clone.
+Repo analyzed: [browser-use/video-use](https://github.com/browser-use/video-use).
+33 files, ~5,600 lines total at the inspected revision. Python 3.10+,
+MIT-style license, single-maintainer commits visible in the shallow clone.
 
 ## 1. What it actually is (correcting expectations)
 

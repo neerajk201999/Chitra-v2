@@ -1,4 +1,4 @@
-# Known Issues (v0.3.0 — 2026-07-16)
+# Known Issues (v0.4.0 release candidate — 2026-07-17)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 
@@ -22,11 +22,11 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    frames at ≤250ms intervals plus animation/cut/transition neighborhoods.
    Shorter violations between those frames can still slip through; every-frame
    QA remains reserved for a benchmark that proves the added cost is necessary.
-7. **Public distribution is not released.** The npm registry returns 404 and
-   GitHub is private. Source/tarball installation, native Claude/Codex/Cursor
-   manifests, `npx skills`, and an isolated install through a browser frame are
-   verified; public access and three-harness outside-user timing still require
-   owner release actions and independent testers (M3 exit).
+7. **Public distribution is not released yet.** The v0.4.0 release candidate,
+   source/tarball installation, native Claude/Codex/Cursor manifests, `npx
+   skills`, and an isolated install through a browser frame are verified;
+   public access, registry installation, and three-harness outside-user timing
+   remain release evidence (M3 exit).
 8. **Distribution/parallel rendering unimplemented** (design in ADR-0002 consequences; M5).
 9. **Ctrl-C mid-render** may briefly orphan the vendored Chrome process (no explicit signal handler).
 10. **Example corpus is 2 scores**; agents compose better from a gallery (M3).
@@ -48,7 +48,7 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 13. **GitHub governance is only partly enforceable.** Vulnerability alerts are
     enabled, but branch protection is unavailable while this repository remains
     private on the current GitHub plan. Local and CI verification are green;
-   repository visibility was not changed.
+   public-repository branch protection must be re-evaluated after release.
 14. **Asset provenance validates declarations, not ownership independently.**
     ADR-0023 binds rendered paths to locked Intake sources and blocks
     `reference-only`/`unknown` bytes, but it cannot verify whether a user's
@@ -64,7 +64,7 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 - **A3. ✅ Bypassable final export fixed 2026-07-16 (ADR-0027).** `chitra release`
   enforces creative/static/rendered gates, stages target-safe outputs, renders,
   generates evidence, and writes a hash-bound receipt; `render` is diagnostic.
-- **A4. ✅ Packaging launch blocker fixed 2026-07-16:** `main`/`types` point at `dist`, an `exports` map is present, and package/README/skill-manifest identity is 0.3.0. Publishing and outside-tester install verification remain item 7.
+- **A4. ✅ Packaging launch blocker fixed 2026-07-16:** `main`/`types` point at `dist`, an `exports` map is present, and package/README/plugin identity is 0.4.0. Publishing and outside-tester install verification remain item 7.
 - **A5. ✅ Final-mux audio invariant fixed 2026-07-16 (ADR-0027).** Music/SFX
   are losslessly premixed, two-pass normalized, AAC encoded, then measured;
   releases refuse music-led mixes outside −14 ±0.5 LUFS or above −1.5 dBTP.

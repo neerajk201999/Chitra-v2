@@ -5,8 +5,8 @@ The deterministic core of [Chitra v2](https://github.com/neerajk201999/Chitra-v2
 Requires Node 22.12+ and ffmpeg on PATH. The bundled Chrome downloads on first install (via puppeteer).
 
 ```bash
-# Current source install from the cloned repository; npm publication is pending.
-npm install -g ./core
+npm install -g chitra-video
+chitra probe
 chitra intake intake.json -o intake.lock.json # objective + mixed-source provenance
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # intent conformance
 chitra init --style night --title "My film"   # gate-passing starter score
@@ -20,7 +20,13 @@ chitra release intake.lock.json direction.json storyboard.json score.json -o out
 chitra verify-release out/release.json          # verify the bound release artifacts
 ```
 
-Do not run `npm i -g chitra-video` until the package is published; the registry
-currently returns 404.
+The npm package is the deterministic CLI. For the complete agent workflow,
+clone and open the public repository in Claude Code, Codex, Cursor, or Gemini:
 
-Agent skills, the motion language, examples, and all documentation live in the [main repository](https://github.com/neerajk201999/Chitra-v2). MIT.
+```bash
+git clone https://github.com/neerajk201999/Chitra-v2.git
+cd Chitra-v2
+```
+
+Agent skills, the motion language, examples, and all documentation live in the
+[public repository](https://github.com/neerajk201999/Chitra-v2). MIT.
