@@ -8,6 +8,10 @@ versioned separately.
 
 ### Added
 
+- ADR-0029 Creative Review 0.1 with 28 stable multidisciplinary craft
+  principles, isolated visual-assessment provenance, subject digests, fourteen
+  evidence-bound domains, actionable findings, deterministic hidden-label
+  scoring, CLI validation/scoring, and an anti-spam contract benchmark.
 - Typed multimodal Intake IR for objectives, mixed-source provenance, rights
   state, preferences and anti-references, brand constraints, assumptions, open
   questions, and evidence links.

@@ -12,3 +12,4 @@ export { COMPARISON_VERSION, ReferenceComparison, type ReferenceComparisonT } fr
 export { compareReference, type CompareMode, type CompareOptions, type CompareRegion } from "./reference/compare.js";
 export { INTAKE_VERSION, Intake, IntakeSource, validateIntake, type IntakeT, type IntakeSourceT } from "./intake/schema.js";
 export { materializeIntake } from "./intake/materialize.js";
+export { CREATIVE_REVIEW_VERSION, CRAFT_PRINCIPLES, REVIEW_DOMAINS, CreativeReview, CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview, type CreativeReviewT, type CalibrationCaseLabelT, type CraftPrincipleId } from "./creative/review.js";

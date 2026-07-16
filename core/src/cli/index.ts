@@ -20,6 +20,7 @@ import { compareReference, type CompareMode, type CompareRegion } from "../refer
 import { validateIntake, type IntakeT } from "../intake/schema.js";
 import { materializeIntake } from "../intake/materialize.js";
 import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyReleaseReceipt, type ReleaseArtifacts } from "../release/index.js";
+import { CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview } from "../creative/review.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -162,6 +163,52 @@ program
   .action((file: string) => {
     const storyboard = loadStoryboard(file);
     console.log(`✔ storyboard valid — "${storyboard.title}" (${storyboard.register}), ${storyboard.shots.length} shots`);
+  });
+
+program
+  .command("review-validate")
+  .argument("<review>", "typed Creative Review JSON file")
+  .option("--json", "print the normalized review")
+  .description("Validate evidence-bound multidisciplinary creative judgment (ADR-0029)")
+  .action((file: string, opts: { json?: boolean }) => {
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(path.resolve(file), "utf8")); } catch (e) { fail(`Cannot read ${file}: ${(e as Error).message}`); }
+    const validation = validateCreativeReview(raw);
+    if (!validation.ok) {
+      console.error(`✖ Creative Review schema validation failed (${validation.issues.length}):`);
+      for (const issue of validation.issues) console.error(`  [REVIEW] ${issue.path}: ${issue.message}`);
+      process.exit(2);
+    }
+    if (opts.json) console.log(JSON.stringify(validation.review, null, 2));
+    else {
+      const p1 = validation.review.findings.filter((finding) => finding.severity === "P1").length;
+      console.log(`✔ creative review valid — ${validation.review.verdict}, ${validation.review.findings.length} findings (${p1} P1), ${validation.review.assessments.length} domains assessed`);
+    }
+  });
+
+program
+  .command("review-score")
+  .argument("<label>", "hidden calibration-case label JSON")
+  .argument("<review>", "typed Creative Review JSON")
+  .option("--case <id>", "case id when label is a labels-v2.json collection")
+  .description("Score one Creative Review against principle-ID calibration labels (ADR-0029)")
+  .action((labelFile: string, reviewFile: string, opts: { case?: string }) => {
+    let labelRaw: unknown, reviewRaw: unknown;
+    try { labelRaw = JSON.parse(readFileSync(path.resolve(labelFile), "utf8")); } catch (e) { fail(`Cannot read ${labelFile}: ${(e as Error).message}`); }
+    try { reviewRaw = JSON.parse(readFileSync(path.resolve(reviewFile), "utf8")); } catch (e) { fail(`Cannot read ${reviewFile}: ${(e as Error).message}`); }
+    let labelCandidate = labelRaw;
+    if (opts.case) {
+      const cases = labelRaw && typeof labelRaw === "object" && "cases" in labelRaw ? (labelRaw as { cases?: unknown }).cases : undefined;
+      labelCandidate = cases && typeof cases === "object" ? (cases as Record<string, unknown>)[opts.case] : undefined;
+      if (!labelCandidate) fail(`Calibration case not found: ${opts.case}`);
+    }
+    const label = CalibrationCaseLabel.safeParse(labelCandidate);
+    if (!label.success) fail(`Invalid calibration label: ${label.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
+    const review = validateCreativeReview(reviewRaw);
+    if (!review.ok) fail(`Invalid Creative Review: ${review.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+    const result = scoreCreativeReview(label.data, review.review);
+    console.log(JSON.stringify(result, null, 2));
+    process.exit(result.pass ? 0 : 1);
   });
 
 program

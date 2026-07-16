@@ -38,7 +38,9 @@ deterministic reports/diffs and catches visual drift. The same
 canonical skills install through Claude Code, Codex, Cursor, Gemini CLI, or
 `npx skills`, while an [isolated install benchmark](benchmarks/cold-start/results.md)
 proves the packaged CLI through a real browser frame. Semantic intent and exact
-reconstruction remain honestly open. The closed loop retains its **10/10
+reconstruction remain honestly open. ADR-0029 now makes multidisciplinary
+creative judgment typed and evidence-bound; its contract benchmark passes, but
+professional taste remains unproven pending independent calibration. The closed loop retains its **10/10
 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md).
 
 ## Use it from your coding agent
@@ -76,6 +78,8 @@ chitra check score.json         # + rendered-frame gates: contrast, safe zones, 
 chitra frame score.json -t 1800 -o peek.png   # one-frame preview in seconds
 chitra render score.json -o draft.mp4 -q draft # diagnostic draft; only dirty scenes re-render
 chitra evidence score.json -o evidence/       # contact sheet + hero frames + cut strips
+chitra review-validate creative-review.json   # validate isolated, evidence-bound judgment
+chitra review-score labels-v2.json creative-review.json --case uniform-monotony
 chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
 chitra verify-release out/release.json         # reject changed inputs, assets, output, or evidence
 chitra clean                     # remove work artifacts
