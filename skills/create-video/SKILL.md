@@ -1,12 +1,12 @@
 ---
 name: create-video
-description: Direct and render a cinematic motion-design video from a prompt or any combination of reference videos, images, screenshots, links, brand assets, footage, audio, preferences, and anti-references. Use for launch films, product demos, promos, social clips, motion graphics, reference reconstruction, or end-to-end video creation. Runs intake, direction, score, deterministic gates, render, evidence, and bounded critique.
+description: Direct and render a cinematic motion-design video from a prompt or any combination of reference videos, images, screenshots, links, brand assets, footage, audio, preferences, and anti-references. Use for launch films, product demos, promos, social clips, motion graphics, reference reconstruction, or end-to-end video creation. Runs intake, direction, storyboard, score, deterministic gates, render, evidence, and bounded critique.
 ---
 
 # Chitra · Create Video
 
-You are the **director**, not a generator. You produce three artifacts (Intake,
-Direction, then Score), let the deterministic core validate and render them,
+You are the **director**, not a generator. You produce four artifacts (Intake,
+Direction, Storyboard, then Score), let the deterministic core validate and render them,
 then **watch the evidence and revise**. Never skip the critique loop.
 
 ## Non-negotiables (violations are bugs, not style choices)
@@ -16,7 +16,7 @@ then **watch the evidence and revise**. Never skip the critique loop.
 3. One hero moment per scene (`MO-CHOR-2`). Supporting elements support; they never compete.
 4. Copy is shorter than you want. Reading time is gated (`MO-EDIT-1`); cut words, not hold time.
 5. `chitra check` must be green before any render you show the user.
-6. After rendering: generate evidence, critique it (see step 6), fix, re-render. **Max 3 revision passes**, then present remaining findings honestly.
+6. After rendering: generate evidence, critique it (see step 7), fix, re-render. **Max 3 revision passes**, then present remaining findings honestly.
 
 ## Pipeline
 
@@ -49,11 +49,33 @@ as durable project memory; update it when the user changes direction or inputs.
 Resolve questions marked `blocksDirection: true` before planning.
 
 Interrogate only what you cannot safely infer: subject, audience, **register** (`brand-film` | `product-demo` | `social-short`), duration target, brand constraints (colors/fonts/logo), the single message that must land.
-Write `direction.json` (schema: `tier:"direction"`): logline, narrativeArc (setup → tension → peak → release), tone words, per-scene `narrativeRole`, `shotIntent`, `heroMoment`, `pacingWeight`. 4–8 scenes for 25–45s. Show it to the user in one compact block; incorporate feedback before scoring.
+Write Direction 0.2 as `direction.json`: stable `id`, logline, narrativeArc
+(setup → tension → peak → release), tone, `creativeConcept` (emotional promise,
+governing idea, tension, resolution, visual/sound thesis), and 4–8 directed
+beats. Preserve the Intake objective and constraint statements verbatim in
+`trace`, and copy the requested deliverable before interpreting it creatively.
+The trace also cites Intake source/preference/brand/assumption IDs; every beat
+cites the sources and preferences that shaped it. Never cite an ID that is not
+in the locked Intake. Run `chitra conform intake.lock.json direction.json`;
+resolve every P1 before showing the compact Direction to the user for approval.
 
 Style DNA grounds timing, palette, luminance, motion-energy, and audio landmarks. Its semantic slots are deliberately `unmeasured`; annotate typography, camera intent, narrative, and emotion separately with evidence. Style DNA is not proof of an exact match—the comparator is a later release.
 
-### 2 · Direction → Score (Tier 2)
+### 2 · Direction → Storyboard
+
+Write `storyboard.json` (`storyboardVersion:"0.1.0"`). Turn each directed beat
+into one or more shots. Every shot records `directionBeatId`, `reason`, `whyNow`,
+shot intent, source/preference IDs, optional hero and element type, composition
+(layout/hierarchy/negative space), camera move + reason, typography intent and
+approved top-level `onScreenCopy`, color/audio intent, target duration, and
+transition intent. The shot `id` becomes the Score scene `id`; order is binding.
+
+This is the design approval boundary. Show the shot list before writing Motion
+IR. Run `chitra board storyboard.json` and
+`chitra conform direction.json storyboard.json`; fix P1/P2 drift. A reference
+can inform camera or rhythm only when the shot cites that reference source.
+
+### 3 · Storyboard → Score (Tier 2)
 Write `score.json` (`tier:"score"`). Consult the motion language (`docs/motion/motion-language.md` in the Chitra repo) — cite rules by ID in your reasoning, never restate values.
 
 Style: start from a house style in `styles/` (e.g. `night.json`, `paper.json`) and adapt palette to brand. Keep palettes ≤ 2 chromatic colors + neutrals. Fonts available: Space Grotesk / Instrument Serif / Inter (display), Inter (text).
@@ -81,20 +103,25 @@ Craft rules that separate direction from slop:
 - Ambient motion in every scene ≥ its register's floor — a static frame is a dead frame (`MO-REG-1`).
 - Text over media needs `scrim` ≥ 0.3 or it will fail the per-frame contrast gate (`MO-TYPE-2`).
 
-### 3 · Gate
-`chitra validate score.json` (fast, static) → fix all P1/P2. Then `chitra check score.json` (renders probe frames; contrast/safe-zone/overlap/blank gates). Green means 0 P1. Treat P2 as "fix unless you have a stated reason". P3s are review notes — read them.
+### 4 · Gate
+Run `chitra creative-check intake.lock.json direction.json storyboard.json score.json`
+first. It checks all three intent boundaries; structural green is not a claim
+that the concept is tasteful. Then `chitra validate score.json` (fast, static) →
+fix all P1/P2. Finally `chitra check score.json` (rendered contrast/safe-zone/
+overlap/blank gates). Green means 0 P1. Treat P2 as “fix unless you have a
+stated reason.” P3s are review notes—read them.
 
-### 4 · Draft render
+### 5 · Draft render
 `chitra render score.json -o out/draft.mp4 -q draft` (fast). Never present a draft as final.
 
-### 5 · Evidence
+### 6 · Evidence
 `chitra evidence score.json -o out/evidence` → contact-sheet.png (3 samples/scene), hero-*.png (full-res per scene), cut-strips.png (every cut boundary pair).
 
-### 6 · Critique — watch, then fix
+### 7 · Critique — watch, then fix
 Open and **look at** the evidence images (contact sheet first, then hero frames, then cut strips). Use the `critique-video` skill's rubric if installed; otherwise judge, per scene, in this order: composition & hierarchy → typography → color/contrast → motion legibility (compare in/mid/out states) → cut continuity (strips: does each cut land on a composed frame?) → the two-altitude slop test ("could you guess this look from the category alone? could you guess its evasion?").
-File each finding as: scene id, IR path, severity (P1 blocks, P2 should fix, P3 note), one-line fix. Patch **only the cited IR spans** in score.json — the per-scene cache makes surgical edits cheap. Re-run from step 3. Max 3 passes.
+File each finding as: scene id, IR path, severity (P1 blocks, P2 should fix, P3 note), one-line fix. Patch **only the cited IR spans** in score.json — the per-scene cache makes surgical edits cheap. Re-run from step 4. Max 3 passes.
 
-### 7 · Final
+### 8 · Final
 `chitra render score.json -o out/final.mp4 -q high`. Deliver: final.mp4, the contact sheet, and a 3-line delivery note (what was directed, what the critique loop caught, any remaining P2/P3s).
 
 ## Failure honesty

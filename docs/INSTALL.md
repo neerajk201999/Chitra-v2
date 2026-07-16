@@ -70,6 +70,7 @@ From a project directory:
 # Have the agent create intake.json; the repository includes examples/intake/intake.json.
 chitra intake intake.json -o intake.lock.json
 chitra init . --style night --register brand-film --title "My film"
+chitra creative-check intake.lock.json direction.json storyboard.json score.json
 chitra check score.json
 chitra render score.json -o out/draft.mp4 -q draft
 chitra evidence score.json -o out/evidence
@@ -89,9 +90,10 @@ Then ask the agent for the actual outcome, not implementation trivia:
   three passes with every remaining limitation stated.”
 
 The agent should inventory supplied inputs in `intake.json`, lock local
-provenance, produce Direction and Score artifacts, run deterministic gates,
-render, inspect evidence, and revise. A reference is optional; it is never a
-substitute for the user's objective, preferences, brand constraints, or approval.
+provenance, produce Direction, Storyboard, and Score artifacts, run
+`chitra creative-check` plus render gates, inspect evidence, and revise. A
+reference is optional; it is never a substitute for the user's objective,
+preferences, brand constraints, or approval.
 
 ## Release status
 

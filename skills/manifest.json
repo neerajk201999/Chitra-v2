@@ -3,12 +3,12 @@
   "version": "0.3.0",
   "skills": {
     "create-video": {
-      "sha256": "b39e1bc45f0471de2c6036a1b75d6786a10e7bf99d30a93c730447bace3f535a",
-      "bytes": 11418
+      "sha256": "61df52146d450fd1368d64ccbb800b1ccf59b3a67043fc592424f2ebea4803e7",
+      "bytes": 12822
     },
     "critique-video": {
-      "sha256": "7b5c621c04cd26c3b72b649435eccb8e339725c89e6b6d7c57672a9cefb88c96",
-      "bytes": 3199
+      "sha256": "3b1e8bd2b6bb9b77292962654802c07ae638d417b095e29cfbb1d540aa5a24b8",
+      "bytes": 3340
     },
     "video-workflows": {
       "sha256": "9bf72c9c052c51328fa562e1016c72ba432cb93e28bedc6f3515742bcfed2c77",

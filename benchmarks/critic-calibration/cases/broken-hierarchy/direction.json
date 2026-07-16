@@ -1,6 +1,8 @@
 {
+  "directionVersion": "0.2.0",
   "irVersion": "0.1.0",
   "tier": "direction",
+  "id": "chitra-taste-direction",
   "title": "Chitra — Taste is the product",
   "register": "brand-film",
   "logline": "The industry builds renderers; Chitra builds judgment.",
@@ -11,13 +13,41 @@
     "evidence-led"
   ],
   "audience": "developers and design-literate founders",
+  "deliverable": {},
+  "creativeConcept": {
+    "emotionalPromise": "Judgment becomes the differentiator",
+    "governingIdea": "Taste is the product",
+    "tension": "The industry over-invests in rendering",
+    "resolution": "Chitra invests in direction and critique",
+    "visualThesis": "One imbalanced chart makes the argument visible"
+  },
+  "trace": {
+    "intakeProjectId": "chitra-taste-film",
+    "objective": {
+      "primary": "Show why directed video is different",
+      "audience": "developers and design-literate founders",
+      "singleMessage": "Taste is the product"
+    },
+    "constraints": {
+      "mustInclude": [],
+      "mustAvoid": [],
+      "legal": [],
+      "accessibility": []
+    },
+    "sourceIds": ["creative-brief"],
+    "preferenceIds": [],
+    "brandConstraintIds": [],
+    "assumptionIds": []
+  },
   "scenes": [
     {
       "id": "where-tools-invest",
       "narrativeRole": "the peak — evidence lands",
       "shotIntent": "The viewer's eye goes straight to the chart; the Critique bar's smallness IS the argument.",
       "heroMoment": "The investment chart dominates the frame and the tiny Critique bar lands the thesis.",
-      "pacingWeight": 1.5
+      "pacingWeight": 1.5,
+      "sourceIds": ["creative-brief"],
+      "preferenceIds": []
     }
   ]
 }

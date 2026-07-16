@@ -46,9 +46,11 @@ Landed: ADR-0012 (creative pipeline architecture) · **docs/creative/creative-co
 Engineering foundation: independent `Chitra-v2` lineage + ADR-0014 repository operating system, compact current-state memory, shared local/CI verification contract, executable link/version/manifest checks, and explicit SemVer/CHANGELOG discipline.
 Reference intelligence: ADR-0015 `chitra decompose` → typed Style DNA with deterministic source/media facts, shot rhythm, palette, luminance/saturation, motion energy, audio onset landmarks, and evidence frames; generated benchmark reproduces known cuts/colors and identical repeated JSON.
 Intake intelligence: ADR-0017 `chitra intake` → separately versioned multimodal Intake IR with objective/deliverable, mixed-source roles and rights, preferences/anti-references, brand constraints, assumptions/questions, evidence links, deterministic local hashes, and explicit unlocked URLs; 44 tests and a mixed-input benchmark.
+Creative ladder: ADR-0018 Direction 0.2 + Storyboard 0.1 → explicit concept and
+shot design, stable source/preference traces, three adjacent-tier conformance
+boundaries, `chitra creative-check`, 49 tests, and a benchmark that catches all
+three seeded intent drifts.
 Remaining (priority order):
-- **Creative Director engine**: product brief → cinematic concept (emotion, arc, register) as a typed Brief IR the agent fills and gates check.
-- **Storyboard IR tier**: shot list (intent, hero, camera, type, timing) between Brief and Score, with conformance gates both directions.
 - **Reference comparator**: align reference/render frames and audio, emit visual diffs, and make similarity claims measurable.
 - **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
 - **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.

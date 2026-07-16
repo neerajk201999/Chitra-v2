@@ -5,7 +5,8 @@
  * Severity: P1 blocks release, P2 should fix, P3 note.
  */
 import sharp from "sharp";
-import type { SceneT, ScoreT, DirectionT } from "../ir/schema.js";
+import type { SceneT, ScoreT, DirectionT, StoryboardT } from "../ir/schema.js";
+import type { IntakeT } from "../intake/schema.js";
 import { resolveSceneTimeline, totalDurationMs } from "../compile/index.js";
 import {
   CHOREOGRAPHY,
@@ -553,6 +554,198 @@ export function runConformance(direction: DirectionT, score: ScoreT): Finding[] 
   }
 
   return f;
+}
+
+/** ADR-0018: does the directed concept preserve the locked user truth? */
+export function runIntakeDirectionConformance(intake: IntakeT, direction: DirectionT): Finding[] {
+  const findings: Finding[] = [];
+  if (direction.trace.intakeProjectId !== intake.projectId)
+    findings.push({ ruleId: "CC-INT-1", severity: "P1", path: "direction.trace.intakeProjectId", message: `Direction traces to "${direction.trace.intakeProjectId}", not Intake project "${intake.projectId}"` });
+  if (intake.deliverable.register && intake.deliverable.register !== direction.register)
+    findings.push({ ruleId: "CC-INT-2", severity: "P1", path: "direction.register", message: `Direction register "${direction.register}" contradicts Intake register "${intake.deliverable.register}"` });
+  for (const field of ["primary", "audience", "singleMessage"] as const) {
+    if (direction.trace.objective[field] !== intake.objective[field])
+      findings.push({ ruleId: "CC-INT-8", severity: "P1", path: `direction.trace.objective.${field}`, message: `Direction must preserve Intake objective.${field} verbatim before interpreting it creatively` });
+  }
+  for (const field of ["targetDurationMs", "width", "height", "channel"] as const) {
+    if (intake.deliverable[field] != null && direction.deliverable[field] !== intake.deliverable[field])
+      findings.push({ ruleId: "CC-INT-8", severity: "P1", path: `direction.deliverable.${field}`, message: `Direction deliverable.${field} does not preserve the Intake value` });
+  }
+  for (const field of ["mustInclude", "mustAvoid", "legal", "accessibility"] as const) {
+    intake.constraints[field].forEach((statement) => {
+      if (!direction.trace.constraints[field].includes(statement))
+        findings.push({ ruleId: "CC-INT-8", severity: "P1", path: `direction.trace.constraints.${field}`, message: `Direction dropped Intake constraint "${statement}"` });
+    });
+  }
+
+  intake.openQuestions.forEach((question, index) => {
+    if (question.blocksDirection)
+      findings.push({ ruleId: "CC-INT-3", severity: "P1", path: `intake.openQuestions[${index}]`, message: `Direction is blocked by unresolved question "${question.question}"` });
+  });
+
+  const sources = new Set(intake.sources.map((source) => source.id));
+  const preferences = new Map(intake.preferences.map((preference) => [preference.id, preference]));
+  const brands = new Map(intake.brand.constraints.map((constraint) => [constraint.id, constraint]));
+  const assumptions = new Map(intake.assumptions.map((assumption) => [assumption.id, assumption]));
+  const traceSets = {
+    sourceIds: new Set(direction.trace.sourceIds),
+    preferenceIds: new Set(direction.trace.preferenceIds),
+    brandConstraintIds: new Set(direction.trace.brandConstraintIds),
+    assumptionIds: new Set(direction.trace.assumptionIds),
+  };
+
+  direction.trace.sourceIds.forEach((sourceId, index) => {
+    if (!sources.has(sourceId)) findings.push({ ruleId: "CC-INT-4", severity: "P1", path: `direction.trace.sourceIds[${index}]`, message: `Unknown Intake source "${sourceId}"` });
+  });
+  direction.trace.preferenceIds.forEach((preferenceId, index) => {
+    if (!preferences.has(preferenceId)) findings.push({ ruleId: "CC-INT-4", severity: "P1", path: `direction.trace.preferenceIds[${index}]`, message: `Unknown Intake preference "${preferenceId}"` });
+  });
+  direction.trace.brandConstraintIds.forEach((constraintId, index) => {
+    if (!brands.has(constraintId)) findings.push({ ruleId: "CC-INT-4", severity: "P1", path: `direction.trace.brandConstraintIds[${index}]`, message: `Unknown Intake brand constraint "${constraintId}"` });
+  });
+  direction.trace.assumptionIds.forEach((assumptionId, index) => {
+    const assumption = assumptions.get(assumptionId);
+    if (!assumption) findings.push({ ruleId: "CC-INT-4", severity: "P1", path: `direction.trace.assumptionIds[${index}]`, message: `Unknown Intake assumption "${assumptionId}"` });
+    else if (assumption.status === "rejected") findings.push({ ruleId: "CC-INT-5", severity: "P1", path: `direction.trace.assumptionIds[${index}]`, message: `Direction relies on rejected assumption "${assumptionId}"` });
+    else if (assumption.status === "proposed" && assumption.risk === "high") findings.push({ ruleId: "CC-INT-5", severity: "P1", path: `direction.trace.assumptionIds[${index}]`, message: `High-risk assumption "${assumptionId}" requires approval before Direction` });
+    else if (assumption.status === "proposed") findings.push({ ruleId: "CC-INT-5", severity: "P2", path: `direction.trace.assumptionIds[${index}]`, message: `Direction relies on unapproved assumption "${assumptionId}"` });
+  });
+
+  for (const preference of intake.preferences) {
+    if (preference.priority !== "must") continue;
+    if (!traceSets.preferenceIds.has(preference.id))
+      findings.push({ ruleId: "CC-INT-6", severity: "P1", path: "direction.trace.preferenceIds", message: `Must-level ${preference.polarity} preference "${preference.id}" was dropped` });
+    else if (!direction.scenes.some((scene) => scene.preferenceIds.includes(preference.id)))
+      findings.push({ ruleId: "CC-INT-6", severity: "P1", path: "direction.scenes", message: `Must-level ${preference.polarity} preference "${preference.id}" is acknowledged but shapes no directed beat` });
+  }
+  for (const constraint of intake.brand.constraints) {
+    if (constraint.priority === "must" && !traceSets.brandConstraintIds.has(constraint.id))
+      findings.push({ ruleId: "CC-INT-6", severity: "P1", path: "direction.trace.brandConstraintIds", message: `Must-level brand constraint "${constraint.id}" was dropped` });
+  }
+
+  direction.scenes.forEach((scene, sceneIndex) => {
+    scene.sourceIds.forEach((sourceId, index) => {
+      if (!sources.has(sourceId)) findings.push({ ruleId: "CC-INT-7", severity: "P1", path: `direction.scenes[${sceneIndex}].sourceIds[${index}]`, message: `Beat "${scene.id}" cites unknown source "${sourceId}"` });
+      else if (!traceSets.sourceIds.has(sourceId)) findings.push({ ruleId: "CC-INT-7", severity: "P2", path: `direction.scenes[${sceneIndex}].sourceIds[${index}]`, message: `Beat "${scene.id}" cites source "${sourceId}" absent from the Direction trace summary` });
+    });
+    scene.preferenceIds.forEach((preferenceId, index) => {
+      if (!preferences.has(preferenceId)) findings.push({ ruleId: "CC-INT-7", severity: "P1", path: `direction.scenes[${sceneIndex}].preferenceIds[${index}]`, message: `Beat "${scene.id}" cites unknown preference "${preferenceId}"` });
+      else if (!traceSets.preferenceIds.has(preferenceId)) findings.push({ ruleId: "CC-INT-7", severity: "P2", path: `direction.scenes[${sceneIndex}].preferenceIds[${index}]`, message: `Beat "${scene.id}" cites preference "${preferenceId}" absent from the Direction trace summary` });
+    });
+  });
+  return findings;
+}
+
+/** ADR-0018: does every designed shot execute a directed beat without drift? */
+export function runDirectionStoryboardConformance(direction: DirectionT, storyboard: StoryboardT): Finding[] {
+  const findings: Finding[] = [];
+  if (storyboard.directionId !== direction.id)
+    findings.push({ ruleId: "CC-BOARD-1", severity: "P1", path: "storyboard.directionId", message: `Storyboard traces to "${storyboard.directionId}", not Direction "${direction.id}"` });
+  if (storyboard.register !== direction.register)
+    findings.push({ ruleId: "CC-BOARD-1", severity: "P1", path: "storyboard.register", message: `Storyboard register "${storyboard.register}" contradicts Direction register "${direction.register}"` });
+  for (const field of ["targetDurationMs", "width", "height", "channel"] as const) {
+    if (direction.deliverable[field] != null && storyboard.deliverable[field] !== direction.deliverable[field])
+      findings.push({ ruleId: "CC-BOARD-7", severity: "P1", path: `storyboard.deliverable.${field}`, message: `Storyboard deliverable.${field} does not preserve the Direction value` });
+  }
+
+  const beats = new Map(direction.scenes.map((beat) => [beat.id, beat]));
+  for (const beat of direction.scenes) {
+    const shots = storyboard.shots.filter((shot) => shot.directionBeatId === beat.id);
+    if (!shots.length)
+      findings.push({ ruleId: "CC-BOARD-2", severity: "P1", path: `direction.scenes[${direction.scenes.indexOf(beat)}]`, message: `Directed beat "${beat.id}" has no Storyboard shot` });
+    if (beat.heroMoment && shots.length && !shots.some((shot) => shot.hero))
+      findings.push({ ruleId: "CC-BOARD-3", severity: "P2", path: `storyboard.shots`, message: `Beat "${beat.id}" declares hero moment "${beat.heroMoment}" but none of its shots plans a hero` });
+  }
+
+  storyboard.shots.forEach((shot, index) => {
+    const beat = beats.get(shot.directionBeatId);
+    if (!beat) {
+      findings.push({ ruleId: "CC-BOARD-2", severity: "P1", path: `storyboard.shots[${index}].directionBeatId`, message: `Shot "${shot.id}" cites unknown directed beat "${shot.directionBeatId}"` });
+      return;
+    }
+    shot.sourceIds.forEach((sourceId) => {
+      if (!beat.sourceIds.includes(sourceId)) findings.push({ ruleId: "CC-BOARD-4", severity: "P2", path: `storyboard.shots[${index}].sourceIds`, message: `Shot "${shot.id}" cites source "${sourceId}" not declared on beat "${beat.id}"` });
+    });
+    shot.preferenceIds.forEach((preferenceId) => {
+      if (!beat.preferenceIds.includes(preferenceId)) findings.push({ ruleId: "CC-BOARD-4", severity: "P2", path: `storyboard.shots[${index}].preferenceIds`, message: `Shot "${shot.id}" cites preference "${preferenceId}" not declared on beat "${beat.id}"` });
+    });
+  });
+
+  const firstBeatOrder = storyboard.shots
+    .map((shot) => shot.directionBeatId)
+    .filter((beatId, index, all) => all.indexOf(beatId) === index);
+  const expectedOrder = direction.scenes.map((beat) => beat.id).filter((beatId) => firstBeatOrder.includes(beatId));
+  if (firstBeatOrder.join("|") !== expectedOrder.join("|"))
+    findings.push({ ruleId: "CC-BOARD-5", severity: "P1", path: "storyboard.shots", message: "Storyboard reorders directed beats; revise Direction first if the narrative order changed" });
+
+  if (direction.scenes.length >= 3) {
+    const peak = direction.scenes.reduce((a, b) => (b.pacingWeight > a.pacingWeight ? b : a));
+    const totals = direction.scenes.map((beat) => storyboard.shots.filter((shot) => shot.directionBeatId === beat.id).reduce((sum, shot) => sum + shot.targetDurationMs, 0));
+    const peakDuration = storyboard.shots.filter((shot) => shot.directionBeatId === peak.id).reduce((sum, shot) => sum + shot.targetDurationMs, 0);
+    const sorted = [...totals].sort((a, b) => a - b);
+    if (peak.pacingWeight >= 1.4 && peakDuration <= sorted[Math.floor(sorted.length / 3)])
+      findings.push({ ruleId: "CC-BOARD-6", severity: "P3", path: "storyboard.shots", message: `Pacing peak "${peak.id}" is among the shortest storyboard beats; the planned emphasis may not get air` });
+  }
+  if (storyboard.deliverable.targetDurationMs != null) {
+    const total = storyboard.shots.reduce((sum, shot) => sum + shot.targetDurationMs, 0);
+    const tolerance = Math.max(250, storyboard.deliverable.targetDurationMs * 0.05);
+    if (Math.abs(total - storyboard.deliverable.targetDurationMs) > tolerance)
+      findings.push({ ruleId: "CC-BOARD-7", severity: "P2", path: "storyboard.shots", message: `Storyboard totals ${total}ms vs target ${storyboard.deliverable.targetDurationMs}ms (tolerance ${Math.round(tolerance)}ms)` });
+  }
+  return findings;
+}
+
+/** ADR-0018: does executable Score preserve the approved shot plan? */
+export function runStoryboardScoreConformance(storyboard: StoryboardT, score: ScoreT): Finding[] {
+  const findings: Finding[] = [];
+  if (storyboard.register !== score.meta.register)
+    findings.push({ ruleId: "CC-SCORE-1", severity: "P1", path: "score.meta.register", message: `Score register "${score.meta.register}" contradicts Storyboard register "${storyboard.register}"` });
+  if (storyboard.deliverable.width != null && storyboard.deliverable.width !== score.meta.width)
+    findings.push({ ruleId: "CC-SCORE-8", severity: "P1", path: "score.meta.width", message: `Score width ${score.meta.width} contradicts Storyboard width ${storyboard.deliverable.width}` });
+  if (storyboard.deliverable.height != null && storyboard.deliverable.height !== score.meta.height)
+    findings.push({ ruleId: "CC-SCORE-8", severity: "P1", path: "score.meta.height", message: `Score height ${score.meta.height} contradicts Storyboard height ${storyboard.deliverable.height}` });
+  const shots = new Map(storyboard.shots.map((shot) => [shot.id, shot]));
+  const scenes = new Map(score.scenes.map((scene) => [scene.id, scene]));
+  storyboard.shots.forEach((shot, index) => {
+    const scene = scenes.get(shot.id);
+    if (!scene) {
+      findings.push({ ruleId: "CC-SCORE-2", severity: "P1", path: `storyboard.shots[${index}]`, message: `Storyboard shot "${shot.id}" has no Score scene` });
+      return;
+    }
+    const tolerance = Math.max(250, shot.targetDurationMs * 0.2);
+    if (Math.abs(scene.durationMs - shot.targetDurationMs) > tolerance)
+      findings.push({ ruleId: "CC-SCORE-3", severity: "P2", path: `score.scenes[${score.scenes.indexOf(scene)}].durationMs`, message: `Scene "${scene.id}" runs ${scene.durationMs}ms vs storyboard ${shot.targetDurationMs}ms (tolerance ${Math.round(tolerance)}ms)` });
+    const text = new Set(scene.elements.filter((element) => element.type === "text").map((element) => element.content));
+    shot.typography.onScreenCopy.forEach((copy) => {
+      if (!text.has(copy)) findings.push({ ruleId: "CC-SCORE-4", severity: "P1", path: `score.scenes[${score.scenes.indexOf(scene)}].elements`, message: `Planned copy "${copy}" is missing from scene "${scene.id}"` });
+    });
+    if (shot.hero?.elementType && !scene.elements.some((element) => element.type === shot.hero?.elementType && element.role === "hero"))
+      findings.push({ ruleId: "CC-SCORE-5", severity: "P2", path: `score.scenes[${score.scenes.indexOf(scene)}].elements`, message: `Shot "${shot.id}" plans a hero ${shot.hero.elementType}, but the Score has no hero-role ${shot.hero.elementType}` });
+    if (shot.transition.preferredType && scene.transitionOut.type !== shot.transition.preferredType)
+      findings.push({ ruleId: "CC-SCORE-6", severity: "P2", path: `score.scenes[${score.scenes.indexOf(scene)}].transitionOut.type`, message: `Scene "${scene.id}" uses ${scene.transitionOut.type}, not planned ${shot.transition.preferredType}` });
+  });
+  score.scenes.forEach((scene, index) => {
+    if (!shots.has(scene.id)) findings.push({ ruleId: "CC-SCORE-2", severity: "P2", path: `score.scenes[${index}]`, message: `Score scene "${scene.id}" has no Storyboard shot` });
+  });
+  const shotOrder = storyboard.shots.map((shot) => shot.id);
+  const scoreOrder = score.scenes.map((scene) => scene.id);
+  if (shotOrder.join("|") !== scoreOrder.join("|"))
+    findings.push({ ruleId: "CC-SCORE-7", severity: "P1", path: "score.scenes", message: "Score scene order differs from the Storyboard shot order" });
+  if (storyboard.deliverable.targetDurationMs != null) {
+    const total = score.scenes.reduce((sum, scene) => sum + scene.durationMs, 0);
+    const tolerance = Math.max(250, storyboard.deliverable.targetDurationMs * 0.05);
+    if (Math.abs(total - storyboard.deliverable.targetDurationMs) > tolerance)
+      findings.push({ ruleId: "CC-SCORE-8", severity: "P2", path: "score.scenes", message: `Score totals ${total}ms vs Storyboard target ${storyboard.deliverable.targetDurationMs}ms (tolerance ${Math.round(tolerance)}ms)` });
+  }
+  return findings;
+}
+
+export function runCreativeConformance(intake: IntakeT, direction: DirectionT, storyboard: StoryboardT, score: ScoreT): Finding[] {
+  return [
+    ...runIntakeDirectionConformance(intake, direction),
+    ...runDirectionStoryboardConformance(direction, storyboard),
+    ...runStoryboardScoreConformance(storyboard, score),
+  ];
 }
 
 export function summarize(findings: Finding[]): { p1: number; p2: number; p3: number; releasable: boolean } {

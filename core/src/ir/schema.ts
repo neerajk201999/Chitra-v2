@@ -30,26 +30,158 @@ const typeRole = z.enum(Object.keys(TYPE_SCALE) as [string, ...string[]]);
 const transition = z.enum(TRANSITIONS);
 
 // ── Tier 1: Direction ──────────────────────────────────────────────────────
+export const DIRECTION_VERSION = "0.2.0";
+export const STORYBOARD_VERSION = "0.1.0";
+
 export const SceneDirection = z.object({
   id,
   narrativeRole: z.string().min(4), // e.g. "cold open — state the tension"
   shotIntent: z.string().min(8), // what the viewer should feel/notice
   heroMoment: z.string().optional(), // what visually peaks here, if anything
   pacingWeight: z.number().min(0.25).max(3).default(1), // relative hold emphasis
+  sourceIds: z.array(id).min(1),
+  preferenceIds: z.array(id).default([]),
 });
 
 export const Direction = z.object({
+  directionVersion: z.literal(DIRECTION_VERSION),
   irVersion: z.literal(IR_VERSION),
   tier: z.literal("direction"),
+  id,
   title: z.string().min(1),
   register,
   logline: z.string().min(10),
   narrativeArc: z.string().min(20), // setup → tension → peak → release
   tone: z.array(z.string()).min(1).max(5),
   audience: z.string().min(4),
+  deliverable: z.object({
+    targetDurationMs: z.number().int().min(1000).max(600000).optional(),
+    width: z.number().int().min(320).max(4096).optional(),
+    height: z.number().int().min(320).max(4096).optional(),
+    channel: z.string().min(2).optional(),
+  }).superRefine((value, ctx) => {
+    if ((value.width == null) !== (value.height == null))
+      ctx.addIssue({ code: "custom", message: "deliverable width and height must be supplied together" });
+  }),
+  creativeConcept: z.object({
+    emotionalPromise: z.string().min(8),
+    governingIdea: z.string().min(8),
+    tension: z.string().min(8),
+    resolution: z.string().min(8),
+    visualThesis: z.string().min(8),
+    soundThesis: z.string().min(8).optional(),
+  }),
+  trace: z.object({
+    intakeProjectId: id,
+    objective: z.object({
+      primary: z.string().min(8),
+      audience: z.string().min(4),
+      singleMessage: z.string().min(4),
+    }),
+    constraints: z.object({
+      mustInclude: z.array(z.string().min(2)).default([]),
+      mustAvoid: z.array(z.string().min(2)).default([]),
+      legal: z.array(z.string().min(2)).default([]),
+      accessibility: z.array(z.string().min(2)).default([]),
+    }),
+    sourceIds: z.array(id).min(1),
+    preferenceIds: z.array(id).default([]),
+    brandConstraintIds: z.array(id).default([]),
+    assumptionIds: z.array(id).default([]),
+  }),
   scenes: z.array(SceneDirection).min(1),
+}).superRefine((value, ctx) => {
+  const unique = (values: string[], path: Array<string | number>) => {
+    const seen = new Set<string>();
+    values.forEach((entry, index) => {
+      if (seen.has(entry)) ctx.addIssue({ code: "custom", path: [...path, index], message: `duplicate trace id ${entry}` });
+      seen.add(entry);
+    });
+  };
+  unique(value.trace.sourceIds, ["trace", "sourceIds"]);
+  unique(value.trace.preferenceIds, ["trace", "preferenceIds"]);
+  unique(value.trace.brandConstraintIds, ["trace", "brandConstraintIds"]);
+  unique(value.trace.assumptionIds, ["trace", "assumptionIds"]);
+  const sceneIds = new Set<string>();
+  value.scenes.forEach((scene, index) => {
+    if (sceneIds.has(scene.id))
+      ctx.addIssue({ code: "custom", path: ["scenes", index, "id"], message: `duplicate directed beat id ${scene.id}` });
+    sceneIds.add(scene.id);
+    unique(scene.sourceIds, ["scenes", index, "sourceIds"]);
+    unique(scene.preferenceIds, ["scenes", index, "preferenceIds"]);
+  });
 });
 export type DirectionT = z.infer<typeof Direction>;
+
+// ── Tier 1.5: Storyboard ──────────────────────────────────────────────────
+const storyboardElementType = z.enum([
+  "text", "shape", "image", "video", "figure", "cursor", "particles",
+  "scene3d", "stat", "chart-bar",
+]);
+
+export const StoryboardShot = z.object({
+  id,
+  directionBeatId: id,
+  reason: z.string().min(8),
+  whyNow: z.string().min(8),
+  shotIntent: z.string().min(8),
+  sourceIds: z.array(id).min(1),
+  preferenceIds: z.array(id).default([]),
+  hero: z.object({
+    description: z.string().min(4),
+    elementType: storyboardElementType.optional(),
+  }).optional(),
+  composition: z.object({
+    layout: z.string().min(4),
+    hierarchy: z.string().min(4),
+    negativeSpace: z.string().min(4),
+  }),
+  camera: z.object({
+    movement: z.enum(["locked", "push", "pull", "pan", "tilt", "orbit", "ui-follow", "other"]),
+    reason: z.string().min(8),
+  }),
+  typography: z.object({
+    intent: z.string().min(4),
+    onScreenCopy: z.array(z.string().min(1)).max(10).default([]),
+  }),
+  colorIntent: z.string().min(4),
+  audioIntent: z.string().min(4).optional(),
+  targetDurationMs: z.number().int().min(500).max(20000),
+  transition: z.object({
+    intent: z.string().min(4),
+    preferredType: transition.optional(),
+  }),
+});
+
+export const Storyboard = z.object({
+  storyboardVersion: z.literal(STORYBOARD_VERSION),
+  tier: z.literal("storyboard"),
+  title: z.string().min(1),
+  register,
+  directionId: id,
+  deliverable: z.object({
+    targetDurationMs: z.number().int().min(1000).max(600000).optional(),
+    width: z.number().int().min(320).max(4096).optional(),
+    height: z.number().int().min(320).max(4096).optional(),
+    channel: z.string().min(2).optional(),
+  }).superRefine((value, ctx) => {
+    if ((value.width == null) !== (value.height == null))
+      ctx.addIssue({ code: "custom", message: "deliverable width and height must be supplied together" });
+  }),
+  shots: z.array(StoryboardShot).min(1).max(60),
+}).superRefine((value, ctx) => {
+  const shotIds = new Set<string>();
+  value.shots.forEach((shot, index) => {
+    if (shotIds.has(shot.id))
+      ctx.addIssue({ code: "custom", path: ["shots", index, "id"], message: `duplicate storyboard shot id ${shot.id}` });
+    shotIds.add(shot.id);
+    if (new Set(shot.sourceIds).size !== shot.sourceIds.length)
+      ctx.addIssue({ code: "custom", path: ["shots", index, "sourceIds"], message: "shot source IDs must be unique" });
+    if (new Set(shot.preferenceIds).size !== shot.preferenceIds.length)
+      ctx.addIssue({ code: "custom", path: ["shots", index, "preferenceIds"], message: "shot preference IDs must be unique" });
+  });
+});
+export type StoryboardT = z.infer<typeof Storyboard>;
 
 // ── Tier 2: Score — shared pieces ─────────────────────────────────────────
 const Anchor = z.enum([
@@ -441,5 +573,14 @@ export function validateDirection(data: unknown): { ok: true; direction: Directi
   return {
     ok: false,
     issues: r.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+  };
+}
+
+export function validateStoryboard(data: unknown): { ok: true; storyboard: StoryboardT } | { ok: false; issues: ValidationIssue[] } {
+  const result = Storyboard.safeParse(data);
+  if (result.success) return { ok: true, storyboard: result.data };
+  return {
+    ok: false,
+    issues: result.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
   };
 }

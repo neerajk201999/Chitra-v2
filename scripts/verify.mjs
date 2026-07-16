@@ -29,6 +29,7 @@ if (!quick) {
   run("Runtime probe", process.execPath, ["core/dist/cli/index.js", "probe"]);
   run("Isolated package install", process.execPath, ["benchmarks/cold-start/run.mjs", "--check"]);
   run("Multimodal Intake benchmark", process.execPath, ["benchmarks/intake/run.mjs", "--check"]);
+  run("Creative ladder benchmark", process.execPath, ["benchmarks/creative-ladder/run.mjs", "--check"]);
   run("Reference Decomposer benchmark", process.execPath, ["benchmarks/reference-decomposer/run.mjs", "--check"]);
   run("Frame-addressed browser benchmark", process.execPath, ["benchmarks/keyframe-track/run.mjs", "--check"]);
   run("Seeded-defect benchmark", process.execPath, ["benchmarks/seeded-defects/run.mjs", "--check"]);

@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0
+**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -13,8 +13,12 @@ and CHANGELOG.
   deliverable, mixed-source roles/rights, preferences and anti-references, brand
   constraints, assumptions, open questions, evidence links, and deterministic
   local/inline content fingerprints. Uncaptured URLs stay explicitly unlocked.
-- Direction and Score IRs, conformance gates, static/frame quality gates,
-  evidence generation, content-addressed scene cache, and agent-facing skills.
+- ADR-0018 Direction 0.2 + Storyboard 0.1 creative ladder: governing concept,
+  source/preference/brand/assumption trace, shot composition/camera/type/copy/
+  colour/timing/audio intent, and deterministic conformance across all four
+  tiers through `chitra conform` and `chitra creative-check`.
+- Score IR, static/frame quality gates, evidence generation, content-addressed
+  scene cache, and agent-facing skills.
 - Images, frame-extracted video, sanitized UI figures, cursor/type interaction,
   particles, curated Three.js primitives, music/SFX, beat detection, and
   `at.onBeat` choreography.
@@ -30,10 +34,13 @@ and CHANGELOG.
 
 ## Evidence, not claims
 
-- Unit suite: 44 tests.
+- Unit suite: 49 tests.
 - Multimodal Intake benchmark: inline, local, and URL origins; local evidence;
   preferences and anti-reference; repeated locks identical; traversal, symlink
   escape, stale hash, duplicate ID, and unknown provenance links rejected.
+- Creative ladder benchmark: four typed tiers, three conformance boundaries,
+  full CLI chain green, and dropped must-preference, dropped beat, and missing
+  planned copy caught by stable rule IDs.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.
@@ -61,13 +68,11 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Creative Director + Storyboard tiers with conformance gates, so planning and
-   direction—not renderer improvisation—own the film.
-2. Automated reference comparator → aligned frame/audio metrics plus visual
+1. Automated reference comparator → aligned frame/audio metrics plus visual
    diff artifacts; no “exact” claim without it.
-3. Card Vault reconstruction benchmark → 274 authored frames and published
+2. Card Vault reconstruction benchmark → 274 authored frames and published
    metric results, exposing only capabilities the target proves missing.
-4. Then, evidence-led compositor additions: masks/mattes, nested compositions,
+3. Then, evidence-led compositor additions: masks/mattes, nested compositions,
    blend modes, motion blur, internal 3D tracks, and richer audio.
 
 ## Claim boundaries
@@ -78,8 +83,9 @@ Ordered next slices:
   equivalence, interrupted-render equivalence, and broad critic calibration are
   still open.
 - Exact reconstruction of either supplied reference is not yet achieved.
-- Intake now preserves per-project truth, but Intake→Direction source/preference
-  conformance and cross-project Style Memory are not yet implemented.
+- Creative conformance proves structural coverage and traceability, not that a
+  concept, narrative, composition, or copy is professionally good. Calibrated
+  semantic Creative QA and cross-project Style Memory remain open.
 - GitHub is private and `chitra-video` is unpublished; native manifests and
   isolated installs are verified, but public and three-harness outside-user
   installation are not.

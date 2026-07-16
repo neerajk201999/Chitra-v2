@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * chitra — deterministic core CLI (ADR-0005: exceptional headless, machine-readable).
- * Commands: validate · check · render · evidence · probe
+ * Commands include intake · plan · board · conform · validate · check · render · evidence · probe.
  */
 import { readFileSync, existsSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import path from "node:path";
@@ -9,14 +9,14 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { Command } from "commander";
-import { validateScore, validateDirection, type ScoreT, type DirectionT } from "../ir/schema.js";
-import { runStaticGates, runFrameGates, runConformance, summarize, type Finding } from "../gates/index.js";
+import { validateScore, validateDirection, validateStoryboard, type ScoreT, type DirectionT, type StoryboardT } from "../ir/schema.js";
+import { runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runCreativeConformance, summarize, type Finding } from "../gates/index.js";
 import { openSession, renderScore, type Quality } from "../render/index.js";
 import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
 import { decomposeReference } from "../reference/decompose.js";
-import { validateIntake } from "../intake/schema.js";
+import { validateIntake, type IntakeT } from "../intake/schema.js";
 import { materializeIntake } from "../intake/materialize.js";
 
 const program = new Command();
@@ -74,6 +74,38 @@ function loadDirection(file: string): DirectionT {
   return v.direction;
 }
 
+function loadStoryboard(file: string): StoryboardT {
+  const abs = path.resolve(file);
+  if (!existsSync(abs)) fail(`No such file: ${abs}`);
+  let data: unknown;
+  try { data = JSON.parse(readFileSync(abs, "utf8")); } catch (e) { fail(`Invalid JSON in ${file}: ${(e as Error).message}`); }
+  const validation = validateStoryboard(data);
+  if (!validation.ok) {
+    console.error(`✖ Storyboard schema validation failed (${validation.issues.length}):`);
+    for (const issue of validation.issues) console.error(`  [IR] ${issue.path}: ${issue.message}`);
+    process.exit(2);
+  }
+  return validation.storyboard;
+}
+
+async function loadIntake(file: string): Promise<IntakeT> {
+  const abs = path.resolve(file);
+  if (!existsSync(abs)) fail(`No such file: ${abs}`);
+  let data: unknown;
+  try { data = JSON.parse(readFileSync(abs, "utf8")); } catch (e) { fail(`Invalid JSON in ${file}: ${(e as Error).message}`); }
+  const validation = validateIntake(data);
+  if (!validation.ok) {
+    console.error(`✖ Intake schema validation failed (${validation.issues.length}):`);
+    for (const issue of validation.issues) console.error(`  [INTAKE] ${issue.path}: ${issue.message}`);
+    process.exit(2);
+  }
+  try {
+    return await materializeIntake(validation.intake, path.dirname(abs));
+  } catch (e) {
+    fail((e as Error).message);
+  }
+}
+
 program
   .command("intake")
   .argument("<intake>", "multimodal Intake IR JSON file")
@@ -81,18 +113,8 @@ program
   .option("--json", "print the locked intake as JSON")
   .description("Validate and lock prompt/reference/assets/preferences provenance without fetching remote content (ADR-0017)")
   .action(async (file: string, opts: { out?: string; json?: boolean }) => {
-    const abs = path.resolve(file);
-    if (!existsSync(abs)) fail(`No such file: ${abs}`);
-    let data: unknown;
-    try { data = JSON.parse(readFileSync(abs, "utf8")); } catch (e) { fail(`Invalid JSON in ${file}: ${(e as Error).message}`); }
-    const validation = validateIntake(data);
-    if (!validation.ok) {
-      console.error(`✖ Intake schema validation failed (${validation.issues.length}):`);
-      for (const issue of validation.issues) console.error(`  [INTAKE] ${issue.path}: ${issue.message}`);
-      process.exit(2);
-    }
     try {
-      const intake = await materializeIntake(validation.intake, path.dirname(abs));
+      const intake = await loadIntake(file);
       if (opts.out) {
         const out = path.resolve(opts.out);
         mkdirSync(path.dirname(out), { recursive: true });
@@ -123,17 +145,55 @@ program
   });
 
 program
+  .command("board")
+  .argument("<storyboard>", "Storyboard IR JSON file")
+  .description("Validate a Storyboard (ADR-0018: shot intent between Direction and Score)")
+  .action((file: string) => {
+    const storyboard = loadStoryboard(file);
+    console.log(`✔ storyboard valid — "${storyboard.title}" (${storyboard.register}), ${storyboard.shots.length} shots`);
+  });
+
+program
   .command("conform")
-  .argument("<direction>", "direction JSON file")
-  .argument("<score>", "score JSON file")
+  .argument("<from>", "upstream Intake, Direction, or Storyboard JSON")
+  .argument("<to>", "downstream Direction, Storyboard, or Score JSON")
   .option("--json", "machine-readable output")
-  .description("Creative conformance (ADR-0012): does the Score honor the Direction? Traces every beat, hero moment, and pacing peak.")
-  .action((dirFile: string, scoreFile: string, opts: { json?: boolean }) => {
-    const direction = loadDirection(dirFile);
-    const { score } = loadScore(scoreFile);
-    const findings = runConformance(direction, score);
+  .description("Check one creative boundary: Intake→Direction, Direction→Storyboard/Score, or Storyboard→Score")
+  .action(async (fromFile: string, toFile: string, opts: { json?: boolean }) => {
+    let fromTier = "", toTier = "";
+    try { fromTier = JSON.parse(readFileSync(path.resolve(fromFile), "utf8")).tier; } catch (e) { fail(`Cannot read ${fromFile}: ${(e as Error).message}`); }
+    try { toTier = JSON.parse(readFileSync(path.resolve(toFile), "utf8")).tier; } catch (e) { fail(`Cannot read ${toFile}: ${(e as Error).message}`); }
+    let findings: Finding[];
+    if (fromTier === "intake" && toTier === "direction")
+      findings = runIntakeDirectionConformance(await loadIntake(fromFile), loadDirection(toFile));
+    else if (fromTier === "direction" && toTier === "storyboard")
+      findings = runDirectionStoryboardConformance(loadDirection(fromFile), loadStoryboard(toFile));
+    else if (fromTier === "storyboard" && toTier === "score")
+      findings = runStoryboardScoreConformance(loadStoryboard(fromFile), loadScore(toFile).score);
+    else if (fromTier === "direction" && toTier === "score")
+      findings = runConformance(loadDirection(fromFile), loadScore(toFile).score);
+    else fail(`Unsupported conformance boundary: ${fromTier || "unknown"} → ${toTier || "unknown"}`);
     const s = printFindings(findings, !!opts.json);
     process.exit(s.releasable ? 0 : 1);
+  });
+
+program
+  .command("creative-check")
+  .argument("<intake>", "locked or source Intake JSON")
+  .argument("<direction>", "Direction JSON")
+  .argument("<storyboard>", "Storyboard JSON")
+  .argument("<score>", "Score JSON")
+  .option("--json", "machine-readable output")
+  .description("Validate the complete Intake→Direction→Storyboard→Score intent chain (ADR-0018)")
+  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { json?: boolean }) => {
+    const findings = runCreativeConformance(
+      await loadIntake(intakeFile),
+      loadDirection(directionFile),
+      loadStoryboard(storyboardFile),
+      loadScore(scoreFile).score
+    );
+    const summary = printFindings(findings, !!opts.json);
+    process.exit(summary.releasable ? 0 : 1);
   });
 
 program

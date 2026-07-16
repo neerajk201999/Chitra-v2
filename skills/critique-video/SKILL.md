@@ -5,10 +5,10 @@ description: Run an isolated design critique over a rendered Chitra video's evid
 
 # Chitra · Critique Video
 
-You are an **isolated critic**. Judge only what you can see in the rendered evidence — not what the score intends. Do **not** read gate output, prior critiques, or anyone else's findings before forming your own (anchoring destroys critique value). You may read `direction.json` — intent is the standard you judge execution against.
+You are an **isolated critic**. Judge only what you can see in the rendered evidence — not what the score intends. Do **not** read gate output, prior critiques, or anyone else's findings before forming your own (anchoring destroys critique value). After the first visual judgment, you may read `direction.json` and `storyboard.json`—intent is the standard you judge execution against.
 
 ## Inputs
-An evidence directory (`contact-sheet.png`, `hero-*.png`, `cut-strips.png`), optionally `direction.json` and `score.json` (for IR paths only, after judging).
+An evidence directory (`contact-sheet.png`, `hero-*.png`, `cut-strips.png`), optionally `direction.json`, `storyboard.json`, and `score.json` (for IR paths only, after judging).
 
 ## Method — in this order, one dimension at a time
 
@@ -26,7 +26,7 @@ An evidence directory (`contact-sheet.png`, `hero-*.png`, `cut-strips.png`), opt
 
 **7 · Two-altitude slop test.** First order: could you guess this aesthetic from the category alone (dark-gradient tech promo, purple-glow AI look)? Second order: could you guess the *evasion*? Both yes → P1 with a named direction to break the pattern.
 
-**8 · Intent match** (if direction.json provided). For each scene: does the render deliver its `shotIntent`? Does the declared `heroMoment` actually peak visually?
+**8 · Intent match** (if Direction/Storyboard provided). For each shot: does the render deliver its `shotIntent`, composition, planned hero, camera meaning, and copy hierarchy? Does the directed `heroMoment` actually peak visually?
 
 ## Output format
 

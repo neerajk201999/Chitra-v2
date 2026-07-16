@@ -11,6 +11,7 @@ chitra probe                   # verifies ffmpeg + vendored Chrome
 mkdir my-film && cd my-film
 chitra intake intake.json -o intake.lock.json # after the agent inventories the brief and sources
 chitra init . --style night --title "My film"
+chitra creative-check intake.lock.json direction.json storyboard.json score.json
 chitra check score.json && chitra render score.json -o out.mp4 -q draft
 ```
 
