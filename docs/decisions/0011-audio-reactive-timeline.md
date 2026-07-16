@@ -1,6 +1,6 @@
 # ADR-0011 — Audio-reactive timeline (scored motion)
 
-**Status:** accepted · building 2026-07-15
+**Status:** accepted · shipped 2026-07-15
 
 ## Context
 

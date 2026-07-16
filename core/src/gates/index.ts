@@ -51,7 +51,7 @@ export function runStaticGates(score: ScoreT): Finding[] {
       else if (a.at.onBeat >= beats.length)
         f.push({ ruleId: "MO-AUD-4", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" onBeat ${a.at.onBeat} exceeds ${beats.length} detected beats` });
     });
-    const resolved = safeResolve(scene, { sceneStartMs: sceneStart(si), beats });
+    const resolved = safeResolve(scene, { sceneStartMs: sceneStart(si), beats, fps: score.meta.fps });
     if (!resolved) {
       f.push({ ruleId: "IR-REF-1", severity: "P1", path: p(".choreography"), message: "Choreography references an unknown animation id (broken relational timing)" });
       return;
@@ -84,6 +84,32 @@ export function runStaticGates(score: ScoreT): Finding[] {
       }
       if (a.preset === "type-in" && target && target.type !== "text")
         f.push({ ruleId: "IR-CUR-1", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" (type-in) targets "${a.target}" which is ${target.type}, not text` });
+    });
+
+    // MO-KEY-1 (ADR-0013): exact tracks are typed, frame-bounded, and an
+    // explicit exception to the curated vocabulary — never a silent shortcut.
+    scene.choreography.forEach((a, ai) => {
+      const path = p(`.choreography[${ai}]`);
+      if (a.preset !== "keyframe-track") {
+        if (a.keyframes)
+          f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" carries keyframes but preset is ${a.preset} — keyframes require keyframe-track` });
+        return;
+      }
+      if (!a.keyframes?.length)
+        f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" is keyframe-track with no keyframes` });
+      if (!a.override?.reason)
+        f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" is an exact track without override.reason explaining why presets are insufficient` });
+      if (a.duration || a.override?.durationMs || a.override?.gsapEase || a.stagger || a.distance || a.direction || a.waypoints || a.morphTo)
+        f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" mixes keyframes with incompatible preset controls; final frame sets duration and keyframes use token easings` });
+      if (scene.choreography.some((other) => other !== a && (
+        other.target === a.target ||
+        (other.target.endsWith("*") && a.target.startsWith(other.target.slice(0, -1))) ||
+        (a.target.endsWith("*") && other.target.startsWith(a.target.slice(0, -1)))
+      )))
+        f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" does not exclusively own target "${a.target}" — exact tracks cannot stack with another tween on the same target` });
+      const endMs = resolved.find((r) => r.anim.id === a.id);
+      if (endMs && endMs.startMs + endMs.durationMs > scene.durationMs + 0.001)
+        f.push({ ruleId: "MO-KEY-1", severity: "P1", path, message: `"${a.id}" ends at ${Math.round(endMs.startMs + endMs.durationMs)}ms, beyond scene duration ${scene.durationMs}ms` });
     });
 
     // MO-3D-1 (ADR-0010): a 3D subject must settle, not spin forever (perpetual
@@ -268,7 +294,7 @@ export function runStaticGates(score: ScoreT): Finding[] {
           );
           if (!cont) break;
           const contExit = next.choreography.find((a) => a.target === cont.id && PRESETS[a.preset as PresetName].kind === "exit");
-          visibleTo += contExit ? safeResolve(next, { sceneStartMs: sceneStart(ni), beats })?.find((r) => r.anim.id === contExit.id)?.startMs ?? next.durationMs : next.durationMs;
+          visibleTo += contExit ? safeResolve(next, { sceneStartMs: sceneStart(ni), beats, fps: score.meta.fps })?.find((r) => r.anim.id === contExit.id)?.startMs ?? next.durationMs : next.durationMs;
           if (contExit) break;
         }
       }
@@ -332,7 +358,7 @@ export function runStaticGates(score: ScoreT): Finding[] {
   return f;
 }
 
-function safeResolve(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[] }) {
+function safeResolve(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[]; fps?: number }) {
   try {
     return resolveSceneTimeline(scene, ctx);
   } catch {

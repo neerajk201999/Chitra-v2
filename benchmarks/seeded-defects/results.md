@@ -1,4 +1,4 @@
-# Seeded-Defect Evaluation — 2026-07-15
+# Seeded-Defect Evaluation — 2026-07-16
 
 Deterministic Quality Engine (layers 1–2) against 10 seeded authoring defects in the flagship score.
 

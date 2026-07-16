@@ -101,6 +101,9 @@ export const PRESETS = {
   "particle-shimmer": { defaultEasing: "move-through", defaultDuration: "cinematic", kind: "ambient" }, // looping per-dot twinkle
   "particle-form": { defaultEasing: "spring-standard", defaultDuration: "dramatic", kind: "enter" }, // radial assemble
   "particle-morph": { defaultEasing: "move-through", defaultDuration: "cinematic", kind: "feature" }, // formation → formation
+  // ADR-0013: exact frame-addressed transform/compositing track. Duration is
+  // derived from its final frame; defaultDuration is only a schema fallback.
+  "keyframe-track": { defaultEasing: "move-through", defaultDuration: "standard", kind: "feature" },
   "hide": { defaultEasing: "linear", defaultDuration: "standard", kind: "exit" }, // instant state declaration (match-cut continuity)
   "fade-out": { defaultEasing: "exit-swift", defaultDuration: "standard", kind: "exit" },
   "fade-down-out": { defaultEasing: "exit-swift", defaultDuration: "standard", kind: "exit" },
