@@ -276,9 +276,14 @@ const VideoElement = z.object({
 
 /** ADR-0009/0020: deterministic dot-matrix particle field. Authors pick a
  *  generated formation or supply bounded, ordered custom coordinates. */
-const ParticlePoint = z.object({
+const ParticleCoordinate = z.object({
   x: z.number().min(0).max(100),
   y: z.number().min(0).max(100),
+}).strict();
+const ParticlePoint = ParticleCoordinate.extend({
+  /** ADR-0025: bounded per-dot appearance; absent values preserve uniform fields. */
+  size: z.number().min(0.25).max(2).optional(),
+  opacity: z.number().min(0.05).max(1).optional(),
 });
 
 const ParticlesElement = z.object({
@@ -294,6 +299,7 @@ const ParticlesElement = z.object({
   count: z.number().int().min(4).max(400).default(48), // ring/scatter dot count
   radius: z.number().min(5).max(60).default(20), // ring radius, stage units
   dotSize: z.number().min(1).max(40).default(7), // px at 1080
+  glow: z.number().min(0).max(4).default(1.5), // shadow-radius multiplier
   seed: z.number().int().min(0).max(99999).default(1),
   position: Position.default({ anchor: "center" }),
   width: z.number().min(5).max(140).default(40),
@@ -489,7 +495,7 @@ export const Animation = z.object({
   morphTo: z.enum(["grid", "ring", "scatter", "custom"]).optional(),
   /** ADR-0020: destination coordinates for morphTo custom. A custom source may
    *  omit these to return to its own ordered base points. */
-  morphPoints: z.array(ParticlePoint).min(4).max(400).optional(),
+  morphPoints: z.array(ParticleCoordinate).min(4).max(400).optional(),
   /** ADR-0013: only valid with `keyframe-track`; MO-KEY-1 enforces the pairing,
    *  explicit reason, and scene bounds. */
   keyframes: KeyframeTrack.optional(),

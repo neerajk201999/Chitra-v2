@@ -83,3 +83,7 @@ The next reconstruction work must address source/asset fidelity explicitly;
 more timing-keyframe tuning would optimize the benchmark without fixing the
 measured cause. This document makes no exact-reconstruction or competitive-
 quality claim.
+
+A later rights-approved, non-redistributed source-assisted run is recorded in
+[source-assisted-results.md](source-assisted-results.md); the clean-room table
+above remains immutable and directly reproducible from committed authoring.

@@ -337,6 +337,7 @@ describe("particle fields (ADR-0009)", () => {
     const a = compile(s).html, b = compile(s).html;
     expect(a).toBe(b);
     expect((a.match(/class="pdot"/g) || []).length).toBe(48);
+    expect(a).not.toContain("opacity:1.000;box-shadow");
   });
   it("MO-PART-1 caps dot count and confines morphTo to particle-morph", () => {
     const big = runStaticGates(withField({ cols: 24, rows: 24 })).filter((x) => x.ruleId === "MO-PART-1");
@@ -374,6 +375,32 @@ describe("particle fields (ADR-0009)", () => {
     s.scenes[0].choreography.push({ id: "bad-custom", target: "field", preset: "particle-morph", morphTo: "custom", morphPoints: [{ x: 0, y: 0 }, { x: 100, y: 100 }, { x: 50, y: 50 }, { x: 25, y: 25 }], at: { after: "scene-start", offsetMs: 0 } } as never);
     expect(runStaticGates(s).some((x) => x.ruleId === "MO-PART-1" && /destination points/.test(x.message))).toBe(true);
     expect(() => compile(s)).toThrow(/4 destination points for 48 source dots/);
+  });
+  it("ADR-0025 compiles bounded per-point size/opacity and field glow deterministically", () => {
+    const points = [
+      { x: 10, y: 20, size: 0.5, opacity: 0.25 },
+      { x: 80, y: 20, size: 1.2, opacity: 0.8 },
+      { x: 80, y: 70 },
+      { x: 10, y: 70 },
+    ];
+    const s = withField({ formation: "custom", points, count: 4, dotSize: 10, glow: 2 });
+    const v = validateScore(s);
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+    const a = compile(v.score).html, b = compile(v.score).html;
+    expect(a).toBe(b);
+    expect(a).toContain("opacity:0.250;box-shadow:0 0 10.0px");
+    v.score.meta.width = 100;
+    v.score.meta.height = 100;
+    expect(compile(v.score).html).toContain("width:1px;height:1px");
+
+    expect(validateScore(withField({ formation: "custom", points: [{ x: 10, y: 10, size: 0.1 }, ...points.slice(1)], count: 4 })).ok).toBe(false);
+    expect(validateScore(withField({ formation: "custom", points: [{ x: 10, y: 10, opacity: 1.1 }, ...points.slice(1)], count: 4 })).ok).toBe(false);
+    expect(validateScore(withField({ glow: 4.1 })).ok).toBe(false);
+
+    const morph = withField();
+    morph.scenes[0].choreography.push({ id: "appearance-at-destination", target: "field", preset: "particle-morph", morphTo: "custom", morphPoints: [{ x: 0, y: 0, size: 2 }, { x: 100, y: 100 }, { x: 50, y: 50 }, { x: 25, y: 25 }], at: { after: "scene-start", offsetMs: 0 } } as never);
+    expect(validateScore(morph).ok).toBe(false);
   });
 });
 

@@ -81,6 +81,10 @@ reference pixels/audio: mean SSIM 0.363459 versus freeze 0.269554, but worse MAE
 MAE locally without moving the unrelated worst frames. Exact remains open; the
 ADR-0021 parent transform groups then raise SSIM to 0.367146 while slightly
 regressing MAE/PSNR; the tradeoff is published rather than collapsed to a win.
+The rights-approved source-assisted 0.9 run then reaches SSIM 0.401685 and
+localizes the next largest appearance residual to the final mark. ADR-0025 adds
+bounded heterogeneous particle size/opacity/glow for that measured gap; exact
+reconstruction remains open.
 Remaining (priority order):
 - Close M2 release-integrity gaps A2/A3/A5 before calling the Quality Engine a
   mandatory output floor.

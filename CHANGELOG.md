@@ -40,6 +40,8 @@ versioned separately.
 - ADR-0024 rendered figure-DOM text registration for minimum size, three-instant
   pixel contrast, safe zones, reading time, and overlap gates, plus a real-
   browser defect/control benchmark.
+- ADR-0025 bounded per-point size/opacity and field glow for deterministic
+  heterogeneous custom particle constellations, with a real-browser benchmark.
 
 ### Fixed
 
