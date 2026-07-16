@@ -1,6 +1,8 @@
 # System Overview
 
-Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004 (Quality Engine), ADR-0005 (distribution).
+Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
+(Quality Engine), ADR-0005 (distribution), ADR-0017 (Intake), ADR-0018
+(creative ladder).
 
 ```
                         USER'S CODING AGENT (Claude Code / Codex / Cursor / Gemini CLI)
@@ -15,7 +17,7 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004 (Quali
 │    ► Shot Planner ► Motion Director ► Sound Director                        │
 │                │                                          ▲                  │
 │                ▼                                          │ patches          │
-│    Tier-1 Direction + Tier-2 Score (Motion IR)      Editor (surgical)        │
+│    Intake ► Direction ► Storyboard ► Score          Editor (surgical)        │
 │                │                                          ▲                  │
 │                ▼                                          │ findings         │
 │         ┌── deterministic core ──┐              Critics (isolated VLM        │
@@ -29,7 +31,8 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004 (Quali
 └──────────────────────────────────────────────────────────────────────────────┘
 
 DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pixels)
-  ir/        schemas (Tier 1 + Tier 2), validation, diff/patch, versioning
+  intake/    multimodal source/provenance contract and deterministic locking
+  ir/        Direction, Storyboard, and Score schemas, validation, versioning
   motion/    token registry: easing families, duration scale, stagger patterns,
              transition types, register definitions (machine-readable mirror of docs/motion/)
   compile/   IR → HTML/CSS/GSAP page (stable IDs, one paused master timeline,

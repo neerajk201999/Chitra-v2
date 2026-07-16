@@ -61,6 +61,9 @@ for (const entry of [pkg.main, pkg.types, pkg.exports?.["."]?.import, pkg.export
 
 const tokens = readFileSync(path.join(root, "core/src/motion/tokens.ts"), "utf8");
 const irVersion = tokens.match(/IR_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const motionSchema = readFileSync(path.join(root, "core/src/ir/schema.ts"), "utf8");
+const directionVersion = motionSchema.match(/DIRECTION_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const storyboardVersion = motionSchema.match(/STORYBOARD_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const referenceSchema = readFileSync(path.join(root, "core/src/reference/schema.ts"), "utf8");
 const styleDnaVersion = referenceSchema.match(/STYLE_DNA_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const intakeSchema = readFileSync(path.join(root, "core/src/intake/schema.ts"), "utf8");
@@ -70,6 +73,10 @@ if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
 if (!irVersion || !currentState.includes(`**Motion IR:** ${irVersion}`))
   failures.push(`current-state Motion IR version is not ${irVersion ?? "discoverable"}`);
+if (!directionVersion || !currentState.includes(`**Direction:** ${directionVersion}`))
+  failures.push(`current-state Direction version is not ${directionVersion ?? "discoverable"}`);
+if (!storyboardVersion || !currentState.includes(`**Storyboard:** ${storyboardVersion}`))
+  failures.push(`current-state Storyboard version is not ${storyboardVersion ?? "discoverable"}`);
 if (!styleDnaVersion || !currentState.includes(`**Style DNA:** ${styleDnaVersion}`))
   failures.push(`current-state Style DNA version is not ${styleDnaVersion ?? "discoverable"}`);
 if (!intakeVersion || !currentState.includes(`**Intake IR:** ${intakeVersion}`))

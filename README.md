@@ -9,10 +9,12 @@ Install into your coding agent — Claude Code, Codex, Cursor, Gemini CLI — an
 Every existing tool solves *rendering*. Chitra solves **taste**:
 
 ```
-prompt + optional sources → intake → direction → design → motion → render → critique → revision → video
+prompt + optional sources → intake → direction → storyboard → motion → render → critique → revision → video
 ```
 
-- A **two-tier Motion IR**: directorial intent + an executable, schema-validated score. Diffable, patchable, deterministic. (ADR-0003)
+- A **four-tier creative ladder**: locked Intake → Direction → Storyboard → an
+  executable Motion IR Score, with deterministic conformance at every boundary.
+  Diffable, patchable, and model-neutral. (ADR-0017, ADR-0018)
 - A **tokenized motion language**: easing families, duration scales, pacing rules, register-aware rubrics — encoded design judgment, enforced in code. ([docs/motion](docs/motion/motion-language.md))
 - A **Quality Engine that watches the render**: structural validation → deterministic gates → isolated VLM critics over rendered evidence → surgical revision, bounded at 3 passes. (ADR-0004)
 - A **deterministic core** (compile → render → gate) with all reasoning in your agent's LLM — no API keys, no hosted service. (ADR-0002, ADR-0005)
@@ -26,6 +28,9 @@ the [intake benchmark](benchmarks/intake/results.md) verifies deterministic loca
 fingerprints and explicit unlocked URLs. `chitra decompose` creates deterministic
 Style DNA and evidence; the [generated-fixture benchmark](benchmarks/reference-decomposer/results.md)
 reproduces exact known cuts/colors with byte-identical JSON and frames. The same
+Direction 0.2 and Storyboard 0.1 contracts preserve concept and shot intent; the
+[creative-ladder benchmark](benchmarks/creative-ladder/results.md) catches three
+seeded intent drifts across the complete chain. The same
 canonical skills install through Claude Code, Codex, Cursor, Gemini CLI, or
 `npx skills`, while an [isolated install benchmark](benchmarks/cold-start/results.md)
 proves the packaged CLI through a real browser frame. Semantic intent and exact
@@ -58,6 +63,7 @@ preferences, and anti-references are optional inputs—not mandatory ceremony.
 ```bash
 # what the agent runs under the hood
 chitra intake intake.json -o intake.lock.json # validate + fingerprint supplied sources and evidence
+chitra creative-check intake.lock.json direction.json storyboard.json score.json # preserve intent across every tier
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
 chitra validate score.json      # schema + static gates (fast)

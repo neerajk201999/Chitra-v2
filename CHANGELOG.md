@@ -16,11 +16,16 @@ versioned separately.
   implicit network acquisition.
 - Mixed-input benchmark covering inline prompts, local references, uncaptured
   URLs, evidence, and repeatable locks.
+- Direction 0.2 creative concept and Intake trace fields, plus Storyboard 0.1
+  shot-level composition, camera, typography/copy, colour, timing, transition,
+  audio, and provenance intent.
+- Deterministic Intake→Direction→Storyboard→Score conformance gates,
+  `chitra board`, generic adjacent-tier `chitra conform`, complete-chain
+  `chitra creative-check`, and a three-defect creative-ladder benchmark.
 
 ### Planned
 
-- Creative Director and Storyboard tiers, automated reference comparison, and
-  the Card Vault reconstruction benchmark.
+- Automated reference comparison and the Card Vault reconstruction benchmark.
 
 ## [0.3.0] — 2026-07-16
 

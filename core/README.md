@@ -8,6 +8,7 @@ Requires Node 22.12+ and ffmpeg on PATH. The bundled Chrome downloads on first i
 # Current source install from the cloned repository; npm publication is pending.
 npm install -g ./core
 chitra intake intake.json -o intake.lock.json # objective + mixed-source provenance
+chitra creative-check intake.lock.json direction.json storyboard.json score.json # intent conformance
 chitra init --style night --title "My film"   # gate-passing starter score
 chitra decompose reference.mp4 -o style-dna.json # measured reference facts + shot evidence
 chitra check score.json                        # schema + static + rendered-frame gates

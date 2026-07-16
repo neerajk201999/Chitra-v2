@@ -22,11 +22,11 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     over-count musical beats in dense or continuous audio. Thresholds and
     analyzer methods are recorded in Style DNA, but ChitraBench accuracy and a
     separate evidence-linked semantic pass remain open (M4).
-12. **Intake→Direction conformance is not yet implemented.** ADR-0017 now
-    preserves typed mixed-source provenance, preferences, anti-references,
-    brand constraints, assumptions, questions, and evidence in a deterministic
-    lock. Direction cannot yet cite those IDs or prove that must-level intent
-    survived planning; that is the Creative Director/Storyboard slice.
+12. **Creative conformance is structural, not semantic.** ADR-0018 now catches
+    dropped sources/preferences/brand constraints, unresolved blockers,
+    invented or reordered beats, missing shots/copy/heroes, and timing drift.
+    It cannot prove that a governing idea, narrative, composition, or copy is
+    professionally good. That requires calibrated Creative QA and blind labels.
 13. **GitHub governance is only partly enforceable.** Vulnerability alerts are
     enabled, but branch protection is unavailable while this repository remains
     private on the current GitHub plan. Local and CI verification are green;
