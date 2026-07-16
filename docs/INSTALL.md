@@ -100,7 +100,8 @@ preferences, brand constraints, or approval.
 ## Public-preview status
 
 - Source install and isolated tarball install: verified.
-- v0.4.0 npm publication and public GitHub access: pending the release transaction.
+- Public GitHub clone and isolated `chitra-video@0.4.0` registry install/probe:
+  verified.
 - Claude Code and Codex marketplace installation: exercised in isolated homes.
 - Claude Code, Codex, and Cursor manifests: validated/version-checked.
 - Canonical skills: installed locally for Claude Code, Codex, Cursor, and

@@ -1,4 +1,4 @@
-# Known Issues (v0.4.0 release candidate — 2026-07-17)
+# Known Issues (v0.4.0 — 2026-07-17)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 
@@ -22,11 +22,10 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    frames at ≤250ms intervals plus animation/cut/transition neighborhoods.
    Shorter violations between those frames can still slip through; every-frame
    QA remains reserved for a benchmark that proves the added cost is necessary.
-7. **Public distribution is not released yet.** The v0.4.0 release candidate,
-   source/tarball installation, native Claude/Codex/Cursor manifests, `npx
-   skills`, and an isolated install through a browser frame are verified;
-   public access, registry installation, and three-harness outside-user timing
-   remain release evidence (M3 exit).
+7. **Outside-user cold starts are not measured yet.** Public GitHub access,
+   `chitra-video@0.4.0`, an unauthenticated clone, isolated registry install and
+   probe, native Claude/Codex/Cursor manifests, and `npx skills` are verified.
+   Three independent users across three harnesses remain the M3 exit gate.
 8. **Distribution/parallel rendering unimplemented** (design in ADR-0002 consequences; M5).
 9. **Ctrl-C mid-render** may briefly orphan the vendored Chrome process (no explicit signal handler).
 10. **Example corpus is 2 scores**; agents compose better from a gallery (M3).
@@ -45,10 +44,11 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     invented or reordered beats, missing shots/copy/heroes, and timing drift.
     It cannot prove that a governing idea, narrative, composition, or copy is
     professionally good. That requires calibrated Creative QA and blind labels.
-13. **GitHub governance is only partly enforceable.** Vulnerability alerts are
-    enabled, but branch protection is unavailable while this repository remains
-    private on the current GitHub plan. Local and CI verification are green;
-   public-repository branch protection must be re-evaluated after release.
+13. **GitHub governance has a single-maintainer ceiling.** Vulnerability alerts
+    and private reporting are enabled. Protected `main` requires current
+    `verify` CI and resolved conversations, enforces rules for admins, and
+    blocks force pushes/deletion; independent review and maintainer redundancy
+    remain unavailable with one maintainer.
 14. **Asset provenance validates declarations, not ownership independently.**
     ADR-0023 binds rendered paths to locked Intake sources and blocks
     `reference-only`/`unknown` bytes, but it cannot verify whether a user's
