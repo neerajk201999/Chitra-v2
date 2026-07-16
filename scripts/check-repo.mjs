@@ -10,6 +10,17 @@ const pkg = readJson("core/package.json");
 const lock = readJson("core/package-lock.json");
 const manifest = readJson("skills/manifest.json");
 const failures = [];
+const skillDirs = readdirSync(path.join(root, "skills"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
+for (const name of skillDirs) {
+  if (!existsSync(path.join(root, "skills", name, "SKILL.md")))
+    failures.push(`skills/${name} is not a valid skill directory (missing SKILL.md)`);
+}
+const canonicalSkills = skillDirs.filter((name) => existsSync(path.join(root, "skills", name, "SKILL.md")));
+if (JSON.stringify(Object.keys(manifest.skills).sort()) !== JSON.stringify(canonicalSkills))
+  failures.push("skill manifest entries do not match canonical skill directories");
 
 for (const [label, version] of [
   ["package-lock root", lock.version],
@@ -17,6 +28,26 @@ for (const [label, version] of [
   ["skill manifest", manifest.version],
 ]) {
   if (version !== pkg.version) failures.push(`${label} version ${version} != package ${pkg.version}`);
+}
+
+for (const file of [
+  ".claude-plugin/plugin.json",
+  ".codex-plugin/plugin.json",
+  ".cursor-plugin/plugin.json",
+]) {
+  const plugin = readJson(file);
+  if (plugin.name !== "chitra") failures.push(`${file} plugin name is not chitra`);
+  if (plugin.version !== pkg.version) failures.push(`${file} version ${plugin.version} != package ${pkg.version}`);
+  const skillPaths = Array.isArray(plugin.skills) ? plugin.skills : [plugin.skills];
+  for (const skillPath of skillPaths.filter(Boolean)) {
+    const resolved = path.resolve(root, skillPath);
+    if (!existsSync(resolved)) failures.push(`${file} has missing skills path ${skillPath}`);
+  }
+  if (file === ".claude-plugin/plugin.json") {
+    const expected = canonicalSkills.map((name) => `./skills/${name}`);
+    for (const skillPath of expected)
+      if (!skillPaths.includes(skillPath)) failures.push(`${file} does not expose ${skillPath}`);
+  }
 }
 
 const changelog = readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
@@ -30,11 +61,15 @@ for (const entry of [pkg.main, pkg.types, pkg.exports?.["."]?.import, pkg.export
 
 const tokens = readFileSync(path.join(root, "core/src/motion/tokens.ts"), "utf8");
 const irVersion = tokens.match(/IR_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const referenceSchema = readFileSync(path.join(root, "core/src/reference/schema.ts"), "utf8");
+const styleDnaVersion = referenceSchema.match(/STYLE_DNA_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
 if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
 if (!irVersion || !currentState.includes(`**Motion IR:** ${irVersion}`))
   failures.push(`current-state Motion IR version is not ${irVersion ?? "discoverable"}`);
+if (!styleDnaVersion || !currentState.includes(`**Style DNA:** ${styleDnaVersion}`))
+  failures.push(`current-state Style DNA version is not ${styleDnaVersion ?? "discoverable"}`);
 
 const cli = path.join(root, "core/dist/cli/index.js");
 if (existsSync(cli)) {

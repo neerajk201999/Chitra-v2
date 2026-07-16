@@ -15,6 +15,7 @@ import { openSession, renderScore, type Quality } from "../render/index.js";
 import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
+import { decomposeReference } from "../reference/decompose.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -314,6 +315,30 @@ program
       const r = spawnSync("ffmpeg", ["-y", "-v", "error", ...args, "-ar", "48000", target], { encoding: "utf8" });
       if (r.status !== 0) fail(`ffmpeg failed for ${name}: ${(r.stderr ?? "").slice(-300)}`);
       console.log(`✔ ${target}`);
+    }
+  });
+
+program
+  .command("decompose")
+  .argument("<video>", "reference video file")
+  .requiredOption("-o, --out <file>", "Style DNA JSON output")
+  .option("--evidence <dir>", "shot evidence directory (default: <out>.evidence)")
+  .option("--scene-threshold <n>", "ffmpeg scene-change threshold (default 0.3)", parseFloat)
+  .option("--sample-fps <n>", "analysis samples per second (default 4)", parseFloat)
+  .option("--sample-width <px>", "analysis frame width (default 160)", (v) => parseInt(v, 10))
+  .option("--max-samples <n>", "bounded sample count (default 480)", (v) => parseInt(v, 10))
+  .description("Decompose a reference into typed, evidence-backed Style DNA (ADR-0015)")
+  .action(async (video: string, o: { out: string; evidence?: string; sceneThreshold?: number; sampleFps?: number; sampleWidth?: number; maxSamples?: number }) => {
+    try {
+      const out = path.resolve(o.out);
+      const evidenceDir = path.resolve(o.evidence ?? out.replace(/\.json$/i, "") + ".evidence");
+      const dna = await decomposeReference(video, { artifactDir: path.dirname(out), evidenceDir, sceneThreshold: o.sceneThreshold, sampleFps: o.sampleFps, sampleWidth: o.sampleWidth, maxSamples: o.maxSamples });
+      mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, JSON.stringify(dna, null, 2) + "\n");
+      console.log(`✔ ${o.out} — ${dna.shots.length} shots, ${dna.rhythm.cutsPerMinute} cuts/min, ${dna.palette.dominantColors.length} palette colors, ${dna.audio.present ? `${dna.audio.beats.length} audio landmarks` : "no audio"}`);
+      console.log(`  evidence: ${dna.evidence.directory} · semantic review remains explicitly unmeasured`);
+    } catch (e) {
+      fail((e as Error).message);
     }
   });
 

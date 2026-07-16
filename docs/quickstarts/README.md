@@ -1,18 +1,26 @@
 # Quickstarts
 
-Same five minutes everywhere: install the core, scaffold, render, iterate.
+The canonical, current platform matrix is [Install and use Chitra](../INSTALL.md).
+The source install below requires access to the private repository; npm publish
+and outside-user timing are still release gates.
 
 ```bash
-npm i -g chitra-video          # or: git clone <repo> && cd chitra/core && npm i && npx tsc
+git clone https://github.com/neerajk201999/Chitra-v2.git && cd Chitra-v2
+npm install -g ./core
 chitra probe                   # verifies ffmpeg + vendored Chrome
 mkdir my-film && cd my-film
 chitra init . --style night --title "My film"
 chitra check score.json && chitra render score.json -o out.mp4 -q draft
 ```
 
-- **Claude Code** — install the plugin from `.claude-plugin/plugin.json` (or just open the repo; `AGENTS.md` routes to the `create-video` / `critique-video` skills). Say what you want; the agent runs the loop: direction → score → gates → draft → evidence → critique → revision → final.
-- **Cursor** — the compiled rule at `.cursor/rules/chitra.mdc` ships in-repo (regenerate with `node scripts/build-skills.mjs`). Open the repo, ask for a video.
-- **Codex / anything else** — point the agent at `AGENTS.md`; it is the harness-neutral entry point.
+With a reference, run `chitra decompose reference.mp4 -o style-dna.json` first.
+It produces reproducible media, shot, palette, motion, and audio measurements
+plus one evidence frame per detected shot; semantic intent remains explicitly
+unmeasured for the agent to annotate from evidence.
+
+- **Claude Code / Codex** — use the tested native marketplace commands in the install guide, or open the repository directly.
+- **Cursor / Gemini CLI** — open the repository or install the canonical skills with the explicit harness command in the install guide.
+- **Anything else** — install with `npx skills` when supported, or point the agent at `AGENTS.md`.
 
 Audio ships in `core/audio-library/` (synthesized, license-free); reference e.g.
 `"music": {"src": "path/to/pulse-bed.m4a"}` or generate your own with `chitra bed` / `chitra sfx-kit`.

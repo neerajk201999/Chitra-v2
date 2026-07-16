@@ -1,6 +1,7 @@
 {
   "name": "chitra",
   "owner": { "name": "Chitra" },
+  "metadata": { "description": "Agent skills for directing, rendering, and critiquing cinematic motion-design videos." },
   "plugins": [
     {
       "name": "chitra",

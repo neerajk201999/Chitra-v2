@@ -28,9 +28,10 @@ Remaining:
 *Goal: `install → first non-embarrassing video < 10 minutes` in Claude Code, Cursor, Codex.*
 Landed 2026-07-15 (v3): **ADR-0008 figures & interaction choreography** — sanitized token-themed HTML-fragment mockups (agent-authored UI as first-class elements, gated on pixels), cursor element with waypoint moves + click rings, type-in preset (char cadence + caret); IR-CUR-1 gate; proven against the Anthropic Claude Design benchmark ([docs/research/benchmark-claude-design.md](../research/benchmark-claude-design.md)). Committed CC0-equivalent audio library (3 synthesized beds + SFX kit, core/audio-library/).
 Landed 2026-07-15 (later): **media asset pipeline (ADR-0006)** — `chitra fetch` (download+normalize via sharp) and `chitra snap` (webpage capture via vendored Chrome, consent overlays auto-hidden, never clicked); asset bytes content-hashed into scene hashes; MO-MED-1..4 rules + static gate; provenance ledger (`assets/sources.jsonl`); proven end-to-end by the Wokelo launch film (live wokelo.ai screenshot as a scored scene). Also: right/bottom-anchor compiler bug found by the critique loop and fixed (compiler cache v3).
-Landed: npm publish readiness (`chitra-video`, tarball verified; publish pending owner npmjs login — this machine's npm points at a work registry) · MIT LICENSE · per-harness skill compiler (`scripts/build-skills.mjs`: Cursor rule + sha256 manifest, `--check` for CI) · MO-EDIT-5 no-dead-air gate (from calibration run-001) · render-cache auto-pruning (a full-disk incident is now structurally impossible) · scripted cold start measured: 6s warm-cache end-to-end (clone→install→build→init→first frame); genuinely-cold estimate 3–6 min (downloads dominate).
+Landed: npm publish readiness (`chitra-video`, tarball verified; publish pending owner npmjs login) · MIT LICENSE · canonical skills with Claude Code/Codex/Cursor manifests, `AGENTS.md`/`GEMINI.md`, `npx skills` portability, hash manifest, and stale-version CI checks (ADR-0016) · isolated tarball install benchmark through a real browser frame · MO-EDIT-5 no-dead-air gate · render-cache auto-pruning.
 Remaining:
-- `npm publish` (owner action) + quickstarts per harness.
+- Make the GitHub repository public and `npm publish` (owner actions).
+- Three outside testers across Claude Code, Codex, and Cursor; record network-cold install-to-first-frame time and first-use failures.
 - Router + per-register workflow skills (product-launch, social-short as separate workflows).
 - **Exit gate:** cold-start test in 3 harnesses by 3 outside testers hits the 10-minute bar.
 
@@ -53,10 +54,12 @@ Brand ingestion ("BRAND.md for motion": logo, palette, type, motion personality 
 *Goal: Chitra makes the creative decisions a top director + motion designer would — before rendering. The pipeline begins at intent, not at Motion IR (ADR-0012).*
 Landed: ADR-0012 (creative pipeline architecture) · **docs/creative/creative-constitution.md** (the encoded WHY across narrative/rhythm/camera/type/colour/composition/brand — CC-* rules) · Direction tier wired into the CLI (`chitra plan`) · **Brief↔Score conformance gate** (`chitra conform`; CC-CONF-1..5: register match, no dropped beat, no scene without a WHY, hero moments executed, pacing peak gets air) · ADR-0013 typed frame-addressed transform tracks · 40 tests.
 Engineering foundation: independent `Chitra-v2` lineage + ADR-0014 repository operating system, compact current-state memory, shared local/CI verification contract, executable link/version/manifest checks, and explicit SemVer/CHANGELOG discipline.
+Reference intelligence: ADR-0015 `chitra decompose` → typed Style DNA with deterministic source/media facts, shot rhythm, palette, luminance/saturation, motion energy, audio onset landmarks, and evidence frames; generated benchmark reproduces known cuts/colors and identical repeated JSON.
 Remaining (priority order):
-- **Reference Decomposer**: reference video → measurable Style DNA (camera, rhythm, typography, palette, motion, narrative, emotion). Unlocks "make it like this reference."
+- **Multimodal Brief/Intake IR**: prompt + optional videos/images/links/screenshots/footage/audio/brand/preferences → typed objective, evidence, constraints, and provenance.
 - **Creative Director engine**: product brief → cinematic concept (emotion, arc, register) as a typed Brief IR the agent fills and gates check.
 - **Storyboard IR tier**: shot list (intent, hero, camera, type, timing) between Brief and Score, with conformance gates both directions.
+- **Reference comparator**: align reference/render frames and audio, emit visual diffs, and make similarity claims measurable.
 - **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
 - **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.
 - **Then ChitraBench** end-to-end (benchmarking a creative system, not a renderer).

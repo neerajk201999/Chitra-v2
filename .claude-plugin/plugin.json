@@ -1,7 +1,10 @@
 {
   "name": "chitra",
-  "version": "0.1.0",
-  "description": "Direct cinematic motion-design videos from your coding agent: two-tier Motion IR, deterministic rendering, quality gates that watch the render, and a bounded critique loop.",
-  "author": { "name": "Chitra" },
-  "skills": ["./skills/create-video", "./skills/critique-video"]
+  "version": "0.3.0",
+  "description": "Direct, render, inspect, and revise cinematic motion-design videos with a deterministic quality floor.",
+  "author": { "name": "Neeraj Kanoi", "url": "https://github.com/neerajk201999" },
+  "homepage": "https://github.com/neerajk201999/Chitra-v2",
+  "repository": "https://github.com/neerajk201999/Chitra-v2",
+  "license": "MIT",
+  "skills": ["./skills/create-video", "./skills/critique-video", "./skills/video-workflows"]
 }

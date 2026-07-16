@@ -1,0 +1,16 @@
+{
+  "$schema": "https://cursor.com/schemas/cursor-plugin/plugin.json",
+  "name": "chitra",
+  "displayName": "Chitra",
+  "description": "Direct, render, inspect, and revise cinematic motion-design videos with a deterministic quality floor.",
+  "version": "0.3.0",
+  "author": { "name": "Neeraj Kanoi" },
+  "publisher": "Chitra",
+  "homepage": "https://github.com/neerajk201999/Chitra-v2",
+  "repository": "https://github.com/neerajk201999/Chitra-v2",
+  "license": "MIT",
+  "category": "developer-tools",
+  "keywords": ["video", "motion-design", "animation", "creative", "quality"],
+  "tags": ["video", "animation", "design", "creative", "workflow"],
+  "skills": "./skills/"
+}

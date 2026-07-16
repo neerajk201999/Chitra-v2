@@ -56,7 +56,7 @@ This repository creates cinematic videos through a directed, gated, critiqued pi
 
 ${skillDirs.map((n) => `- **${n}** — ${frontmatterOf(n)}\n  → Follow \`skills/${n}/SKILL.md\` exactly.`).join("\n")}
 
-Toolchain: \`node core/dist/cli/index.js <init|validate|check|frame|render|evidence|clean|probe>\` (build once: \`cd core && npm install && npx tsc\`; requires ffmpeg). The motion law is \`docs/motion/motion-language.md\` — cite rules by ID, never restate values. IR reference: \`core/src/ir/schema.ts\`. Never present a render whose \`chitra check\` is not green.
+Toolchain: \`node core/dist/cli/index.js <decompose|init|validate|check|frame|render|evidence|clean|probe>\` (build once: \`cd core && npm install && npx tsc\`; requires ffmpeg). The motion law is \`docs/motion/motion-language.md\` — cite rules by ID, never restate values. IR reference: \`core/src/ir/schema.ts\`. Never present a render whose \`chitra check\` is not green.
 `;
 
 const outputs = [
