@@ -47,6 +47,8 @@ and CHANGELOG.
 - ADR-0024 rendered figure-text registration: actual DOM text geometry, color,
   font size, visibility, and addressable targets feed MO-TYPE-1/2/4,
   MO-EDIT-1, and QE-OVERLAP-1. Media contrast now runs at all three samples.
+- ADR-0026 Storyboard→Score conformance reads sanitized project-local figure
+  text, so approved copy inside complex product UI remains traceable.
 - Package 0.3.0 has valid `main`/`types`/`exports`; global-style tarball install
   and `chitra probe` have been exercised locally.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
@@ -54,7 +56,7 @@ and CHANGELOG.
 
 ## Evidence, not claims
 
-- Unit suite: 55 tests.
+- Unit suite: 57 tests.
 - Multimodal Intake benchmark: inline, local, and URL origins; local evidence;
   preferences and anti-reference; repeated locks identical; traversal, symlink
   escape, stale hash, duplicate ID, and unknown provenance links rejected.

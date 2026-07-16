@@ -5,8 +5,10 @@
  * Severity: P1 blocks release, P2 should fix, P3 note.
  */
 import sharp from "sharp";
+import { readFileSync } from "node:fs";
 import type { SceneT, ScoreT, DirectionT, StoryboardT } from "../ir/schema.js";
 import type { IntakeT } from "../intake/schema.js";
+import { resolveProjectAsset } from "../assets/local.js";
 import { resolveSceneTimeline, totalDurationMs } from "../compile/index.js";
 import {
   CHOREOGRAPHY,
@@ -770,8 +772,22 @@ export function runDirectionStoryboardConformance(direction: DirectionT, storybo
   return findings;
 }
 
-/** ADR-0018: does executable Score preserve the approved shot plan? */
-export function runStoryboardScoreConformance(storyboard: StoryboardT, score: ScoreT): Finding[] {
+const normalizedFigureCopy = (html: string) => html
+  .replace(/<style\b[\s\S]*?<\/style\s*>/gi, " ")
+  .replace(/<script\b[\s\S]*?<\/script\s*>/gi, " ")
+  .replace(/<\/?(?:br|div|p|section|article|h[1-6]|li|tr|td|th)\b[^>]*>/gi, " ")
+  .replace(/<[^>]+>/g, "")
+  .replace(/&nbsp;|&#160;/gi, " ")
+  .replace(/&amp;/gi, "&")
+  .replace(/&lt;/gi, "<")
+  .replace(/&gt;/gi, ">")
+  .replace(/&quot;|&#34;/gi, '"')
+  .replace(/&#39;|&apos;/gi, "'")
+  .replace(/\s+/g, " ")
+  .trim();
+
+/** ADR-0018/0026: does executable Score preserve the approved shot plan? */
+export function runStoryboardScoreConformance(storyboard: StoryboardT, score: ScoreT, projectDir?: string): Finding[] {
   const findings: Finding[] = [];
   if (storyboard.register !== score.meta.register)
     findings.push({ ruleId: "CC-SCORE-1", severity: "P1", path: "score.meta.register", message: `Score register "${score.meta.register}" contradicts Storyboard register "${storyboard.register}"` });
@@ -791,8 +807,16 @@ export function runStoryboardScoreConformance(storyboard: StoryboardT, score: Sc
     if (Math.abs(scene.durationMs - shot.targetDurationMs) > tolerance)
       findings.push({ ruleId: "CC-SCORE-3", severity: "P2", path: `score.scenes[${score.scenes.indexOf(scene)}].durationMs`, message: `Scene "${scene.id}" runs ${scene.durationMs}ms vs storyboard ${shot.targetDurationMs}ms (tolerance ${Math.round(tolerance)}ms)` });
     const text = new Set(scene.elements.filter((element) => element.type === "text").map((element) => element.content));
+    const figureText = projectDir == null ? [] : scene.elements
+      .filter((element) => element.type === "figure")
+      .flatMap((element) => {
+        try { return [normalizedFigureCopy(readFileSync(resolveProjectAsset(projectDir, element.src), "utf8"))]; }
+        catch { return []; }
+      });
     shot.typography.onScreenCopy.forEach((copy) => {
-      if (!text.has(copy)) findings.push({ ruleId: "CC-SCORE-4", severity: "P1", path: `score.scenes[${score.scenes.indexOf(scene)}].elements`, message: `Planned copy "${copy}" is missing from scene "${scene.id}"` });
+      const normalized = normalizedFigureCopy(copy);
+      if (!text.has(copy) && !figureText.some((content) => content.includes(normalized)))
+        findings.push({ ruleId: "CC-SCORE-4", severity: "P1", path: `score.scenes[${score.scenes.indexOf(scene)}].elements`, message: `Planned copy "${copy}" is missing from scene "${scene.id}"` });
     });
     if (shot.hero?.elementType && !scene.elements.some((element) => element.type === shot.hero?.elementType && element.role === "hero"))
       findings.push({ ruleId: "CC-SCORE-5", severity: "P2", path: `score.scenes[${score.scenes.indexOf(scene)}].elements`, message: `Shot "${shot.id}" plans a hero ${shot.hero.elementType}, but the Score has no hero-role ${shot.hero.elementType}` });
@@ -893,11 +917,11 @@ export function runAssetProvenanceConformance(intake: IntakeT, direction: Direct
   return findings;
 }
 
-export function runCreativeConformance(intake: IntakeT, direction: DirectionT, storyboard: StoryboardT, score: ScoreT): Finding[] {
+export function runCreativeConformance(intake: IntakeT, direction: DirectionT, storyboard: StoryboardT, score: ScoreT, projectDir?: string): Finding[] {
   return [
     ...runIntakeDirectionConformance(intake, direction),
     ...runDirectionStoryboardConformance(direction, storyboard),
-    ...runStoryboardScoreConformance(storyboard, score),
+    ...runStoryboardScoreConformance(storyboard, score, projectDir),
     ...runAssetProvenanceConformance(intake, direction, storyboard, score),
   ];
 }
