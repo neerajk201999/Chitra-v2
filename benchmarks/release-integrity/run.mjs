@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
@@ -60,6 +60,7 @@ try {
   const released = JSON.parse(run(process.execPath, [cli, "release", path.join(project, "intake.lock.json"), path.join(project, "direction.json"), path.join(project, "storyboard.json"), path.join(project, "score.json"), "-o", out, "-e", evidence, "-r", receipt, "--json"]));
   assert.equal(released.summary.p1, 0);
   assert.equal(released.audio.status, "present");
+  assert(existsSync(path.join(evidence, "cut-strips.png")), "single-scene releases must include opening-to-closing boundary evidence");
   assert(Math.abs(released.audio.integratedLufs + 14) <= 0.5, `loudness ${released.audio.integratedLufs}`);
   assert(released.audio.truePeakDbtp <= -1.5, `true peak ${released.audio.truePeakDbtp}`);
   const verified = verifyReleaseReceipt(receipt);

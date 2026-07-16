@@ -46,6 +46,10 @@ inputs to the delivered bytes without risking user inputs.
    evidence files before receipt creation. It now hashes every artifact returned
    by evidence generation, so any missing contact sheet, hero, or cut strip
    fails the transaction instead of shrinking the receipt.
+10. **Single-scene evidence violated its own contract.** Evidence generation
+    returned a cut-strip path but wrote no file when a film had no cuts. A
+    one-scene film now receives a deterministic opening→closing boundary strip
+    labelled “no cuts,” which is both receipt-bindable and useful to critique.
 
 ## Residual boundaries
 
