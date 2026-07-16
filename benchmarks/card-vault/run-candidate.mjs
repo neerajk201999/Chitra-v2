@@ -27,9 +27,11 @@ try {
     evidenceDir: path.join(work, "evidence"),
     artifactDir: work,
     maxFrames: 274,
+    regions: [{ id: "phone-card", x: 180, y: 260, width: 360, height: 300, startPair: 111, endPair: 140 }],
   });
   assert.equal(report.alignment.comparedFrames, 274);
-  console.log(JSON.stringify({ candidate: "clean-room-0.7", render, visual: report.visual, audio: report.audio, alignment: report.alignment, artifacts: work }, null, 2));
+  const regions = report.regions.map(({ id, bounds, pairRange, visual }) => ({ id, bounds, pairRange, visual }));
+  console.log(JSON.stringify({ candidate: "clean-room-0.7", render, visual: report.visual, regions, audio: report.audio, alignment: report.alignment, artifacts: work }, null, 2));
 } catch (error) {
   rmSync(work, { recursive: true, force: true });
   throw error;

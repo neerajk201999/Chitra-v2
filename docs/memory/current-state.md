@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.1.0
+**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -35,6 +35,9 @@ and CHANGELOG.
   explicit normalized-progress sampling; RGB MAE, PSNR, global-luma SSIM,
   deterministic amplified diff PNGs, worst-frame evidence, and limited 20ms
   mono audio-energy envelope correlation/RMSE.
+- ADR-0022 named ROI diagnostics: aligned-reference bounds and optional pair
+  ranges, regional metric summaries/worst pairs, deterministic cropped diffs,
+  and strict validation. Whole-frame metrics remain authoritative.
 - Package 0.3.0 has valid `main`/`types`/`exports`; global-style tarball install
   and `chitra probe` have been exercised locally.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
@@ -51,14 +54,19 @@ and CHANGELOG.
   planned copy caught by stable rule IDs.
 - Reference Comparator benchmark: exact identical 12/12-frame report yields MAE
   0/SSIM 1/audio correlation 1; repeated report/diffs identical; colour drift
-  caught; strict geometry rejection and normalized non-exhaustive mode proven.
+  caught; a localized defect is isolated from an untouched ROI; regional
+  evidence repeats; invalid regions reject; strict geometry rejection,
+  normalized non-exhaustive mode, and repeatable CLI regions are proven.
 - Card Vault target registered by hash at 720×900/30fps/274 frames. The first
   clean-room Chitra candidate authors all 274 frames with eight typed tracks,
   custom particles, and no reference pixels/audio: mean SSIM 0.363459 and
   minimum SSIM 0.132334 versus freeze 0.269554/0.095306, while MAE remains worse
-  at 0.027557 versus 0.024120. Candidate 0.7 raises mean SSIM to 0.367144
+  at 0.027557 versus 0.024120. Candidate 0.7 raises mean SSIM to 0.367146
   through parent-scale + child-morph grouping, but slightly regresses MAE/PSNR.
-  Worst residuals moved to the frames 128–139 card carousel; exact is not met.
+  Worst residuals moved to the frames 128–139 card carousel. Comparison 0.2's
+  phone/card ROI over pairs 111–140 measures MAE 0.089867 and 14.212 dB PSNR
+  versus whole-film 0.027557 and 23.637 dB, localizing the asset-fidelity gap;
+  exact is not met.
 - Seeded deterministic defects: 10/10 caught.
 - Keyframe browser benchmark: 3/3 exact authored states, backward seek passes,
   repeated same-frame PNG is byte-identical.
@@ -86,19 +94,21 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Card Vault clean-room baseline is authored and measured; use its exhaustive
-   residuals to improve the candidate without treating one metric as quality.
-2. Custom particles and parent transform groups are measured. Return to the
-   unchanged carousel worst frames; motion blur, internal 3D, and audio follow
-   only when updated evidence isolates their value.
+1. Keep the clean-room Card Vault baseline immutable as a renderer-capability
+   benchmark; its remaining carousel error is now localized to asset fidelity.
+2. Design a separately labelled, rights-approved source-assisted reconstruction
+   track with asset provenance and hashing. Do not hide copied target pixels in
+   the clean-room score. Add masks/clipping only when that track proves the gap.
 
 ## Claim boundaries
 
 - Chitra does not yet “beat Remotion/HyperFrames/EditFrame/Replit Video.” No
   neutral head-to-head benchmark has established that.
 - Same-machine repeated-frame determinism is measured. Cross-machine golden
-  equivalence, interrupted-render equivalence, and broad critic calibration are
-  still open.
+  equivalence, cold/warm full-render equivalence, interrupted-render
+  equivalence, and broad critic calibration are still open. Two current Card
+  Vault reruns are byte-identical, but an earlier artifact differs at MAE
+  0.000095/SSIM 0.999909; the cause is not isolated.
 - Exact reconstruction of either supplied reference is not yet achieved.
 - Comparator exactness is decoded-pixel equality. Its global SSIM and audio
   envelope do not measure local perceptual features, optical flow, semantics,

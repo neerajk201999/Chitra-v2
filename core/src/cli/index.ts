@@ -16,7 +16,7 @@ import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
 import { decomposeReference } from "../reference/decompose.js";
-import { compareReference, type CompareMode } from "../reference/compare.js";
+import { compareReference, type CompareMode, type CompareRegion } from "../reference/compare.js";
 import { validateIntake, type IntakeT } from "../intake/schema.js";
 import { materializeIntake } from "../intake/materialize.js";
 
@@ -45,6 +45,15 @@ function loadScore(file: string): { score: ScoreT; projectDir: string } {
 function fail(msg: string): never {
   console.error(`✖ ${msg}`);
   process.exit(2);
+}
+
+function parseCompareRegion(spec: string): CompareRegion {
+  const parts = spec.split(":");
+  if (parts.length !== 5 && parts.length !== 7) fail(`--region must be id:x:y:width:height[:startPair:endPair], got "${spec}"`);
+  const [id, ...raw] = parts;
+  const values = raw.map((value) => Number(value));
+  if (values.some((value) => !Number.isInteger(value))) fail(`--region coordinates and pair bounds must be integers, got "${spec}"`);
+  return { id, x: values[0], y: values[1], width: values[2], height: values[3], ...(parts.length === 7 ? { startPair: values[4], endPair: values[5] } : {}) };
 }
 
 function printFindings(findings: Finding[], json: boolean) {
@@ -453,18 +462,20 @@ program
   .option("--mode <mode>", "exact | normalized", "exact")
   .option("--max-frames <n>", "exact-mode safety ceiling", (value) => parseInt(value, 10), 1200)
   .option("--samples <n>", "normalized-mode uniform sample count", (value) => parseInt(value, 10), 120)
-  .description("Compare aligned reference/candidate frames and audio energy with explicit exact/normalized semantics (ADR-0019)")
-  .action(async (reference: string, candidate: string, options: { out: string; evidence?: string; mode: string; maxFrames: number; samples: number }) => {
+  .option("--region <spec>", "repeatable ROI id:x:y:width:height[:startPair:endPair]", (value, previous: string[]) => [...previous, value], [])
+  .description("Compare aligned reference/candidate frames, optional regions, and audio energy with explicit exact/normalized semantics (ADR-0019/0022)")
+  .action(async (reference: string, candidate: string, options: { out: string; evidence?: string; mode: string; maxFrames: number; samples: number; region: string[] }) => {
     if (!(["exact", "normalized"] as string[]).includes(options.mode)) fail("--mode must be exact or normalized");
     if (!Number.isInteger(options.maxFrames) || options.maxFrames < 1) fail("--max-frames must be a positive integer");
     if (!Number.isInteger(options.samples) || options.samples < 1 || options.samples > 2000) fail("--samples must be 1–2000");
     try {
       const out = path.resolve(options.out);
       const evidenceDir = path.resolve(options.evidence ?? out.replace(/\.json$/i, "") + ".evidence");
-      const report = await compareReference(reference, candidate, { mode: options.mode as CompareMode, evidenceDir, artifactDir: path.dirname(out), maxFrames: options.maxFrames, samples: options.samples });
+      const report = await compareReference(reference, candidate, { mode: options.mode as CompareMode, evidenceDir, artifactDir: path.dirname(out), maxFrames: options.maxFrames, samples: options.samples, regions: options.region.map(parseCompareRegion) });
       mkdirSync(path.dirname(out), { recursive: true });
       writeFileSync(out, JSON.stringify(report, null, 2) + "\n");
       console.log(`✔ ${options.out} — ${report.alignment.mode} ${report.alignment.comparedFrames} frame pairs, MAE ${report.visual.meanAbsoluteError.toFixed(4)}, global SSIM ${report.visual.meanGlobalLumaSsim.toFixed(4)}`);
+      if (report.regions.length) console.log(`  regions: ${report.regions.map((region) => `${region.id} MAE ${region.visual.meanAbsoluteError.toFixed(6)} / SSIM ${region.visual.meanGlobalLumaSsim.toFixed(6)} / PSNR ${region.visual.meanPsnrDb == null ? "∞" : `${region.visual.meanPsnrDb.toFixed(3)} dB`}`).join(" · ")}`);
       console.log(`  evidence: ${report.evidence.directory} · semantic similarity remains unmeasured`);
     } catch (e) {
       fail((e as Error).message);

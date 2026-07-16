@@ -8,7 +8,8 @@ import { COMPARISON_VERSION, ReferenceComparison, type ReferenceComparisonT } fr
 import { probeVideo } from "./decompose.js";
 
 export type CompareMode = "exact" | "normalized";
-export interface CompareOptions { mode?: CompareMode; evidenceDir: string; artifactDir?: string; maxFrames?: number; samples?: number }
+export interface CompareRegion { id: string; x: number; y: number; width: number; height: number; startPair?: number; endPair?: number }
+export interface CompareOptions { mode?: CompareMode; evidenceDir: string; artifactDir?: string; maxFrames?: number; samples?: number; regions?: CompareRegion[] }
 const round = (value: number, places = 6) => Number(value.toFixed(places));
 const posixRelative = (from: string, to: string) => path.relative(from, to).split(path.sep).join("/");
 
@@ -40,9 +41,11 @@ function extract(file: string, outDir: string, selected?: number[], fit?: { widt
   return readdirSync(outDir).filter((entry) => entry.endsWith(".png")).sort().map((entry) => path.join(outDir, entry));
 }
 
-async function comparePair(reference: string, candidate: string, difference: string) {
-  const a = await sharp(reference).flatten({ background: "#000000" }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  const b = await sharp(candidate).flatten({ background: "#000000" }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+async function comparePair(reference: string, candidate: string, difference: string, region?: { left: number; top: number; width: number; height: number }) {
+  const sourceA = sharp(reference).flatten({ background: "#000000" }).removeAlpha();
+  const sourceB = sharp(candidate).flatten({ background: "#000000" }).removeAlpha();
+  const a = await (region ? sourceA.extract(region) : sourceA).raw().toBuffer({ resolveWithObject: true });
+  const b = await (region ? sourceB.extract(region) : sourceB).raw().toBuffer({ resolveWithObject: true });
   if (a.info.width !== b.info.width || a.info.height !== b.info.height || a.info.channels !== b.info.channels)
     throw new Error("Aligned frames have different decoded dimensions or channels");
   const diff = Buffer.alloc(a.data.length);
@@ -70,6 +73,20 @@ async function comparePair(reference: string, candidate: string, difference: str
   const mse = squared / a.data.length;
   await sharp(diff, { raw: a.info }).png().toFile(difference);
   return { mae: absolute / (a.data.length * 255), psnr: mse === 0 ? null : 10 * Math.log10((255 * 255) / mse), ssim };
+}
+
+function summarizeVisual(frames: ReferenceComparisonT["frames"]) {
+  const maes = frames.map((frame) => frame.meanAbsoluteError).sort((a, b) => a - b);
+  const ssims = frames.map((frame) => frame.globalLumaSsim);
+  const psnr = frames.map((frame) => frame.psnrDb).filter((value): value is number => value != null);
+  return {
+    meanAbsoluteError: round(frames.reduce((sum, frame) => sum + frame.meanAbsoluteError, 0) / frames.length),
+    p95AbsoluteError: maes[Math.floor((maes.length - 1) * 0.95)],
+    meanGlobalLumaSsim: round(ssims.reduce((sum, value) => sum + value, 0) / frames.length),
+    minimumGlobalLumaSsim: Math.min(...ssims),
+    meanPsnrDb: psnr.length ? round(psnr.reduce((sum, value) => sum + value, 0) / psnr.length, 3) : null,
+    worstPairIndices: [...frames].sort((a, b) => b.meanAbsoluteError - a.meanAbsoluteError || a.pairIndex - b.pairIndex).slice(0, 10).map((frame) => frame.pairIndex),
+  };
 }
 
 function audioEnvelope(file: string) {
@@ -118,10 +135,22 @@ export async function compareReference(referenceFile: string, candidateFile: str
   const pairCount = mode === "exact" ? ref.frameCount : Math.max(1, Math.min(requestedSamples, ref.frameCount, cand.frameCount));
   const refIndices = mode === "exact" ? indices(ref.frameCount, ref.frameCount) : indices(ref.frameCount, pairCount);
   const candIndices = mode === "exact" ? indices(cand.frameCount, cand.frameCount) : indices(cand.frameCount, pairCount);
-  const temp = mkdtempSync(path.join(os.tmpdir(), "chitra-compare-"));
   const evidenceDir = path.resolve(options.evidenceDir), artifactDir = path.resolve(options.artifactDir ?? process.cwd());
-  mkdirSync(evidenceDir, { recursive: true });
+  const regions = options.regions ?? [];
+  const ids = new Set<string>();
+  for (const region of regions) {
+    if (!/^[a-z][a-z0-9-]*$/.test(region.id)) throw new Error(`Region id "${region.id}" must be kebab-case`);
+    if (ids.has(region.id)) throw new Error(`Duplicate region id "${region.id}"`);
+    ids.add(region.id);
+    for (const [key, value] of Object.entries({ x: region.x, y: region.y, width: region.width, height: region.height }))
+      if (!Number.isSafeInteger(value) || value < (key === "width" || key === "height" ? 1 : 0)) throw new Error(`Region "${region.id}" ${key} must be a valid integer`);
+    if (region.x + region.width > ref.width || region.y + region.height > ref.height) throw new Error(`Region "${region.id}" exceeds aligned ${ref.width}x${ref.height} canvas`);
+    const start = region.startPair ?? 0, end = region.endPair ?? pairCount - 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end >= pairCount) throw new Error(`Region "${region.id}" pair range ${start}..${end} is outside 0..${pairCount - 1}`);
+  }
+  const temp = mkdtempSync(path.join(os.tmpdir(), "chitra-compare-"));
   try {
+    mkdirSync(evidenceDir, { recursive: true });
     const refFrames = extract(reference, path.join(temp, "reference"), mode === "exact" ? undefined : refIndices);
     const candFrames = extract(candidate, path.join(temp, "candidate"), mode === "exact" ? undefined : candIndices, mode === "exact" ? undefined : { width: ref.width, height: ref.height });
     if (refFrames.length !== pairCount || candFrames.length !== pairCount) throw new Error(`Decoded frame count mismatch: expected ${pairCount}, got ${refFrames.length}/${candFrames.length}`);
@@ -131,9 +160,19 @@ export async function compareReference(referenceFile: string, candidateFile: str
       const metric = await comparePair(refFrames[index], candFrames[index], diff);
       frames.push({ pairIndex: index, referenceFrame: refIndices[index], candidateFrame: candIndices[index], referenceTimeMs: Math.round(refIndices[index] / ref.fps * 1000), candidateTimeMs: Math.round(candIndices[index] / cand.fps * 1000), meanAbsoluteError: round(metric.mae), psnrDb: metric.psnr == null ? null : round(metric.psnr, 3), globalLumaSsim: round(metric.ssim), differenceImage: posixRelative(artifactDir, diff) });
     }
-    const maes = frames.map((frame) => frame.meanAbsoluteError).sort((a, b) => a - b);
-    const ssims = frames.map((frame) => frame.globalLumaSsim), psnr = frames.map((frame) => frame.psnrDb).filter((value): value is number => value != null);
-    const worstPairIndices = [...frames].sort((a, b) => b.meanAbsoluteError - a.meanAbsoluteError || a.pairIndex - b.pairIndex).slice(0, 10).map((frame) => frame.pairIndex);
+    const regionReports: ReferenceComparisonT["regions"] = [];
+    for (const region of regions) {
+      const start = region.startPair ?? 0, end = region.endPair ?? pairCount - 1;
+      const regionFrames: ReferenceComparisonT["frames"] = [];
+      const dir = path.join(evidenceDir, "regions", region.id);
+      mkdirSync(dir, { recursive: true });
+      for (let index = start; index <= end; index++) {
+        const diff = path.join(dir, `diff-${String(index).padStart(6, "0")}.png`);
+        const metric = await comparePair(refFrames[index], candFrames[index], diff, { left: region.x, top: region.y, width: region.width, height: region.height });
+        regionFrames.push({ pairIndex: index, referenceFrame: refIndices[index], candidateFrame: candIndices[index], referenceTimeMs: Math.round(refIndices[index] / ref.fps * 1000), candidateTimeMs: Math.round(candIndices[index] / cand.fps * 1000), meanAbsoluteError: round(metric.mae), psnrDb: metric.psnr == null ? null : round(metric.psnr, 3), globalLumaSsim: round(metric.ssim), differenceImage: posixRelative(artifactDir, diff) });
+      }
+      regionReports.push({ id: region.id, bounds: { x: region.x, y: region.y, width: region.width, height: region.height }, pairRange: { start, endInclusive: end }, frames: regionFrames, visual: summarizeVisual(regionFrames) });
+    }
     const ffmpeg = String(command("ffmpeg", ["-version"]).stdout).split("\n")[0];
     const source = async (file: string, media: ReturnType<typeof probeVideo>) => ({ filename: path.basename(file), sha256: await sha256(file), durationMs: media.durationMs, width: media.width, height: media.height, fps: round(media.fps), frameCount: media.frameCount, videoCodec: media.videoCodec, ...(media.audioCodec ? { audioCodec: media.audioCodec } : {}) });
     const report = {
@@ -142,9 +181,9 @@ export async function compareReference(referenceFile: string, candidateFile: str
       analyzer: { ffmpeg, pixelMetric: "rgb-mae-psnr+global-luma-ssim-v1" as const, audioMetric: "20ms-mono-rms-envelope-v1" as const, diffAmplification: 4 as const },
       alignment: { mode, spatial: mode === "exact" ? "strict" as const : "contain-letterbox" as const, temporal: mode === "exact" ? "frame-index" as const : "normalized-progress" as const, comparedFrames: pairCount, exhaustive: mode === "exact" },
       frames,
-      visual: { meanAbsoluteError: round(frames.reduce((sum, frame) => sum + frame.meanAbsoluteError, 0) / pairCount), p95AbsoluteError: maes[Math.floor((maes.length - 1) * 0.95)], meanGlobalLumaSsim: round(ssims.reduce((sum, value) => sum + value, 0) / pairCount), minimumGlobalLumaSsim: Math.min(...ssims), meanPsnrDb: psnr.length ? round(psnr.reduce((sum, value) => sum + value, 0) / psnr.length, 3) : null, worstPairIndices },
+      visual: summarizeVisual(frames), regions: regionReports,
       audio: ref.hasAudio && cand.hasAudio ? compareAudio(reference, candidate, mode, cand.durationMs - ref.durationMs) : { status: "missing" as const, referencePresent: ref.hasAudio, candidatePresent: cand.hasAudio },
-      evidence: { directory: posixRelative(artifactDir, evidenceDir), differenceImages: frames.length },
+      evidence: { directory: posixRelative(artifactDir, evidenceDir), differenceImages: frames.length + regionReports.reduce((sum, region) => sum + region.frames.length, 0) },
       semanticReview: { status: "unmeasured" as const, note: "Pixel and energy-envelope metrics do not measure narrative, intent, typography semantics, camera meaning, music, speech, or professional preference." },
     };
     return ReferenceComparison.parse(report);

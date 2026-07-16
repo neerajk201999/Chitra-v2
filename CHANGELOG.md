@@ -22,10 +22,11 @@ versioned separately.
 - Deterministic Intake→Direction→Storyboard→Score conformance gates,
   `chitra board`, generic adjacent-tier `chitra conform`, complete-chain
   `chitra creative-check`, and a three-defect creative-ladder benchmark.
-- `chitra compare` and typed Comparison 0.1 reports with exhaustive strict
+- `chitra compare` and typed Comparison 0.2 reports with exhaustive strict
   frame-index mode, explicitly normalized progress mode, per-frame RGB MAE/
   PSNR/global-luma SSIM, deterministic difference images, worst-frame evidence,
-  and limited audio energy-envelope alignment.
+  limited audio energy-envelope alignment, and named ROI/pair-range diagnostics
+  with deterministic cropped diffs and strict validation.
 - ADR-0020 typed custom particle constellations and same-count custom morph
   targets with deterministic point-index mapping.
 - ADR-0021 one-level transform composition groups with stable child ownership
@@ -38,8 +39,11 @@ versioned separately.
 - Authored clean-room Card Vault 0.6 across all 274 frames without copied
   reference pixels/audio. Custom particles improved mean SSIM from 0.353047 to
   0.363459; exact reconstruction and competitive-quality claims remain open.
-- Card Vault 0.7 parent scaling improves mean SSIM again to 0.367144 but slightly
+- Card Vault 0.7 parent scaling improves mean SSIM again to 0.367146 but slightly
   worsens MAE/PSNR; both sides of the metric tradeoff are retained.
+- Card Vault Comparison 0.2 localizes the remaining carousel error: pairs
+  111–140 in the phone/card ROI measure MAE 0.089867 and 14.212 dB PSNR versus
+  whole-film 0.027557 and 23.637 dB; regional metrics remain diagnostic only.
 
 ## [0.3.0] — 2026-07-16
 

@@ -38,7 +38,7 @@ Remaining:
 ## M3.5 — Expressiveness & audio v2 (owner-directed priority, 2026-07-15) — LANDED same day
 Owner call: close the Remotion expressiveness gap and the HyperFrames workflow gap now, ahead of M4. Landed: **video-in-scene** (ADR-0007: ffmpeg frame pre-extraction, deterministic, content-hashed, MO-MED-gated) · **SFX on choreography** (sounds fire at resolved animation starts; MO-AUD-3 sparsity gate) · **deterministic starter audio** (`chitra sfx-kit`, `chitra bed` — zero-license ffmpeg synthesis) · workflow skills (product-launch, screen-demo, social-short) · renderer-frontier survey (docs/research/render-stack-frontier.md). Proven by the akta.pro launch film: transcribed voiceover → real UI stills + moving clip + bed + SFX, all gates green.
 Landed 2026-07-16 by concrete-reference exception (ADR-0012): **ADR-0013 frame-addressed transform tracks** — typed X/Y, scale, 3-axis rotation, opacity, perspective, origin, and token easing; final-frame/FPS timing; reason-gated by MO-KEY-1; browser benchmark seeks exact authored frames 3/3 and repeats a PNG byte-identically ([results](../../benchmarks/keyframe-track/results.md)).
-Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes, nested compositions, blend modes, motion blur, internal 3D camera/mesh tracks, clip audio pass-through, narration/TTS timeline, and automated reference-frame comparison.
+Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes, local-coordinate/deeper compositions, blend modes, motion blur, internal 3D camera/mesh tracks, clip audio pass-through, and narration/TTS timeline. Automated exhaustive reference comparison and named ROI diagnostics are now built (ADR-0019/0022).
 
 ## M4 — Creative Intelligence (the missing brain) — STARTED 2026-07-16
 *Goal: Chitra makes the creative decisions a top director + motion designer would — before rendering. The pipeline begins at intent, not at Motion IR (ADR-0012).*
@@ -53,13 +53,16 @@ three seeded intent drifts.
 Reference comparison: ADR-0019 `chitra compare` → strict exhaustive frame-index
 mode, explicit normalized sampling, transparent visual/audio-energy metrics,
 deterministic per-frame diff evidence, and generated exact/drift fixtures.
+ADR-0022 Comparison 0.2 adds validated named ROI/pair-range summaries and
+cropped diffs; the fixture proves localized-drift isolation and the Card Vault
+run measures 0.089867 ROI MAE versus 0.027557 whole-film MAE.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
 Clean-room candidate 0.6 now authors and compares all 274 frames without copied
 reference pixels/audio: mean SSIM 0.363459 versus freeze 0.269554, but worse MAE
 0.027408 versus 0.024120. ADR-0020 custom constellations improved both SSIM and
 MAE locally without moving the unrelated worst frames. Exact remains open; the
-ADR-0021 parent transform groups then raise SSIM to 0.367144 while slightly
+ADR-0021 parent transform groups then raise SSIM to 0.367146 while slightly
 regressing MAE/PSNR; the tradeoff is published rather than collapsed to a win.
 Remaining (priority order):
 - **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
