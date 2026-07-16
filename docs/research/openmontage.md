@@ -2,6 +2,15 @@
 
 Repo analyzed: `/private/tmp/claude-501/-Users-macbook-Documents-Neeraj-s-Projects-Chitra/1302c09e-b491-430e-abd8-a3ab5beda127/scratchpad/repos/OpenMontage` (AGPLv3, ~2,010 files, Python tools + Node/Remotion renderer + ~400 markdown skills).
 
+Upstream was re-inspected on 2026-07-16. Its strongest creative-intelligence
+artifacts remain the three-dial taste profile, cinematic edit-director craft,
+voice-performance direction, locked runtime/composition decisions, and
+append-only decision logs. These are valuable editorial priors, but most remain
+prompt-governed and the taste profile is too low-dimensional for Chitra's target.
+ADR-0029 therefore keeps fourteen evidence-bound domains and no composite taste
+score; provider/library breadth will be added only when a benchmark residual
+shows it improves watched output.
+
 ## 1. What it is, end-to-end
 
 OpenMontage is an **agent-first video production system with no runtime orchestrator**. The user opens the repo in Claude Code/Cursor/Copilot and types a brief ("Make a 60-second explainer about black holes"). The coding agent *is* the control plane: it reads a YAML **pipeline manifest** (`pipeline_defs/*.yaml`), reads per-stage markdown **director skills** (`skills/pipelines/<pipeline>/<stage>-director.md`), calls Python **tools** (`tools/`, all `BaseTool` subclasses auto-discovered by `tools/tool_registry.py`), validates every stage output against **JSON Schemas** (`schemas/artifacts/`), writes resumable **checkpoints** (`lib/checkpoint.py`), and pauses at **human approval gates**. Output is `projects/<slug>/renders/final.mp4`.

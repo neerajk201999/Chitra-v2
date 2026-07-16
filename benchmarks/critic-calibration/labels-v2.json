@@ -1,0 +1,37 @@
+{
+  "$comment": "ADR-0029 principle-ID labels. Keep hidden from critic sessions. These remain author labels until independently replaced.",
+  "labelVersion": "0.2.0",
+  "cases": {
+    "control-clean": {
+      "expectedVerdicts": ["ship", "revise"],
+      "mustFind": [],
+      "mustNotFind": [],
+      "maxFindings": 3,
+      "maxSeverity": "P2"
+    },
+    "uniform-monotony": {
+      "expectedVerdicts": ["revise"],
+      "mustFind": [{ "principleId": "CR-MOT-3", "severityAtLeast": "P2" }],
+      "mustNotFind": [],
+      "maxFindings": 5
+    },
+    "slop-aesthetic": {
+      "expectedVerdicts": ["revise", "redirect"],
+      "mustFind": [
+        { "principleId": "CR-SLOP-1", "severityAtLeast": "P1" },
+        { "principleId": "CR-TYPE-1", "severityAtLeast": "P2" }
+      ],
+      "mustNotFind": [],
+      "maxFindings": 6
+    },
+    "broken-hierarchy": {
+      "expectedVerdicts": ["revise"],
+      "mustFind": [
+        { "principleId": "CR-COMP-1", "severityAtLeast": "P1" },
+        { "principleId": "CR-DIR-2", "severityAtLeast": "P1" }
+      ],
+      "mustNotFind": [],
+      "maxFindings": 5
+    }
+  }
+}

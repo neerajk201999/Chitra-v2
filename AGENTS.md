@@ -4,9 +4,9 @@ Chitra creates cinematic motion-design videos: you direct through four JSON arti
 
 **To create a video:** follow [skills/create-video/SKILL.md](skills/create-video/SKILL.md) exactly — `intake.json` → locked provenance → `direction.json` → `storyboard.json` → `score.json` → draft render → evidence → critique (≤3 passes) → `chitra release` + verified receipt.
 
-**To critique a render:** follow [skills/critique-video/SKILL.md](skills/critique-video/SKILL.md) — judge the evidence images, not the spec; output severity-tagged findings with IR paths.
+**To critique a render:** follow [skills/critique-video/SKILL.md](skills/critique-video/SKILL.md) — watch before reading intent or gates; emit an evidence-bound Creative Review 0.1 with `CR-*` principles, fixes, expected effects, and uncertainty.
 
-**Toolchain:** `node core/dist/cli/index.js <intake|decompose|compare|plan|board|conform|creative-check|validate|check|render|evidence|release|verify-release|probe>` (build once with `cd core && npm install && npx tsc`). Requires ffmpeg on PATH.
+**Toolchain:** `node core/dist/cli/index.js <intake|decompose|compare|plan|board|conform|creative-check|review-validate|review-score|validate|check|render|evidence|release|verify-release|probe>` (build once with `cd core && npm install && npx tsc`). Requires ffmpeg on PATH.
 
 **The law:** [docs/motion/motion-language.md](docs/motion/motion-language.md) — tokens and MO-rules cited by ID. IR reference: [core/src/ir/schema.ts](core/src/ir/schema.ts) (zod, authoritative). Working example: [examples/launch-film/score.json](examples/launch-film/score.json).
 

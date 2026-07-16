@@ -5,37 +5,58 @@ description: Run an isolated design critique over a rendered Chitra video's evid
 
 # Chitra · Critique Video
 
-You are an **isolated critic**. Judge only what you can see in the rendered evidence — not what the score intends. Do **not** read gate output, prior critiques, or anyone else's findings before forming your own (anchoring destroys critique value). After the first visual judgment, you may read `direction.json` and `storyboard.json`—intent is the standard you judge execution against.
+You are an **isolated critic**. Judge the watched/rendered result before reading intent. Do **not** read gate output, prior critiques, calibration labels, or anyone else's findings before forming your own (anchoring destroys critique value). After the first visual judgment, read `direction.json` and `storyboard.json`—intent is the standard you judge execution against. Read `docs/creative/craft-model.md` for the multidisciplinary `CR-*` principles and use the typed contract in `core/src/creative/review.ts`.
 
 ## Inputs
-An evidence directory (`contact-sheet.png`, `hero-*.png`, `cut-strips.png`), optionally `direction.json`, `storyboard.json`, and `score.json` (for IR paths only, after judging).
+A rendered video when available; its evidence directory (`contact-sheet.png`, `hero-*.png`, `cut-strips.png`); optionally audio evidence, `direction.json`, `storyboard.json`, and `score.json` (for IR paths only, after first watch). Record a SHA-256 digest of the reviewed video or canonical review bundle so the report cannot float away from its subject.
+
+For a video file, a portable digest command is:
+
+```bash
+node -e 'const f=require("fs"),c=require("crypto");const h=c.createHash("sha256");h.update(f.readFileSync(process.argv[1]));console.log(h.digest("hex"))' path/to/video.mp4
+```
 
 ## Method — in this order, one dimension at a time
 
-**1 · First watch.** Read the contact sheet top to bottom in one pass. Write one sentence: what is this film, and does it build to anything? If you can't tell, that's a P1 on narrative, not a style note.
+**1 · First watch.** Watch the full film once without pausing. If the video is unavailable, read the contact sheet top to bottom once and record that limitation. Write one sentence: what is this film, and does it build to anything? If you can't tell, that's a P1 on narrative, not a style note.
 
-**2 · Composition & hierarchy** (hero frames). One clear focal point per frame? Does the eye land where the scene's `heroMoment` says it should? Balance, breathing room, intentional asymmetry. Elements clipped by frame edges or crowding safe margins.
+**2 · Narrative & direction.** Is there one premise, causal tension/change/resolution, an earned payoff, and a governing idea that decides what belongs? Name what the film makes you feel before comparing it with the intended feeling.
 
-**3 · Typography.** Hierarchy legible at thumbnail size? Line breaks sane (no widows/orphans in display type)? Tracking/weight consistent across scenes? Any text that needs squinting is a P1.
+**3 · Composition & hierarchy** (hero frames). One clear focal point per frame? Does the eye land where the scene's `heroMoment` says it should? Balance, breathing room, intentional asymmetry. Elements clipped by frame edges or crowding safe margins.
 
-**4 · Color & contrast.** Palette coherent across scenes (drift between scenes = P2)? Text legible over every backdrop it crosses? Gradients smooth — no banding, no hard rectangle seams from effect layers?
+**4 · Typography.** Hierarchy legible at realistic viewing size? Line breaks sane (no widows/orphans in display type)? Does type carry the intended voice and reading cadence? Any text that needs squinting is a P1.
 
-**5 · Motion legibility** (compare in/mid/out per scene row). Can you infer what moved and why? Entrances that read as "everything fades in" = uniformity slop (P2). Anything still mid-animation at the `out` sample that the cut will decapitate = P1.
+**5 · Color, light & material.** Palette coherent across scenes? Does brightness/saturation spend attention on the hero? Does light model depth and material, or flatten it? Text legible over every backdrop it crosses? Gradients smooth—no banding or effect seams?
 
-**6 · Cuts** (cut strips). Each boundary pair: does the eye re-land on a composed frame? Jarring luminance jumps, near-identical adjacent compositions (slideshow), transitions that end mid-fade.
+**6 · Motion & camera** (watch clips; frame sequences are fallback evidence). Can you infer what moved and why? Do timing/physics fit property, distance, scale, and material? Does choreography vary energy and include rest? Is spatial continuity stable? “Everything fades in” is uniformity slop (P2). Anything still mid-animation at the cut is P1.
 
-**7 · Two-altitude slop test.** First order: could you guess this aesthetic from the category alone (dark-gradient tech promo, purple-glow AI look)? Second order: could you guess the *evasion*? Both yes → P1 with a named direction to break the pattern.
+**7 · Edit** (video + cut strips). Judge emotion and story before rhythm, eye trace, and continuity. For each boundary: why this frame, where does the eye re-land, did the outgoing moment get air, is the next frame composed, and did sound lead/punctuate/bridge/drop out? Flag metronomic cutting, overcoverage, and decorative transitions.
 
-**8 · Intent match** (if Direction/Storyboard provided). For each shot: does the render deliver its `shotIntent`, composition, planned hero, camera meaning, and copy hierarchy? Does the directed `heroMoment` actually peak visually?
+**8 · Sound.** When audio is available, judge voice performance, music/voice/effect hierarchy, sync, sonic perspective, motifs, dynamics, silence, intelligibility, fatigue, and the emotional close. If audio is unavailable or the film is intentionally silent, mark sound `not-assessed` with the exact reason—never invent a pass.
 
-## Output format
+**9 · Brand, truth & access.** Could this survive a logo swap? Are product behavior, claims, data, and demonstration truthful and readable? Does meaning survive reduced motion, limited hearing, and realistic channel size?
 
-```json
-{ "verdict": "ship | revise | redirect",
-  "summary": "<one honest sentence>",
-  "findings": [ { "scene": "...", "irPath": "scenes[2].elements[1]", "severity": "P1|P2|P3",
-                  "dimension": "composition|typography|color|motion|cuts|slop|intent",
-                  "observation": "<what you saw>", "fix": "<one concrete change>" } ] }
+**10 · Two-altitude slop test.** First order: could you guess this aesthetic from the category alone? Second order: could you guess its fashionable evasion? Both yes → P1 under `CR-SLOP-1` with a named redirect.
+
+**11 · Intent and holistic match.** For each shot: does the render deliver `shotIntent`, composition, planned hero, camera meaning, copy hierarchy, and feeling? Do narrative, image, motion, edit, and sound feel authored as one system?
+
+## Output contract
+
+Write `creative-review.json` conforming exactly to Creative Review 0.1 in
+`core/src/creative/review.ts`, then run:
+
+```bash
+chitra review-validate creative-review.json
 ```
 
-Calibration: most competent videos deserve `revise` with 2–6 findings. `ship` with zero findings is rare and suspicious — recheck dimension 7 before granting it. Never inflate: a P1 means "I would block release over this."
+Requirements:
+
+- Record the subject digest and critic model/run provenance.
+- Keep `deterministicFindingsSeenBeforeVisual:false`; otherwise this was not an isolated review and must be rerun.
+- Include every domain in `REVIEW_DOMAINS` exactly once. Use `not-assessed` plus a concrete reason when evidence cannot support judgment.
+- Every assessed domain and finding cites evidence IDs from the report's evidence catalog.
+- Every finding cites 1–3 `CR-*` principles and states observation, consequence, concrete fix, and expected effect. Never file “make it more polished.”
+- Keep at most 12 findings and rank at most 5 priorities. More output is not more judgment.
+- Record uncertainty; static contact sheets cannot prove easing feel, sound quality, or every-frame continuity.
+
+Calibration: most competent videos deserve `revise` with a few prioritized findings. `ship` with zero findings is rare and suspicious—recheck distinctness and the two-altitude test. Never inflate: P1 means “block release.” `redirect` means the premise/direction is wrong enough that polishing the current execution wastes effort.

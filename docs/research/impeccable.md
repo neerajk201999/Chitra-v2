@@ -2,6 +2,13 @@
 
 Repo analyzed: `scratchpad/repos/impeccable` (Paul Bakaus, Apache 2.0). All paths below are relative to that root.
 
+Upstream was re-inspected on 2026-07-16. The important current architecture is
+the mandatory isolated visual assessment plus deterministic assessment,
+anti-anchored synthesis, explicit degraded-run provenance, a detector registry,
+and persisted critique history/trends. ADR-0029 ports the evidence/provenance
+discipline, not Impeccable's scalar UI score: temporal craft domains remain
+separate and require Chitra's own independent labels.
+
 ---
 
 ## 1. What it is

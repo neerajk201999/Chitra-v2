@@ -85,6 +85,12 @@ pixel contrast, safe zones, reading time, and overlap. ADR-0027 expands checks
 to bounded intervals and choreography/transition neighborhoods. A generated
 browser fixture triggers all five rules and leaves its compliant control green;
 exhaustive every-frame coverage and token-only CSS parsing remain open.
+Creative judgment: ADR-0029 ships Creative Review 0.1 with 28 stable `CR-*`
+principles, isolated first-watch provenance, fourteen evidence-bound domain
+assessments, actionable findings, hidden-label scoring, severity/finding
+budgets, and a deterministic contract benchmark. It deliberately has no scalar
+taste score and is not a release blocker until independent calibration supports
+that use.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
 Clean-room candidate 0.6 now authors and compares all 274 frames without copied
@@ -98,10 +104,13 @@ localizes the next largest appearance residual to the final mark. ADR-0025 adds
 bounded heterogeneous particle size/opacity/glow for that measured gap; exact
 reconstruction remains open.
 Remaining (priority order):
-- **Creative QA**: independently label ≥20 cases and promote only calibrated
-  CC-* principles to gates (narrative/composition/pacing/rhythm).
-- **Style Memory**: learn explicit, reviewable deltas from accepted human
+- **Creative QA calibration**: independently label ≥20 cases across brand film,
+  product demo, and social short using video, motion clips, and audio; measure
+  principle/severity/verdict agreement and false-positive rate.
+- **Accepted-revision memory**: learn explicit, reviewable deltas from accepted human
   revisions so future films inherit taste without silent global mutation.
+- **Directorial search**: generate bounded narrative/storyboard alternatives,
+  render probes, compare them blind, and retain the winner's reasoning.
 - Prove outside-user first use, then run neutral **ChitraBench** end-to-end.
 - **Exit gate:** on a fixed brief + reference, blind evaluators cannot distinguish Chitra's creative *decisions* (storyboard, pacing, type, palette choices) from a professional's on ≥ the ChitraBench bar.
 

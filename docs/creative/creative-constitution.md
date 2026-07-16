@@ -6,6 +6,11 @@ Every director/planner/critic agent reads this **before** generating. It is tast
 made explicit — and, wherever a principle can be measured, it becomes a gate
 (rule IDs prefixed `CC-`, promoted to deterministic checks as proxies are found).
 
+Use [craft-model.md](craft-model.md) for the multidisciplinary review vocabulary,
+frame-level motion and edit reasoning, evidence requirements, flexibility model,
+and machine-readable `CR-*` principle mapping introduced by ADR-0029. This
+constitution sets creative posture; the craft model defines how work is judged.
+
 This is a living document. When an accepted revision teaches us something the
 constitution didn't know, we amend it here (ADR-0012 Style Memory) so future
 sessions inherit the taste instead of relearning it.
