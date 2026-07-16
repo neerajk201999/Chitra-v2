@@ -37,6 +37,15 @@ versioned separately.
 - Generated source-assisted benchmark proving licensed nested-asset rendering,
   cache invalidation, exact repeated capture, and rejection of reference-only
   use and false clean-room labels.
+- ADR-0024 rendered figure-DOM text registration for minimum size, three-instant
+  pixel contrast, safe zones, reading time, and overlap gates, plus a real-
+  browser defect/control benchmark.
+
+### Fixed
+
+- Figure text no longer bypasses deterministic typography gates; media
+  contrast now runs at all three declared scene samples and reuses the midpoint
+  capture for blank-frame analysis.
 
 ### Benchmarked
 

@@ -131,6 +131,10 @@ export interface TextRegion {
   y: number;
   w: number;
   h: number;
+  origin?: "score" | "figure";
+  figureId?: string;
+  target?: string;
+  text?: string;
 }
 
 /** ADR-0007: pre-extract every video element to per-frame JPEGs (content-hashed,

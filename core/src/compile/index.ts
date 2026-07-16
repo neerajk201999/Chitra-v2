@@ -329,7 +329,7 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
         `--text:${p.text};--text-dim:${p.textDim};--on-media:${p.onMedia};` +
         `--font-display:'${score.style.fonts.display}';--font-text:'${score.style.fonts.text}';--font-mono:'${score.style.fonts.mono}';`;
       return wrap(
-        `<div class="figure" style="position:relative;width:${w}px;height:${h}px;border-radius:${r};overflow:hidden;${shadow}${vars}">${fragment}</div>`
+        `<div class="figure" data-chitra-scene="${esc(sceneId)}" data-chitra-figure="${esc(el.id)}" style="position:relative;width:${w}px;height:${h}px;border-radius:${r};overflow:hidden;${shadow}${vars}">${fragment}</div>`
       );
     }
     case "particles": {
@@ -934,8 +934,9 @@ window.__chitra = {
     });
   },
   textRegions: function () {
-    var stage = document.getElementById("stage").getBoundingClientRect();
-    return TEXTMETA.map(function (m) {
+    var stageEl = document.getElementById("stage");
+    var stage = stageEl.getBoundingClientRect();
+    var regions = TEXTMETA.map(function (m) {
       var el = document.querySelector(m.sel);
       if (!el) return null;
       var st = getComputedStyle(el);
@@ -947,8 +948,54 @@ window.__chitra = {
       var inner = el.querySelector(".txt") || el;
       var fs = parseFloat(getComputedStyle(inner).fontSize);
       return { sel: m.sel, scene: m.sceneId, visible: vis, overMedia: m.overMedia, color: m.color,
-        fontSizePx: fs, x: r.left - stage.left, y: r.top - stage.top, w: r.width, h: r.height };
+        fontSizePx: fs, x: r.left - stage.left, y: r.top - stage.top, w: r.width, h: r.height,
+        origin: "score", text: (inner.textContent || "").trim() };
     }).filter(Boolean);
+    function colorInfo(value) {
+      var m = String(value || "").match(/rgba?\\(\\s*([\\d.]+)[, ]+\\s*([\\d.]+)[, ]+\\s*([\\d.]+)(?:\\s*[,/]\\s*([\\d.]+))?/i);
+      if (!m) return { hex: "#000000", alpha: 1 };
+      var h = function (n) { return Math.max(0, Math.min(255, Math.round(Number(n)))).toString(16).padStart(2, "0"); };
+      return { hex: "#" + h(m[1]) + h(m[2]) + h(m[3]), alpha: m[4] == null ? 1 : Number(m[4]) };
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".figure[data-chitra-figure]"), function (figure) {
+      var sceneId = figure.getAttribute("data-chitra-scene");
+      var figureId = figure.getAttribute("data-chitra-figure");
+      var walker = document.createTreeWalker(figure, NodeFilter.SHOW_TEXT);
+      var node, textIndex = 0;
+      while ((node = walker.nextNode())) {
+        var index = textIndex++;
+        var text = String(node.nodeValue || "").replace(/\\s+/g, " ").trim();
+        var parent = node.parentElement;
+        if (!text || !parent || /^(STYLE|SCRIPT|NOSCRIPT|TEMPLATE)$/.test(parent.tagName)) continue;
+        var range = document.createRange();
+        range.selectNodeContents(node);
+        var r = range.getBoundingClientRect();
+        var visible = true, current = parent;
+        var left = r.left, top = r.top, right = r.right, bottom = r.bottom;
+        while (current) {
+          var currentStyle = getComputedStyle(current);
+          if (currentStyle.display === "none" || currentStyle.visibility === "hidden" || parseFloat(currentStyle.opacity || "1") <= 0.05) { visible = false; break; }
+          var currentRect = current.getBoundingClientRect();
+          if (currentStyle.overflowX !== "visible") { left = Math.max(left, currentRect.left); right = Math.min(right, currentRect.right); }
+          if (currentStyle.overflowY !== "visible") { top = Math.max(top, currentRect.top); bottom = Math.min(bottom, currentRect.bottom); }
+          if (left >= right || top >= bottom) { visible = false; break; }
+          if (current === stageEl) break;
+          current = current.parentElement;
+        }
+        var style = getComputedStyle(parent), color = colorInfo(style.color);
+        if (color.alpha <= 0.05) visible = false;
+        var inner = parent.closest("[id]");
+        var innerId = inner && inner.id !== sceneId + "--" + figureId && /^[a-z][a-z0-9-]*$/.test(inner.id) ? inner.id : null;
+        var target = innerId ? figureId + "/" + innerId : figureId;
+        regions.push({
+          sel: "#" + sceneId + "--" + figureId + "/" + (innerId || "text") + "::text[" + index + "]",
+          scene: sceneId, visible: visible, overMedia: true, color: color.hex,
+          fontSizePx: parseFloat(style.fontSize), x: left - stage.left, y: top - stage.top, w: Math.max(0, right - left), h: Math.max(0, bottom - top),
+          origin: "figure", figureId: figureId, target: target, text: text
+        });
+      }
+    });
+    return regions;
   },
 };
 </script>
