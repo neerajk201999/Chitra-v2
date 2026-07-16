@@ -71,6 +71,24 @@ export function runStaticGates(score: ScoreT): Finding[] {
         f.push({ ruleId: "IR-REF-2", severity: "P1", path: p(`.choreography[${ai}]`), message: `Animation "${a.id}" targets "${a.target}" but no such element exists in this scene${a.target.includes("/") ? " (figureId/innerId requires a figure element with that id)" : ""}` });
     });
 
+    // IR-GROUP-1 (ADR-0021): one-level, single-owner transform hierarchy.
+    const groupOwner = new Map<string, string>();
+    scene.elements.forEach((element, ei) => {
+      if (element.type !== "group") return;
+      element.children.forEach((childId, ci) => {
+        const child = scene.elements.find((candidate) => candidate.id === childId);
+        const path = p(`.elements[${ei}].children[${ci}]`);
+        if (!child)
+          f.push({ ruleId: "IR-GROUP-1", severity: "P1", path, message: `group "${element.id}" references missing child "${childId}"` });
+        else if (child.type === "group")
+          f.push({ ruleId: "IR-GROUP-1", severity: "P1", path, message: `group "${element.id}" cannot contain group "${childId}" — composition groups are one level` });
+        const prior = groupOwner.get(childId);
+        if (prior)
+          f.push({ ruleId: "IR-GROUP-1", severity: "P1", path, message: `element "${childId}" belongs to both groups "${prior}" and "${element.id}"` });
+        else groupOwner.set(childId, element.id);
+      });
+    });
+
     // IR-CUR-1 (ADR-0008): waypoints exist ONLY on cursor-move aimed at a cursor;
     // interaction presets must aim at their element kind.
     scene.choreography.forEach((a, ai) => {

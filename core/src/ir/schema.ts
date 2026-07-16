@@ -375,6 +375,14 @@ const ChartBarElement = z.object({
   height: z.number().min(10).max(80).default(40),
 });
 
+/** ADR-0021: one-level full-stage transform hierarchy. */
+const GroupElement = z.object({
+  type: z.literal("group"),
+  id,
+  role: z.enum(["support", "ambient"]).default("support"),
+  children: z.array(id).min(1).max(11),
+});
+
 export const Element = z.discriminatedUnion("type", [
   TextElement,
   ShapeElement,
@@ -386,6 +394,7 @@ export const Element = z.discriminatedUnion("type", [
   Scene3dElement,
   StatElement,
   ChartBarElement,
+  GroupElement,
 ]);
 export type ElementT = z.infer<typeof Element>;
 

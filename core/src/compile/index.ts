@@ -377,7 +377,30 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       });
       return wrap(`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${bars}</svg>`);
     }
+    case "group":
+      throw new Error(`Group "${el.id}" must be rendered through its scene composition`);
   }
+}
+
+/** ADR-0021: group siblings under a full-stage parent transform context. */
+function renderSceneElements(elements: ElementT[], score: ScoreT, scale: number, sceneId: string, projectDir: string): string {
+  const byId = new Map(elements.map((element) => [element.id, element]));
+  const owner = new Map<string, string>();
+  for (const group of elements.filter((element) => element.type === "group")) {
+    for (const childId of group.children) {
+      const child = byId.get(childId);
+      if (!child) throw new Error(`Scene "${sceneId}": group "${group.id}" references missing child "${childId}"`);
+      if (child.type === "group") throw new Error(`Scene "${sceneId}": group "${group.id}" cannot contain group "${childId}" (ADR-0021 is one level)`);
+      const prior = owner.get(childId);
+      if (prior) throw new Error(`Scene "${sceneId}": element "${childId}" belongs to both groups "${prior}" and "${group.id}"`);
+      owner.set(childId, group.id);
+    }
+  }
+  return elements.filter((element) => !owner.has(element.id)).map((element) => {
+    if (element.type !== "group") return renderElement(element, score, scale, sceneId, projectDir);
+    const children = element.children.map((childId) => renderElement(byId.get(childId)!, score, scale, sceneId, projectDir)).join("\n");
+    return `<div class="pos" style="left:0;top:0;"><div class="el group" id="${sceneId}--${element.id}" style="position:relative;width:${score.meta.width}px;height:${score.meta.height}px;">${children}</div></div>`;
+  }).join("\n");
 }
 
 // ── Choreography → GSAP tween specs (serialized into the page) ────────────
@@ -459,8 +482,8 @@ function presetTweens(
     case "cursor-move": {
       // Waypoints in stage units → px offsets from the cursor's authored position
       const cur = scene.elements.find((e) => e.id === anim.target);
-      const bx = cur?.position?.x ?? 50;
-      const by = cur?.position?.y ?? 50;
+      const bx = cur && "position" in cur ? (cur.position.x ?? 50) : 50;
+      const by = cur && "position" in cur ? (cur.position.y ?? 50) : 50;
       const pts = (anim.waypoints ?? []).map((w) => ({
         x: ((w.x - bx) / 100) * score.meta.width,
         y: ((w.y - by) / 100) * score.meta.height,
@@ -604,7 +627,7 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
       scene.background === "image" && scene.backgroundImage
         ? `background:${p.bg} url('${esc(scene.backgroundImage)}') center/cover no-repeat;`
         : `background:${colorOf(p, scene.background)};`;
-    const els = scene.elements.map((el) => renderElement(el, score, scale, scene.id, projectDir)).join("\n");
+    const els = renderSceneElements(scene.elements, score, scale, scene.id, projectDir);
     scenesHtml += `<div class="scene" id="scene-${scene.id}" style="${bg}">${els}</div>\n`;
 
     const overMedia = textOverMedia(scene);

@@ -48,7 +48,7 @@ Reference intelligence: ADR-0015 `chitra decompose` → typed Style DNA with det
 Intake intelligence: ADR-0017 `chitra intake` → separately versioned multimodal Intake IR with objective/deliverable, mixed-source roles and rights, preferences/anti-references, brand constraints, assumptions/questions, evidence links, deterministic local hashes, and explicit unlocked URLs; 44 tests and a mixed-input benchmark.
 Creative ladder: ADR-0018 Direction 0.2 + Storyboard 0.1 → explicit concept and
 shot design, stable source/preference traces, three adjacent-tier conformance
-boundaries, `chitra creative-check`, 51 tests, and a benchmark that catches all
+boundaries, `chitra creative-check`, 53 tests, and a benchmark that catches all
 three seeded intent drifts.
 Reference comparison: ADR-0019 `chitra compare` → strict exhaustive frame-index
 mode, explicit normalized sampling, transparent visual/audio-energy metrics,
@@ -59,7 +59,8 @@ Clean-room candidate 0.6 now authors and compares all 274 frames without copied
 reference pixels/audio: mean SSIM 0.363459 versus freeze 0.269554, but worse MAE
 0.027408 versus 0.024120. ADR-0020 custom constellations improved both SSIM and
 MAE locally without moving the unrelated worst frames. Exact remains open; the
-next measured gap is parent scaling during a child particle morph.
+ADR-0021 parent transform groups then raise SSIM to 0.367144 while slightly
+regressing MAE/PSNR; the tradeoff is published rather than collapsed to a win.
 Remaining (priority order):
 - **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
 - **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.

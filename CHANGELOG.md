@@ -28,6 +28,8 @@ versioned separately.
   and limited audio energy-envelope alignment.
 - ADR-0020 typed custom particle constellations and same-count custom morph
   targets with deterministic point-index mapping.
+- ADR-0021 one-level transform composition groups with stable child ownership
+  and independent parent/child choreography.
 
 ### Benchmarked
 
@@ -36,6 +38,8 @@ versioned separately.
 - Authored clean-room Card Vault 0.6 across all 274 frames without copied
   reference pixels/audio. Custom particles improved mean SSIM from 0.353047 to
   0.363459; exact reconstruction and competitive-quality claims remain open.
+- Card Vault 0.7 parent scaling improves mean SSIM again to 0.367144 but slightly
+  worsens MAE/PSNR; both sides of the metric tradeoff are retained.
 
 ## [0.3.0] — 2026-07-16
 

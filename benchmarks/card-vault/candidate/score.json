@@ -2,7 +2,7 @@
   "irVersion": "0.1.0",
   "tier": "score",
   "meta": {
-    "title": "Card Vault clean-room reconstruction candidate 0.6",
+    "title": "Card Vault clean-room reconstruction candidate 0.7",
     "register": "brand-film",
     "width": 720,
     "height": 900,
@@ -72,6 +72,12 @@
           "position": { "anchor": "center", "x": 50, "y": 47 },
           "width": 22,
           "height": 18
+        },
+        {
+          "type": "group",
+          "id": "vault-mark-comp",
+          "role": "support",
+          "children": ["vault-dots"]
         }
       ],
       "choreography": [
@@ -209,6 +215,18 @@
           "duration": "emphasis",
           "morphTo": "custom",
           "at": { "after": "mark-to-ring", "offsetMs": 0 }
+        },
+        {
+          "id": "ring-scale-track",
+          "target": "vault-mark-comp",
+          "preset": "keyframe-track",
+          "at": { "after": "scene-start", "offsetMs": 7833 },
+          "override": { "reason": "The reference ring expands around independently morphing dots, requiring a parent transform composition" },
+          "keyframes": [
+            { "frame": 0, "scale": 1 },
+            { "frame": 15, "scale": 1.45, "easing": "move-through" },
+            { "frame": 30, "scale": 1, "easing": "move-through" }
+          ]
         }
       ],
       "transitionOut": { "type": "cut", "duration": "standard" }
