@@ -1,9 +1,11 @@
 export * from "./ir/schema.js";
 export * from "./motion/tokens.js";
 export { compile, resolveSceneTimeline, totalDurationMs, type CompileResult } from "./compile/index.js";
-export { openSession, renderScore, sceneHash, type RenderSession, type RenderResult, type TextRegion, type Quality } from "./render/index.js";
-export { runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runAssetProvenanceConformance, runCreativeConformance, summarize, type Finding } from "./gates/index.js";
+export { openSession, renderScore, renderInputFiles, sceneHash, scoreHash, type RenderSession, type RenderResult, type TextRegion, type Quality } from "./render/index.js";
+export { runStaticGates, runFrameGates, frameGateSampleTimes, FRAME_GATE_INTERVAL_MS, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runAssetProvenanceConformance, runCreativeConformance, summarize, type Finding } from "./gates/index.js";
 export { generateEvidence, type EvidenceResult } from "./evidence/index.js";
+export { measureAudio, audioInvariantIssues, type AudioMeasurement } from "./audio/measure.js";
+export { assertReleaseTargets, releaseFingerprint, makeReleaseReceipt, verifyReleaseReceipt, ReleaseReceiptSchema, sha256File, type ReleaseArtifacts, type ReleaseFingerprint, type ReleaseReceipt } from "./release/index.js";
 export { STYLE_DNA_VERSION, StyleDNA, type StyleDNAT } from "./reference/schema.js";
 export { decomposeReference, type DecomposeOptions } from "./reference/decompose.js";
 export { COMPARISON_VERSION, ReferenceComparison, type ReferenceComparisonT } from "./reference/comparison-schema.js";

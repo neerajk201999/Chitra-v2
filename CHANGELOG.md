@@ -44,12 +44,17 @@ versioned separately.
   heterogeneous custom particle constellations, with a real-browser benchmark.
 - ADR-0026 project-local figure copy participates in Storyboard→Score copy
   conformance instead of producing false missing-copy blockers.
+- ADR-0027 `chitra release` and `verify-release`: bounded temporal frame gates,
+  staged non-overwriting outputs, hash-bound creative/render/evidence inputs,
+  measured final-mux loudness/peak, and stale receipt rejection.
 
 ### Fixed
 
 - Figure text no longer bypasses deterministic typography gates; media
-  contrast now runs at all three declared scene samples and reuses the midpoint
-  capture for blank-frame analysis.
+  contrast now runs at bounded frame intervals and choreography/transition
+  neighborhoods, while the midpoint capture is reused for blank-frame analysis.
+- Beat-grid timing now invalidates frame caches, and music/SFX are normalized
+  and measured on the encoded final bus rather than trusting the source bed.
 
 ### Benchmarked
 

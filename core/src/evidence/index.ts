@@ -114,16 +114,29 @@ export async function generateEvidence(
       .toBuffer();
     cutCells.push(cell);
   }
-  const cutStrips = path.join(outDir, "cut-strips.png");
-  if (cutCells.length) {
-    const strip = await sharp({
-      create: { width: THUMB_W * 2 + 8, height: cutCells.length * (cellH + 16), channels: 3, background: "#000000" },
-    })
-      .composite(cutCells.map((c, i) => ({ input: c, top: i * (cellH + 16), left: 0 })))
+  if (!cutCells.length) {
+    const scene = score.scenes[0];
+    const bounds = session.compiled.sceneBoundsMs[0];
+    const frameMs = 1000 / session.compiled.fps;
+    const opening = await sharp(await session.seekAndCapture(Math.min(bounds.endMs - frameMs, bounds.startMs + frameMs))).resize(THUMB_W, thumbH).png().toBuffer();
+    const closing = await sharp(await session.seekAndCapture(Math.max(bounds.startMs, bounds.endMs - frameMs))).resize(THUMB_W, thumbH).png().toBuffer();
+    cutCells.push(await sharp({ create: { width: THUMB_W * 2 + 8, height: cellH + 8, channels: 3, background: "#000000" } })
+      .composite([
+        { input: opening, top: 4, left: 0 },
+        { input: closing, top: 4, left: THUMB_W + 8 },
+        { input: label(`single scene ${scene.id} · opening → closing · no cuts`, THUMB_W * 2 + 8, labelH), top: thumbH + 4, left: 0 },
+      ])
       .png()
-      .toBuffer();
-    writeFileSync(cutStrips, strip);
+      .toBuffer());
   }
+  const cutStrips = path.join(outDir, "cut-strips.png");
+  const strip = await sharp({
+    create: { width: THUMB_W * 2 + 8, height: cutCells.length * (cellH + 16), channels: 3, background: "#000000" },
+  })
+    .composite(cutCells.map((c, i) => ({ input: c, top: i * (cellH + 16), left: 0 })))
+    .png()
+    .toBuffer();
+  writeFileSync(cutStrips, strip);
 
   return { contactSheet, heroFrames, cutStrips };
 }

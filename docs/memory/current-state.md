@@ -46,9 +46,14 @@ and CHANGELOG.
   invalidation. It does not infer legal rights; it enforces the user's claim.
 - ADR-0024 rendered figure-text registration: actual DOM text geometry, color,
   font size, visibility, and addressable targets feed MO-TYPE-1/2/4,
-  MO-EDIT-1, and QE-OVERLAP-1. Media contrast now runs at all three samples.
+  MO-EDIT-1, and QE-OVERLAP-1. ADR-0027 runs media contrast across bounded
+  output-frame samples and choreography/transition neighborhoods.
 - ADR-0026 Storyboard→Score conformance reads sanitized project-local figure
   text, so approved copy inside complex product UI remains traceable.
+- ADR-0027 verified release transactions: ≤250ms output-frame sampling plus
+  choreography/transition neighborhoods, cross-scene overlap checks, staged
+  target-safe outputs, final-mux loudness/peak measurement, and receipts that
+  bind the creative artifacts, resolved render inputs, video, and evidence.
 - Package 0.3.0 has valid `main`/`types`/`exports`; global-style tarball install
   and `chitra probe` have been exercised locally.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
@@ -56,7 +61,10 @@ and CHANGELOG.
 
 ## Evidence, not claims
 
-- Unit suite: 57 tests.
+- Unit suite: 61 tests.
+- Release-integrity benchmark: generated four-tier project releases through the
+  CLI at −13.98 LUFS/−12.51 dBTP; the receipt verifies immediately, changed
+  Score/output bytes are rejected, and input-overwriting targets are blocked.
 - Multimodal Intake benchmark: inline, local, and URL origins; local evidence;
   preferences and anti-reference; repeated locks identical; traversal, symlink
   escape, stale hash, duplicate ID, and unknown provenance links rejected.
@@ -117,14 +125,11 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Close release-integrity findings A2/A3/A5: choreography-boundary + interval
-   frame sampling, a hash-keyed `release` path that cannot bypass gates, and
-   final-mux loudness/peak measurement.
-2. Calibrate Creative QA on at least 20 independently labelled cases, then add
+1. Calibrate Creative QA on at least 20 independently labelled cases, then add
    explicit Style Memory from accepted human revisions.
-3. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
+2. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
    a pre-registered neutral ChitraBench against real baselines.
-4. Keep Card Vault as an immutable renderer benchmark. Add masks, deeper comps,
+3. Keep Card Vault as an immutable renderer benchmark. Add masks, deeper comps,
    blend modes, internal 3D/light tracks, motion blur, or richer audio only when
    a rights-approved measured residual isolates that capability. Never infer
    source-use rights from possession of a reference.
@@ -148,8 +153,9 @@ The evidence and reasoning for this rebaseline are in
 - Creative conformance proves structural coverage and traceability, not that a
   concept, narrative, composition, or copy is professionally good. Calibrated
   semantic Creative QA and cross-project Style Memory remain open.
-- Frame gates sample three instants per scene. Figure DOM text is now included,
-  but transient between-sample defects, rasterized text, and token-only CSS
+- Release gates sample output frames at ≤250ms intervals plus choreography and
+  transition neighborhoods. This is bounded coverage, not every-frame proof;
+  shorter between-sample defects, rasterized text, and token-only CSS
   enforcement remain open.
 - GitHub is private and `chitra-video` is unpublished; native manifests and
   isolated installs are verified, but public and three-harness outside-user

@@ -74,6 +74,10 @@ chitra creative-check intake.lock.json direction.json storyboard.json score.json
 chitra check score.json
 chitra render score.json -o out/draft.mp4 -q draft
 chitra evidence score.json -o out/evidence
+# After the evidence critique and revisions:
+chitra release intake.lock.json direction.json storyboard.json score.json \
+  -o out/final.mp4 -e out/evidence -r out/release.json
+chitra verify-release out/release.json
 ```
 
 Then ask the agent for the actual outcome, not implementation trivia:
@@ -90,8 +94,8 @@ Then ask the agent for the actual outcome, not implementation trivia:
   three passes with every remaining limitation stated.”
 
 The agent should inventory supplied inputs in `intake.json`, lock local
-provenance, produce Direction, Storyboard, and Score artifacts, run
-`chitra creative-check` plus render gates, inspect evidence, and revise. A
+provenance, produce Direction, Storyboard, and Score artifacts, inspect draft
+evidence, revise, and deliver only through `chitra release`. A
 reference is optional; it is never a substitute for the user's objective,
 preferences, brand constraints, or approval.
 

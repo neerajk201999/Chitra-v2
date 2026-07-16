@@ -18,6 +18,7 @@ import {
   SAFE_ZONES,
   TYPE_SCALE,
   TYPOGRAPHY,
+  type DurationToken,
   type PresetName,
   type Register,
   type SafeZone,
@@ -453,27 +454,69 @@ const luminance = (r: number, g: number, b: number) => {
 const hexLum = (hex: string) => luminance(parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16));
 const contrast = (l1: number, l2: number) => (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 
+export const FRAME_GATE_INTERVAL_MS = 250;
+
+/** ADR-0027: output-frame samples with no interval wider than 250ms, enriched
+ * around the moments where choreography and transitions can create defects. */
+export function frameGateSampleTimes(score: ScoreT): number[] {
+  const frameMs = 1000 / score.meta.fps;
+  const totalFrames = Math.max(1, Math.round((totalDurationMs(score) / 1000) * score.meta.fps));
+  const lastFrame = totalFrames - 1;
+  const intervalFrames = Math.max(1, Math.floor(FRAME_GATE_INTERVAL_MS / frameMs));
+  const frames = new Set<number>();
+  const addMs = (ms: number) => frames.add(Math.max(0, Math.min(lastFrame, Math.round(ms / frameMs))));
+  let sceneStartMs = 0;
+  for (const scene of score.scenes) {
+    const sceneEndMs = sceneStartMs + scene.durationMs;
+    const firstFrame = Math.max(0, Math.round(sceneStartMs / frameMs));
+    const endFrame = Math.min(lastFrame, Math.ceil(sceneEndMs / frameMs) - 1);
+    for (let frame = firstFrame; frame <= endFrame; frame += intervalFrames) frames.add(frame);
+    frames.add(firstFrame);
+    frames.add(Math.min(endFrame, firstFrame + 1));
+    frames.add(Math.round((firstFrame + endFrame) / 2));
+    frames.add(Math.max(firstFrame, endFrame - 1));
+    frames.add(endFrame);
+
+    const resolved = safeResolve(scene, { sceneStartMs, beats: score.audio?.music?.beats, fps: score.meta.fps }) ?? [];
+    for (const item of resolved) {
+      const start = sceneStartMs + item.startMs;
+      const end = start + item.durationMs;
+      for (const marker of [start, start + frameMs, (start + end) / 2, end - frameMs, end, end + frameMs]) addMs(marker);
+    }
+    if (scene.transitionOut.type !== "cut") {
+      const transitionStart = sceneEndMs - DURATIONS[scene.transitionOut.duration as DurationToken];
+      for (const marker of [transitionStart - frameMs, transitionStart, transitionStart + frameMs, sceneEndMs - frameMs, sceneEndMs]) addMs(marker);
+    }
+    sceneStartMs = sceneEndMs;
+  }
+  return [...frames].sort((a, b) => a - b).map((frame) => frame * frameMs);
+}
+
 export async function runFrameGates(score: ScoreT, session: RenderSession): Promise<Finding[]> {
   const f: Finding[] = [];
+  const findingKeys = new Set<string>();
+  const addFinding = (finding: Finding) => {
+    const key = `${finding.ruleId}|${finding.path}`;
+    if (!findingKeys.has(key)) {
+      findingKeys.add(key);
+      f.push(finding);
+    }
+  };
   const zone = SAFE_ZONES[score.meta.safeZone as SafeZone];
   const W = score.meta.width, H = score.meta.height;
   const minPx = TYPOGRAPHY.minTextPx1080[score.meta.register as Register] * (Math.min(W, H) / 1080);
   const safe = { x0: W * zone.left, y0: H * zone.top, x1: W * (1 - zone.right), y1: H * (1 - zone.bottom) };
-
-  // Sample each scene at entry-settled point, midpoint, and pre-exit point.
-  for (let si = 0; si < score.scenes.length; si++) {
-    const b = session.compiled.sceneBoundsMs[si];
-    const times = [b.startMs + Math.min(700, (b.endMs - b.startMs) * 0.35), (b.startMs + b.endMs) / 2, b.endMs - Math.min(250, (b.endMs - b.startMs) * 0.15)];
-    const figureText = new Map<string, { region: TextRegion; sampledAtMs: number; text: string }>();
-    let midpointRegions: TextRegion[] = [], midpointShot: Buffer | null = null;
-    for (const t of times) {
-      const regions = (await session.textRegions(t)).filter((r) => r.visible && r.scene === score.scenes[si].id);
-      for (const region of regions) {
-        if (region.origin !== "figure") continue;
-        const previous = figureText.get(region.sel);
-        if (!previous) {
-          figureText.set(region.sel, { region, sampledAtMs: t, text: region.text ?? "" });
-        } else {
+  const sceneIndex = new Map(score.scenes.map((scene, index) => [scene.id, index]));
+  const figureText = score.scenes.map(() => new Map<string, { region: TextRegion; sampledAtMs: number; text: string }>());
+  const samples = frameGateSampleTimes(score);
+  for (const t of samples) {
+    const regions = (await session.textRegions(t)).filter((region) => region.visible);
+    for (const region of regions) {
+      const si = sceneIndex.get(region.scene);
+      if (si != null && region.origin === "figure") {
+        const previous = figureText[si].get(region.sel);
+        if (!previous) figureText[si].set(region.sel, { region, sampledAtMs: t, text: region.text ?? "" });
+        else {
           if (region.fontSizePx < previous.region.fontSizePx) {
             previous.region = region;
             previous.sampledAtMs = t;
@@ -481,37 +524,45 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
           if (wordCount(region.text ?? "") > wordCount(previous.text)) previous.text = region.text ?? "";
         }
       }
-      const shot = regions.some((region) => region.overMedia) ? await session.seekAndCapture(t) : null;
-      if (t === times[1]) { midpointRegions = regions; midpointShot = shot; }
-
-      for (const r of regions) {
-        // MO-TYPE-4: safe zones
-        if (r.x < safe.x0 - 1 || r.y < safe.y0 - 1 || r.x + r.w > safe.x1 + 1 || r.y + r.h > safe.y1 + 1)
-          f.push({ ruleId: "MO-TYPE-4", severity: "P1", path: r.sel, timecodeMs: Math.round(t), message: `Text outside ${score.meta.safeZone} safe zone at ${(t / 1000).toFixed(2)}s` });
-
-        // MO-TYPE-2: contrast — pixel-sampled when over media, palette-computed otherwise
-        if (r.overMedia && shot) {
-          const left = Math.max(0, Math.min(W - 1, Math.floor(r.x)));
-          const top = Math.max(0, Math.min(H - 1, Math.floor(r.y)));
-          const right = Math.max(left + 1, Math.min(W, Math.ceil(r.x + r.w)));
-          const bottom = Math.max(top + 1, Math.min(H, Math.ceil(r.y + r.h)));
-          const region = await sharp(shot)
-            .extract({
-              left, top, width: right - left, height: bottom - top,
-            })
-            .stats();
-          const bgLum = luminance(region.channels[0].mean, region.channels[1].mean, region.channels[2].mean);
-          const ratio = contrast(hexLum(r.color), bgLum);
-          if (ratio < TYPOGRAPHY.minContrast)
-            f.push({ ruleId: "MO-TYPE-2", severity: "P1", path: r.sel, timecodeMs: Math.round(t), message: `Text contrast ${ratio.toFixed(1)}:1 over media at ${(t / 1000).toFixed(2)}s (min ${TYPOGRAPHY.minContrast}:1)` });
-        }
+    }
+    let shot: Buffer | null = null;
+    if (regions.some((region) => region.overMedia)) {
+      shot = await session.contrastCapture(t);
+    }
+    for (const r of regions) {
+      if (r.x < safe.x0 - 1 || r.y < safe.y0 - 1 || r.x + r.w > safe.x1 + 1 || r.y + r.h > safe.y1 + 1)
+        addFinding({ ruleId: "MO-TYPE-4", severity: "P1", path: r.sel, timecodeMs: Math.round(t), message: `Text outside ${score.meta.safeZone} safe zone at ${(t / 1000).toFixed(2)}s` });
+      if (r.overMedia && shot) {
+        const left = Math.max(0, Math.min(W - 1, Math.floor(r.x)));
+        const top = Math.max(0, Math.min(H - 1, Math.floor(r.y)));
+        const right = Math.max(left + 1, Math.min(W, Math.ceil(r.x + r.w)));
+        const bottom = Math.max(top + 1, Math.min(H, Math.ceil(r.y + r.h)));
+        const stats = await sharp(shot).extract({ left, top, width: right - left, height: bottom - top }).stats();
+        const bgLum = luminance(stats.channels[0].mean, stats.channels[1].mean, stats.channels[2].mean);
+        const ratio = contrast(hexLum(r.color), bgLum);
+        if (ratio < TYPOGRAPHY.minContrast)
+          addFinding({ ruleId: "MO-TYPE-2", severity: "P1", path: r.sel, timecodeMs: Math.round(t), message: `Text contrast ${ratio.toFixed(1)}:1 over media at ${(t / 1000).toFixed(2)}s (min ${TYPOGRAPHY.minContrast}:1)` });
       }
     }
+    for (let a = 0; a < regions.length; a++) {
+      for (let b = a + 1; b < regions.length; b++) {
+        const A = regions[a], B = regions[b];
+        const ox = Math.min(A.x + A.w, B.x + B.w) - Math.max(A.x, B.x);
+        const oy = Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y);
+        const sameMatchCut = A.scene !== B.scene && !!A.text?.trim() && A.text.trim() === B.text?.trim() &&
+          Math.abs(A.x - B.x) <= 2 && Math.abs(A.y - B.y) <= 2 && Math.abs(A.w - B.w) <= 2 && Math.abs(A.h - B.h) <= 2;
+        if (ox > 2 && oy > 2 && !sameMatchCut)
+          addFinding({ ruleId: "QE-OVERLAP-1", severity: "P1", path: `${A.sel} ∩ ${B.sel}`, timecodeMs: Math.round(t), message: `Text elements overlap by ${Math.round(ox)}×${Math.round(oy)}px at ${(t / 1000).toFixed(2)}s` });
+      }
+    }
+  }
 
+  for (let si = 0; si < score.scenes.length; si++) {
+    const b = session.compiled.sceneBoundsMs[si];
     const readingGroups = new Map<string, { text: string[]; region: TextRegion }>();
-    for (const { region, sampledAtMs, text } of figureText.values()) {
+    for (const { region, sampledAtMs, text } of figureText[si].values()) {
       if (region.fontSizePx < minPx)
-        f.push({ ruleId: "MO-TYPE-1", severity: "P1", path: region.sel, timecodeMs: Math.round(sampledAtMs), message: `Figure text renders at ${Math.round(region.fontSizePx)}px; minimum for ${score.meta.register} is ${Math.round(minPx)}px` });
+        addFinding({ ruleId: "MO-TYPE-1", severity: "P1", path: region.sel, timecodeMs: Math.round(sampledAtMs), message: `Figure text renders at ${Math.round(region.fontSizePx)}px; minimum for ${score.meta.register} is ${Math.round(minPx)}px` });
       const key = region.target ?? region.figureId ?? region.sel;
       const group = readingGroups.get(key) ?? { text: [], region };
       group.text.push(text);
@@ -531,27 +582,14 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
       const needMs = (wordCount(text) / TYPOGRAPHY.readingWpm) * 60000 * TYPOGRAPHY.readingSafety + TYPOGRAPHY.sceneEntryGraceMs;
       const haveMs = Math.max(0, visibleTo - visibleFrom);
       if (text && haveMs < needMs)
-        f.push({ ruleId: "MO-EDIT-1", severity: "P1", path: group.region.sel, message: `Figure text "${text.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
+        addFinding({ ruleId: "MO-EDIT-1", severity: "P1", path: group.region.sel, message: `Figure text "${text.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
     }
-
-    // QE-OVERLAP-1: visible text regions must not intersect (settled sample)
-    const vis = midpointRegions;
-    for (let a = 0; a < vis.length; a++) {
-      for (let bIdx = a + 1; bIdx < vis.length; bIdx++) {
-        const A = vis[a], B = vis[bIdx];
-        const ox = Math.min(A.x + A.w, B.x + B.w) - Math.max(A.x, B.x);
-        const oy = Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y);
-        if (ox > 2 && oy > 2)
-          f.push({ ruleId: "QE-OVERLAP-1", severity: "P1", path: `${A.sel} ∩ ${B.sel}`, timecodeMs: Math.round(times[1]), message: `Text elements overlap by ${Math.round(ox)}×${Math.round(oy)}px at ${(times[1] / 1000).toFixed(2)}s` });
-      }
-    }
-
-    // Blank-frame detection at scene midpoint
-    const mid = midpointShot ?? await session.seekAndCapture((b.startMs + b.endMs) / 2);
+    const midpoint = (b.startMs + b.endMs) / 2;
+    const mid = await session.seekAndCapture(midpoint);
     const stats = await sharp(mid).stats();
     const sd = stats.channels.reduce((s, c) => s + c.stdev, 0) / stats.channels.length;
     if (sd < 1.0)
-      f.push({ ruleId: "QE-BLANK-1", severity: "P1", path: `scenes[${si}]`, timecodeMs: Math.round((b.startMs + b.endMs) / 2), message: `Scene midpoint is a near-uniform frame (stdev ${sd.toFixed(2)}) — likely blank render or dead scene` });
+      addFinding({ ruleId: "QE-BLANK-1", severity: "P1", path: `scenes[${si}]`, timecodeMs: Math.round(midpoint), message: `Scene midpoint is a near-uniform frame (stdev ${sd.toFixed(2)}) — likely blank render or dead scene` });
   }
 
   // Static contrast for non-media text (cheap, exact, whole score)

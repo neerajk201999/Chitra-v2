@@ -74,8 +74,10 @@ chitra compare reference.mp4 out.mp4 -o comparison.json --evidence comparison-ev
 chitra validate score.json      # schema + static gates (fast)
 chitra check score.json         # + rendered-frame gates: contrast, safe zones, overlap, blanks
 chitra frame score.json -t 1800 -o peek.png   # one-frame preview in seconds
-chitra render score.json -o out.mp4 -q high   # refuses P1 findings; only dirty scenes re-render
+chitra render score.json -o draft.mp4 -q draft # diagnostic draft; only dirty scenes re-render
 chitra evidence score.json -o evidence/       # contact sheet + hero frames + cut strips
+chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
+chitra verify-release out/release.json         # reject changed inputs, assets, output, or evidence
 chitra clean                     # remove work artifacts
 ```
 

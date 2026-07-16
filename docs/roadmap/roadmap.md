@@ -23,10 +23,13 @@ Also landed early from M2/M3: evidence sheets + critic/creator skills (prompts),
 *Goal: the system catches and fixes its own defects.*
 Landed: evidence generator · critique-video skill · **seeded-defect eval measuring 10/10 deterministic catch rate** ([benchmarks/seeded-defects](../../benchmarks/seeded-defects/results.md)) · audio v1 (music bed, −14 LUFS loudnorm verified, declared-BPM grid + MO-AUD-2) · true crossfade & fade-through-black · IR-REF-2 · adversarial review round 1 with 8 findings fixed ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 Landed 2026-07-15 (later): critic-calibration harness — 4 labeled cases (control, monotony, slop-aesthetic, broken-hierarchy) whose defects pass deterministic gates by construction; run-001 scored 4/4 verdicts, 4/4 mustFinds, 0 false positives (author-biased — see run notes). Novelty/lineage/gap analysis in [docs/reviews/0002](../reviews/0002-novelty-and-gap.md). Run-001's gate candidate shipped as MO-EDIT-5 (no dead air).
+Landed 2026-07-16: ADR-0027 closes the audited A2/A3/A5 release-integrity
+slice with bounded temporal rendered gates, a non-bypassable hash-receipted
+`release` transaction, target-safe staging, beat-aware frame-cache identity,
+and measured two-pass final-bus audio.
 Remaining:
 - Independent critic runs (fresh sessions) + independent human labels; grow to ~20 cases across registers before publishing agreement stats.
 - Narration/voiceover (word timestamps), energy-envelope tracks, and clip-audio pass-through. SFX hooks + deterministic beat detection + `at.onBeat` are built (ADR-0007/0011).
-- Interval-based gate sampling (close the between-instants gap).
 - **Exit gate:** deterministic layer ≥80% on seeded defects (✅ 100%) AND critic layer measured against the calibration set with published agreement stats.
 
 > **Priority lens (2026-07-15):** [docs/research/moats.md](../research/moats.md) ranks the five-year moats: calibration data → ChitraBench → motion-language spec → creative ladder (ADR-0006 candidate). M3 remains necessary execution, but feature polish beyond it is explicitly deprioritized; CLI is declared done.
@@ -70,9 +73,10 @@ synthetic licensed asset renders in a real browser; reference-only use and false
 clean-room claims fail. Card Vault source pixels remain uncommitted pending an
 explicit owner rights decision.
 Rendered Figure QA: ADR-0024 registers actual figure DOM text for minimum size,
-three-instant pixel contrast, safe zones, reading time, and overlap. A generated
+pixel contrast, safe zones, reading time, and overlap. ADR-0027 expands checks
+to bounded intervals and choreography/transition neighborhoods. A generated
 browser fixture triggers all five rules and leaves its compliant control green;
-continuous interval sampling and token-only CSS parsing remain open.
+exhaustive every-frame coverage and token-only CSS parsing remain open.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
 Clean-room candidate 0.6 now authors and compares all 274 frames without copied
@@ -86,8 +90,6 @@ localizes the next largest appearance residual to the final mark. ADR-0025 adds
 bounded heterogeneous particle size/opacity/glow for that measured gap; exact
 reconstruction remains open.
 Remaining (priority order):
-- Close M2 release-integrity gaps A2/A3/A5 before calling the Quality Engine a
-  mandatory output floor.
 - **Creative QA**: independently label ≥20 cases and promote only calibrated
   CC-* principles to gates (narrative/composition/pacing/rhythm).
 - **Style Memory**: learn explicit, reviewable deltas from accepted human

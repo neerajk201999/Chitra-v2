@@ -3,15 +3,15 @@
  * chitra — deterministic core CLI (ADR-0005: exceptional headless, machine-readable).
  * Commands include intake · plan · board · conform · validate · check · render · evidence · probe.
  */
-import { readFileSync, existsSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, rmSync, mkdirSync, renameSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { Command } from "commander";
 import { validateScore, validateDirection, validateStoryboard, type ScoreT, type DirectionT, type StoryboardT } from "../ir/schema.js";
-import { runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runCreativeConformance, summarize, type Finding } from "../gates/index.js";
-import { openSession, renderScore, type Quality } from "../render/index.js";
+import { FRAME_GATE_INTERVAL_MS, frameGateSampleTimes, runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runCreativeConformance, summarize, type Finding } from "../gates/index.js";
+import { COMPILER_CACHE_VERSION, openSession, renderScore, type Quality } from "../render/index.js";
 import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
@@ -19,6 +19,7 @@ import { decomposeReference } from "../reference/decompose.js";
 import { compareReference, type CompareMode, type CompareRegion } from "../reference/compare.js";
 import { validateIntake, type IntakeT } from "../intake/schema.js";
 import { materializeIntake } from "../intake/materialize.js";
+import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyReleaseReceipt, type ReleaseArtifacts } from "../release/index.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -268,8 +269,122 @@ program
       rendered: r.renderedFrames,
       fromCache: r.cachedFrames,
       wallSeconds: +(r.wallMs / 1000).toFixed(1),
+      audio: r.audio,
     };
     console.log(opts.json ? JSON.stringify(out, null, 2) : `✔ ${out.out} — ${out.frames} frames (${out.fromCache} cached) in ${out.wallSeconds}s`);
+  });
+
+program
+  .command("release")
+  .argument("<intake>", "locked Intake JSON")
+  .argument("<direction>", "approved Direction JSON")
+  .argument("<storyboard>", "approved Storyboard JSON")
+  .argument("<score>", "final Score JSON")
+  .option("-o, --out <file>", "final output MP4", "out/final.mp4")
+  .option("-e, --evidence <dir>", "final evidence directory", "out/evidence")
+  .option("-r, --receipt <file>", "release receipt JSON", "out/release.json")
+  .option("-q, --quality <q>", "standard | high", "high")
+  .option("--json", "machine-readable output")
+  .description("Verified release transaction: creative/static/rendered gates → final render/audio → evidence → hash-bound receipt (ADR-0027)")
+  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { out: string; evidence: string; receipt: string; quality: string; json?: boolean }) => {
+    if (!['standard', 'high'].includes(opts.quality)) fail("release quality must be standard|high");
+    const artifacts: ReleaseArtifacts = { intake: intakeFile, direction: directionFile, storyboard: storyboardFile, score: scoreFile };
+    const intake = await loadIntake(intakeFile);
+    const direction = loadDirection(directionFile);
+    const storyboard = loadStoryboard(storyboardFile);
+    const { score, projectDir } = loadScore(scoreFile);
+    const tool = { packageVersion, compilerCacheVersion: COMPILER_CACHE_VERSION };
+    const before = releaseFingerprint(artifacts, score, projectDir, tool);
+    assertReleaseTargets(artifacts, score, projectDir, opts);
+    const findings = [
+      ...runCreativeConformance(intake, direction, storyboard, score, projectDir),
+      ...runStaticGates(score),
+    ];
+    if (findings.some((finding) => finding.severity === "P1")) {
+      printFindings(findings, !!opts.json);
+      fail("P1 findings block release");
+    }
+
+    const tag = `${before.inputHash.slice(0, 12)}-${process.pid}`;
+    const finalOut = path.resolve(opts.out);
+    const finalEvidence = path.resolve(opts.evidence);
+    const finalReceipt = path.resolve(opts.receipt);
+    const stagedOut = path.join(path.dirname(finalOut), `.${path.basename(finalOut)}.${tag}.mp4`);
+    const stagedEvidence = path.join(path.dirname(finalEvidence), `.${path.basename(finalEvidence)}.${tag}`);
+    const stagedReceipt = path.join(path.dirname(finalReceipt), `.${path.basename(finalReceipt)}.${tag}`);
+    try {
+      const session = await openSession(score, projectDir, path.join(projectDir, ".chitra-cache"));
+      let evidence: Awaited<ReturnType<typeof generateEvidence>>;
+      try {
+        findings.push(...await runFrameGates(score, session));
+        if (findings.some((finding) => finding.severity === "P1")) {
+          printFindings(findings, !!opts.json);
+          throw new Error("rendered P1 findings block release");
+        }
+        evidence = await generateEvidence(score, session, stagedEvidence);
+      } finally {
+        await session.close();
+      }
+
+      const render = await renderScore(score, projectDir, stagedOut, {
+        quality: opts.quality as Quality,
+        onProgress: opts.json ? undefined : (done, total) => process.stdout.write(`\r  frame ${done}/${total}`),
+      });
+      if (!opts.json) process.stdout.write("\n");
+      const after = releaseFingerprint(artifacts, score, projectDir, tool);
+      if (after.inputHash !== before.inputHash) throw new Error("release inputs changed while gates/render/evidence were running; no receipt written");
+
+      mkdirSync(path.dirname(finalOut), { recursive: true });
+      mkdirSync(path.dirname(finalEvidence), { recursive: true });
+      rmSync(finalOut, { force: true });
+      renameSync(stagedOut, finalOut);
+      rmSync(finalEvidence, { recursive: true, force: true });
+      renameSync(stagedEvidence, finalEvidence);
+      const evidenceFiles = [evidence.contactSheet, ...evidence.heroFrames, evidence.cutStrips]
+        .map((file) => path.join(finalEvidence, path.relative(stagedEvidence, file)));
+
+      const summary = summarize(findings);
+      const receipt = makeReleaseReceipt({
+        receiptFile: finalReceipt,
+        fingerprint: before,
+        tool,
+        quality: opts.quality as Quality,
+        findings,
+        summary,
+        sampledFrames: frameGateSampleTimes(score).length,
+        maxIntervalMs: FRAME_GATE_INTERVAL_MS,
+        render: {
+          path: finalOut, durationMs: render.durationMs, frames: render.totalFrames,
+          width: score.meta.width, height: score.meta.height, fps: score.meta.fps, audio: render.audio,
+        },
+        evidenceFiles,
+      });
+      mkdirSync(path.dirname(finalReceipt), { recursive: true });
+      writeFileSync(stagedReceipt, JSON.stringify(receipt, null, 2) + "\n");
+      const verification = verifyReleaseReceipt(stagedReceipt);
+      if (!verification.ok) throw new Error(`release receipt self-verification failed: ${verification.issues.join("; ")}`);
+      rmSync(finalReceipt, { force: true });
+      renameSync(stagedReceipt, finalReceipt);
+      const output = { releaseId: receipt.releaseId, out: finalOut, receipt: finalReceipt, evidence: finalEvidence, summary, audio: render.audio };
+      console.log(opts.json ? JSON.stringify(output, null, 2) : `✔ release ${receipt.releaseId} → ${finalOut}\n  receipt: ${finalReceipt}\n  evidence: ${finalEvidence}`);
+    } finally {
+      rmSync(stagedOut, { force: true });
+      rmSync(stagedEvidence, { recursive: true, force: true });
+      rmSync(stagedReceipt, { force: true });
+    }
+  });
+
+program
+  .command("verify-release")
+  .argument("<receipt>", "release receipt JSON")
+  .option("--json", "machine-readable output")
+  .description("Verify that release inputs, resolved assets, final video, and evidence still match their receipt")
+  .action((receiptFile: string, opts: { json?: boolean }) => {
+    const result = verifyReleaseReceipt(receiptFile);
+    if (opts.json) console.log(JSON.stringify(result, null, 2));
+    else if (result.ok) console.log(`✔ release ${result.receipt?.releaseId} receipt is current`);
+    else console.error(`✖ stale or invalid release receipt\n${result.issues.map((issue) => `  - ${issue}`).join("\n")}`);
+    process.exit(result.ok ? 0 : 1);
   });
 
 program

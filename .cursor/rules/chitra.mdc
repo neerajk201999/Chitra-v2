@@ -7,7 +7,7 @@ alwaysApply: false
 
 This repository creates cinematic videos through a directed, gated, critiqued pipeline. Do not improvise a workflow; follow the canonical skill documents:
 
-- **create-video** — Direct and render a cinematic motion-design video from a prompt or any combination of reference videos, images, screenshots, links, brand assets, footage, audio, preferences, and anti-references. Use for launch films, product demos, promos, social clips, motion graphics, reference reconstruction, or end-to-end video creation. Runs intake, direction, storyboard, score, deterministic gates, render, evidence, and bounded critique.
+- **create-video** — Direct and release a cinematic motion-design video from a prompt or any combination of reference videos, images, screenshots, links, brand assets, footage, audio, preferences, and anti-references. Use for launch films, product demos, promos, social clips, motion graphics, reference reconstruction, or end-to-end video creation. Runs intake, direction, storyboard, score, deterministic gates, draft render, evidence, bounded critique, and a hash-bound final release.
   → Follow `skills/create-video/SKILL.md` exactly.
 - **critique-video** — Run an isolated design critique over a rendered Chitra video's evidence (contact sheet, hero frames, cut strips). Use when asked to review, critique, or QA a video or its evidence directory. Produces severity-tagged findings mapped to Motion IR paths.
   → Follow `skills/critique-video/SKILL.md` exactly.
