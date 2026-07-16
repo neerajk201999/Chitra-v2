@@ -11,6 +11,7 @@ chitra intake intake.json -o intake.lock.json # objective + mixed-source provena
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # intent conformance
 chitra init --style night --title "My film"   # gate-passing starter score
 chitra decompose reference.mp4 -o style-dna.json # measured reference facts + shot evidence
+chitra compare reference.mp4 out.mp4 -o comparison.json # aligned pixel/audio-energy evidence
 chitra check score.json                        # schema + static + rendered-frame gates
 chitra frame score.json -t 1800 -o peek.png    # one-frame preview
 chitra render score.json -o out.mp4 -q high    # deterministic; refuses P1 findings

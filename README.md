@@ -31,6 +31,10 @@ reproduces exact known cuts/colors with byte-identical JSON and frames. The same
 Direction 0.2 and Storyboard 0.1 contracts preserve concept and shot intent; the
 [creative-ladder benchmark](benchmarks/creative-ladder/results.md) catches three
 seeded intent drifts across the complete chain. The same
+`chitra compare` adds exhaustive frame-index evidence for compatible films and
+explicitly non-exhaustive normalized comparison for unlike cuts; its
+[generated benchmark](benchmarks/reference-comparator/results.md) proves
+deterministic reports/diffs and catches visual drift. The same
 canonical skills install through Claude Code, Codex, Cursor, Gemini CLI, or
 `npx skills`, while an [isolated install benchmark](benchmarks/cold-start/results.md)
 proves the packaged CLI through a real browser frame. Semantic intent and exact
@@ -66,6 +70,7 @@ chitra intake intake.json -o intake.lock.json # validate + fingerprint supplied 
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # preserve intent across every tier
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
+chitra compare reference.mp4 out.mp4 -o comparison.json --evidence comparison-evidence
 chitra validate score.json      # schema + static gates (fast)
 chitra check score.json         # + rendered-frame gates: contrast, safe zones, overlap, blanks
 chitra frame score.json -t 1800 -o peek.png   # one-frame preview in seconds

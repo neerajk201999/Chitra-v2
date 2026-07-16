@@ -50,8 +50,10 @@ Creative ladder: ADR-0018 Direction 0.2 + Storyboard 0.1 → explicit concept an
 shot design, stable source/preference traces, three adjacent-tier conformance
 boundaries, `chitra creative-check`, 49 tests, and a benchmark that catches all
 three seeded intent drifts.
+Reference comparison: ADR-0019 `chitra compare` → strict exhaustive frame-index
+mode, explicit normalized sampling, transparent visual/audio-energy metrics,
+deterministic per-frame diff evidence, and generated exact/drift fixtures.
 Remaining (priority order):
-- **Reference comparator**: align reference/render frames and audio, emit visual diffs, and make similarity claims measurable.
 - **Style Memory**: learn from accepted human revisions (diff → style delta) so future films inherit taste and brand stay consistent.
 - **Creative QA**: promote CC-* constitution principles to calibrated gates (narrative/composition/pacing/rhythm), beyond motion mechanics.
 - **Then ChitraBench** end-to-end (benchmarking a creative system, not a renderer).

@@ -22,10 +22,14 @@ versioned separately.
 - Deterministic Intake→Direction→Storyboard→Score conformance gates,
   `chitra board`, generic adjacent-tier `chitra conform`, complete-chain
   `chitra creative-check`, and a three-defect creative-ladder benchmark.
+- `chitra compare` and typed Comparison 0.1 reports with exhaustive strict
+  frame-index mode, explicitly normalized progress mode, per-frame RGB MAE/
+  PSNR/global-luma SSIM, deterministic difference images, worst-frame evidence,
+  and limited audio energy-envelope alignment.
 
 ### Planned
 
-- Automated reference comparison and the Card Vault reconstruction benchmark.
+- The Card Vault reconstruction benchmark.
 
 ## [0.3.0] — 2026-07-16
 
