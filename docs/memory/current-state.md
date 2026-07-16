@@ -42,6 +42,9 @@ and CHANGELOG.
   assisted labels, rendered-asset lineage and rights conformance, normalized
   project-only paths, declared figure dependencies, and nested-byte cache
   invalidation. It does not infer legal rights; it enforces the user's claim.
+- ADR-0024 rendered figure-text registration: actual DOM text geometry, color,
+  font size, visibility, and addressable targets feed MO-TYPE-1/2/4,
+  MO-EDIT-1, and QE-OVERLAP-1. Media contrast now runs at all three samples.
 - Package 0.3.0 has valid `main`/`types`/`exports`; global-style tarball install
   and `chitra probe` have been exercised locally.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
@@ -65,6 +68,9 @@ and CHANGELOG.
   Direction/Storyboard/Score, renders inside a figure in a real browser,
   invalidates the scene hash when its bytes change, and repeats the same frame
   byte-identically. Reference-only use and a false clean-room label are blocked.
+- Figure-text browser benchmark: one small, dark, off-safe, overlapping, long
+  figure label triggers all five intended typography rules; a compliant control
+  triggers none, and fully clipped/transparent controls stay ignored.
 - Card Vault target registered by hash at 720×900/30fps/274 frames. The first
   clean-room Chitra candidate authors all 274 frames with eight typed tracks,
   custom particles, and no reference pixels/audio: mean SSIM 0.363459 and
@@ -126,6 +132,9 @@ Ordered next slices:
 - Creative conformance proves structural coverage and traceability, not that a
   concept, narrative, composition, or copy is professionally good. Calibrated
   semantic Creative QA and cross-project Style Memory remain open.
+- Frame gates sample three instants per scene. Figure DOM text is now included,
+  but transient between-sample defects, rasterized text, and token-only CSS
+  enforcement remain open.
 - GitHub is private and `chitra-video` is unpublished; native manifests and
   isolated installs are verified, but public and three-harness outside-user
   installation are not.

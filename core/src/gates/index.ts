@@ -20,7 +20,7 @@ import {
   type Register,
   type SafeZone,
 } from "../motion/tokens.js";
-import type { RenderSession } from "../render/index.js";
+import type { RenderSession, TextRegion } from "../render/index.js";
 
 export interface Finding {
   ruleId: string;
@@ -455,15 +455,32 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
   const f: Finding[] = [];
   const zone = SAFE_ZONES[score.meta.safeZone as SafeZone];
   const W = score.meta.width, H = score.meta.height;
+  const minPx = TYPOGRAPHY.minTextPx1080[score.meta.register as Register] * (Math.min(W, H) / 1080);
   const safe = { x0: W * zone.left, y0: H * zone.top, x1: W * (1 - zone.right), y1: H * (1 - zone.bottom) };
 
   // Sample each scene at entry-settled point, midpoint, and pre-exit point.
   for (let si = 0; si < score.scenes.length; si++) {
     const b = session.compiled.sceneBoundsMs[si];
     const times = [b.startMs + Math.min(700, (b.endMs - b.startMs) * 0.35), (b.startMs + b.endMs) / 2, b.endMs - Math.min(250, (b.endMs - b.startMs) * 0.15)];
+    const figureText = new Map<string, { region: TextRegion; sampledAtMs: number; text: string }>();
+    let midpointRegions: TextRegion[] = [], midpointShot: Buffer | null = null;
     for (const t of times) {
       const regions = (await session.textRegions(t)).filter((r) => r.visible && r.scene === score.scenes[si].id);
-      const shot = t === times[1] ? await session.seekAndCapture(t) : null;
+      for (const region of regions) {
+        if (region.origin !== "figure") continue;
+        const previous = figureText.get(region.sel);
+        if (!previous) {
+          figureText.set(region.sel, { region, sampledAtMs: t, text: region.text ?? "" });
+        } else {
+          if (region.fontSizePx < previous.region.fontSizePx) {
+            previous.region = region;
+            previous.sampledAtMs = t;
+          }
+          if (wordCount(region.text ?? "") > wordCount(previous.text)) previous.text = region.text ?? "";
+        }
+      }
+      const shot = regions.some((region) => region.overMedia) ? await session.seekAndCapture(t) : null;
+      if (t === times[1]) { midpointRegions = regions; midpointShot = shot; }
 
       for (const r of regions) {
         // MO-TYPE-4: safe zones
@@ -472,12 +489,13 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
 
         // MO-TYPE-2: contrast — pixel-sampled when over media, palette-computed otherwise
         if (r.overMedia && shot) {
+          const left = Math.max(0, Math.min(W - 1, Math.floor(r.x)));
+          const top = Math.max(0, Math.min(H - 1, Math.floor(r.y)));
+          const right = Math.max(left + 1, Math.min(W, Math.ceil(r.x + r.w)));
+          const bottom = Math.max(top + 1, Math.min(H, Math.ceil(r.y + r.h)));
           const region = await sharp(shot)
             .extract({
-              left: Math.max(0, Math.round(r.x)),
-              top: Math.max(0, Math.round(r.y)),
-              width: Math.min(W - Math.round(Math.max(0, r.x)), Math.max(1, Math.round(r.w))),
-              height: Math.min(H - Math.round(Math.max(0, r.y)), Math.max(1, Math.round(r.h))),
+              left, top, width: right - left, height: bottom - top,
             })
             .stats();
           const bgLum = luminance(region.channels[0].mean, region.channels[1].mean, region.channels[2].mean);
@@ -488,9 +506,34 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
       }
     }
 
+    const readingGroups = new Map<string, { text: string[]; region: TextRegion }>();
+    for (const { region, sampledAtMs, text } of figureText.values()) {
+      if (region.fontSizePx < minPx)
+        f.push({ ruleId: "MO-TYPE-1", severity: "P1", path: region.sel, timecodeMs: Math.round(sampledAtMs), message: `Figure text renders at ${Math.round(region.fontSizePx)}px; minimum for ${score.meta.register} is ${Math.round(minPx)}px` });
+      const key = region.target ?? region.figureId ?? region.sel;
+      const group = readingGroups.get(key) ?? { text: [], region };
+      group.text.push(text);
+      readingGroups.set(key, group);
+    }
+    const resolved = safeResolve(score.scenes[si], { sceneStartMs: b.startMs, beats: score.audio?.music?.beats, fps: score.meta.fps }) ?? [];
+    for (const [target, group] of readingGroups) {
+      const targets = new Set([target, group.region.figureId].filter((value): value is string => !!value));
+      let visibleFrom = 0, visibleTo = score.scenes[si].durationMs;
+      for (const targetId of targets) {
+        const enter = resolved.find((item) => item.anim.target === targetId && PRESETS[item.anim.preset as PresetName].kind === "enter");
+        const exit = resolved.find((item) => item.anim.target === targetId && PRESETS[item.anim.preset as PresetName].kind === "exit");
+        if (enter) visibleFrom = Math.max(visibleFrom, enter.startMs + enter.durationMs * 0.5);
+        if (exit) visibleTo = Math.min(visibleTo, exit.startMs);
+      }
+      const text = group.text.join(" ").trim();
+      const needMs = (wordCount(text) / TYPOGRAPHY.readingWpm) * 60000 * TYPOGRAPHY.readingSafety + TYPOGRAPHY.sceneEntryGraceMs;
+      const haveMs = Math.max(0, visibleTo - visibleFrom);
+      if (text && haveMs < needMs)
+        f.push({ ruleId: "MO-EDIT-1", severity: "P1", path: group.region.sel, message: `Figure text "${text.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
+    }
+
     // QE-OVERLAP-1: visible text regions must not intersect (settled sample)
-    const settled = await session.textRegions(times[1]);
-    const vis = settled.filter((r) => r.visible && r.scene === score.scenes[si].id);
+    const vis = midpointRegions;
     for (let a = 0; a < vis.length; a++) {
       for (let bIdx = a + 1; bIdx < vis.length; bIdx++) {
         const A = vis[a], B = vis[bIdx];
@@ -502,7 +545,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
     }
 
     // Blank-frame detection at scene midpoint
-    const mid = await session.seekAndCapture((b.startMs + b.endMs) / 2);
+    const mid = midpointShot ?? await session.seekAndCapture((b.startMs + b.endMs) / 2);
     const stats = await sharp(mid).stats();
     const sd = stats.channels.reduce((s, c) => s + c.stdev, 0) / stats.channels.length;
     if (sd < 1.0)

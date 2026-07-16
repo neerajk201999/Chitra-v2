@@ -62,6 +62,10 @@ project-local paths, and declared/hash-invalidating figure dependencies. A
 synthetic licensed asset renders in a real browser; reference-only use and false
 clean-room claims fail. Card Vault source pixels remain uncommitted pending an
 explicit owner rights decision.
+Rendered Figure QA: ADR-0024 registers actual figure DOM text for minimum size,
+three-instant pixel contrast, safe zones, reading time, and overlap. A generated
+browser fixture triggers all five rules and leaves its compliant control green;
+continuous interval sampling and token-only CSS parsing remain open.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
 Clean-room candidate 0.6 now authors and compares all 274 frames without copied
