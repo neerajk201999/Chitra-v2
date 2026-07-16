@@ -268,13 +268,20 @@ const VideoElement = z.object({
   scrim: z.number().min(0).max(0.8).default(0),
 });
 
-/** ADR-0009: deterministic dot-matrix particle field. Authors pick a formation
- *  and behavior preset; dots are never hand-placed. */
+/** ADR-0009/0020: deterministic dot-matrix particle field. Authors pick a
+ *  generated formation or supply bounded, ordered custom coordinates. */
+const ParticlePoint = z.object({
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+});
+
 const ParticlesElement = z.object({
   type: z.literal("particles"),
   id,
   role: z.enum(["hero", "support", "ambient"]).default("ambient"),
-  formation: z.enum(["grid", "ring", "scatter"]).default("grid"),
+  formation: z.enum(["grid", "ring", "scatter", "custom"]).default("grid"),
+  /** ADR-0020: ordered normalized coordinates for a bounded custom formation. */
+  points: z.array(ParticlePoint).min(4).max(400).optional(),
   color: z.enum(["primary", "accent", "text", "on-media"]).default("accent"),
   cols: z.number().int().min(2).max(24).default(8), // grid columns
   rows: z.number().int().min(2).max(24).default(6), // grid rows
@@ -285,6 +292,11 @@ const ParticlesElement = z.object({
   position: Position.default({ anchor: "center" }),
   width: z.number().min(5).max(140).default(40),
   height: z.number().min(5).max(140).default(40),
+}).superRefine((value, ctx) => {
+  if (value.formation === "custom" && !value.points)
+    ctx.addIssue({ code: "custom", path: ["points"], message: "custom particle formation requires points" });
+  if (value.formation !== "custom" && value.points)
+    ctx.addIssue({ code: "custom", path: ["points"], message: "particle points are only valid with formation custom" });
 });
 
 /** ADR-0008: agent-authored UI mockup — a sandboxed, token-themed HTML fragment.
@@ -458,7 +470,10 @@ export const Animation = z.object({
     .max(8)
     .optional(),
   /** ADR-0009: particle-morph only (gated MO-PART-1) — target formation for a dot field. */
-  morphTo: z.enum(["grid", "ring", "scatter"]).optional(),
+  morphTo: z.enum(["grid", "ring", "scatter", "custom"]).optional(),
+  /** ADR-0020: destination coordinates for morphTo custom. A custom source may
+   *  omit these to return to its own ordered base points. */
+  morphPoints: z.array(ParticlePoint).min(4).max(400).optional(),
   /** ADR-0013: only valid with `keyframe-track`; MO-KEY-1 enforces the pairing,
    *  explicit reason, and scene bounds. */
   keyframes: KeyframeTrack.optional(),
@@ -479,6 +494,9 @@ export const Animation = z.object({
       gainDb: z.number().min(-40).max(6).default(-14),
     })
     .optional(),
+}).superRefine((value, ctx) => {
+  if (value.morphPoints && value.morphTo !== "custom")
+    ctx.addIssue({ code: "custom", path: ["morphPoints"], message: "morphPoints require morphTo custom" });
 });
 export type AnimationT = z.infer<typeof Animation>;
 

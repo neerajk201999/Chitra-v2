@@ -125,17 +125,31 @@ export function runStaticGates(score: ScoreT): Finding[] {
     // MO-PART-1 (ADR-0009): particle fields are bounded; morphTo only on particle-morph.
     scene.elements.forEach((el, ei) => {
       if (el.type !== "particles") return;
-      const n = el.formation === "grid" ? el.cols * el.rows : el.count;
+      const n = el.formation === "grid" ? el.cols * el.rows : el.formation === "custom" ? (el.points?.length ?? 0) : el.count;
       if (n > 400)
         f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.elements[${ei}]`), message: `particle field "${el.id}" has ${n} dots (max 400 — perf and taste ceiling)` });
+      if (el.formation === "custom" && !el.points?.length)
+        f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.elements[${ei}].points`), message: `custom particle field "${el.id}" requires ordered points` });
+      if (el.formation !== "custom" && el.points)
+        f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.elements[${ei}].points`), message: `particle field "${el.id}" supplies points but formation is ${el.formation}` });
     });
     scene.choreography.forEach((a, ai) => {
       const target = scene.elements.find((e) => e.id === a.target);
       if (a.morphTo && a.preset !== "particle-morph")
         f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" has morphTo but preset is ${a.preset} — morphTo is particle-morph only` });
+      if (a.morphPoints && (a.preset !== "particle-morph" || a.morphTo !== "custom"))
+        f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.choreography[${ai}].morphPoints`), message: `"${a.id}" has morphPoints without a custom particle-morph` });
       const isPart = a.preset === "particle-shimmer" || a.preset === "particle-form" || a.preset === "particle-morph";
       if (isPart && target && target.type !== "particles")
         f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" (${a.preset}) targets "${a.target}" which is ${target.type}, not a particles field` });
+      if (a.preset === "particle-morph" && a.morphTo === "custom" && target?.type === "particles") {
+        const sourceCount = target.formation === "grid" ? target.cols * target.rows : target.formation === "custom" ? (target.points?.length ?? 0) : target.count;
+        const destination = a.morphPoints ?? (target.formation === "custom" ? target.points : undefined);
+        if (!destination)
+          f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.choreography[${ai}].morphPoints`), message: `custom morph "${a.id}" requires morphPoints or a custom source formation` });
+        else if (destination.length !== sourceCount)
+          f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.choreography[${ai}].morphPoints`), message: `custom morph "${a.id}" has ${destination.length} destination points for ${sourceCount} source dots` });
+      }
     });
 
     // MO-CHOR-5: two entrances on one target without an exit between reads as a

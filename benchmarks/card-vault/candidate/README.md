@@ -1,8 +1,9 @@
-# Card Vault clean-room candidate 0.5
+# Card Vault clean-room candidate 0.6
 
 This is the first Chitra-authored 274-frame reconstruction candidate for the
-registered Card Vault target. It uses one token-themed figure and eight typed
-frame-addressed tracks. It contains no decoded reference frame, crop, logo file,
+registered Card Vault target. It uses one token-themed figure, eight typed
+frame-addressed tracks, and ADR-0020 custom particle constellations for the
+mark→ring→mark close. It contains no decoded reference frame, crop, logo file,
 or reference audio and is safe to inspect without the licensed source video.
 
 The candidate is a benchmark baseline, not an exact reconstruction. It proves
