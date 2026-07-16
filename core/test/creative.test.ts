@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateDirection, validateScore, validateStoryboard } from "../src/ir/schema.js";
@@ -135,6 +136,25 @@ describe("creative ladder conformance (ADR-0018)", () => {
     expect(ids).toContain("CC-SCORE-4");
     expect(ids).toContain("CC-SCORE-5");
     expect(ids).toContain("CC-SCORE-7");
+  });
+
+  it("ADR-0026 finds planned copy authored inside a project-local figure", () => {
+    const value = fixtures();
+    value.storyboard.shots[0].hero!.elementType = "figure";
+    value.storyboard.shots[0].typography.onScreenCopy.push("akta.pro");
+    value.score.scenes[0].elements = [{
+      type: "figure", id: "proof", role: "hero", src: "proof.html", assets: [],
+      position: { anchor: "center" }, width: 80, height: 80, radius: 0, shadow: false,
+    }];
+    const project = mkdtempSync(path.join(os.tmpdir(), "chitra-figure-copy-"));
+    try {
+      writeFileSync(path.join(project, "proof.html"), "<div>Taste is <span>the product.</span><div>akta<span>.pro</span></div></div>");
+      expect(runStoryboardScoreConformance(value.storyboard, value.score, project).some((finding) => finding.ruleId === "CC-SCORE-4")).toBe(false);
+      writeFileSync(path.join(project, "proof.html"), "<div>Different copy.</div>");
+      expect(runStoryboardScoreConformance(value.storyboard, value.score, project).some((finding) => finding.ruleId === "CC-SCORE-4")).toBe(true);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
   });
 
   it("separates clean-room from rights-approved source-assisted asset use", () => {

@@ -178,8 +178,10 @@ program
       findings = runIntakeDirectionConformance(await loadIntake(fromFile), loadDirection(toFile));
     else if (fromTier === "direction" && toTier === "storyboard")
       findings = runDirectionStoryboardConformance(loadDirection(fromFile), loadStoryboard(toFile));
-    else if (fromTier === "storyboard" && toTier === "score")
-      findings = runStoryboardScoreConformance(loadStoryboard(fromFile), loadScore(toFile).score);
+    else if (fromTier === "storyboard" && toTier === "score") {
+      const loaded = loadScore(toFile);
+      findings = runStoryboardScoreConformance(loadStoryboard(fromFile), loaded.score, loaded.projectDir);
+    }
     else if (fromTier === "direction" && toTier === "score")
       findings = runConformance(loadDirection(fromFile), loadScore(toFile).score);
     else fail(`Unsupported conformance boundary: ${fromTier || "unknown"} → ${toTier || "unknown"}`);
@@ -196,11 +198,13 @@ program
   .option("--json", "machine-readable output")
   .description("Validate the complete Intake→Direction→Storyboard→Score intent chain (ADR-0018)")
   .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { json?: boolean }) => {
+    const loaded = loadScore(scoreFile);
     const findings = runCreativeConformance(
       await loadIntake(intakeFile),
       loadDirection(directionFile),
       loadStoryboard(storyboardFile),
-      loadScore(scoreFile).score
+      loaded.score,
+      loaded.projectDir
     );
     const summary = printFindings(findings, !!opts.json);
     process.exit(summary.releasable ? 0 : 1);

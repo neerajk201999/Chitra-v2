@@ -42,6 +42,8 @@ versioned separately.
   browser defect/control benchmark.
 - ADR-0025 bounded per-point size/opacity and field glow for deterministic
   heterogeneous custom particle constellations, with a real-browser benchmark.
+- ADR-0026 project-local figure copy participates in Storyboard→Score copy
+  conformance instead of producing false missing-copy blockers.
 
 ### Fixed
 
