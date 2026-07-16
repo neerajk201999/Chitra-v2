@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-16 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0
+**Verified:** 2026-07-17 · **Package:** 0.3.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -66,14 +66,25 @@ and CHANGELOG.
   evidence-bound domain assessments; actionable findings; deterministic hidden-
   label scoring; and explicit anti-spam/verdict coherence. This is a judgment
   contract, not proof that the critic has professional taste.
+- ADR-0030 Independent Calibration Study 0.1: at least three blind human
+  annotations per case, blind candidate provenance, reviewer expertise/conflict/
+  consent declarations, subject binding, register/motion/audio coverage,
+  thresholded consensus, explicit disagreement, and separate panel/candidate
+  agreement dimensions through `chitra review-calibrate`. Declarations are
+  bound and surfaced, not independently verified by the core.
 
 ## Evidence, not claims
 
-- Unit suite: 67 tests.
+- Unit suite: 70 tests.
 - Creative Review contract benchmark: valid typed review, hidden
   principle/severity/verdict matching, deterministic repeated scoring, the
   documented label-collection CLI flow, and rejection of detached evidence,
   contradictory verdicts, forbidden severity, and finding spam.
+- Independent calibration contract benchmark: deterministic three-reviewer
+  consensus, explicit three-way disagreement, separate verdict/principle/
+  severity metrics, motion/audio/register coverage, private consent, blind
+  candidate enforcement, duplicate-reviewer rejection, and byte-identical CLI
+  output. It proves mechanics; no real independent corpus has been collected.
 - Release-integrity benchmark: generated four-tier project releases through the
   CLI at −13.98 LUFS/−12.51 dBTP; the receipt verifies immediately, changed
   Score/output bytes are rejected, and input-overwriting targets are blocked.
@@ -140,7 +151,7 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Calibrate Creative Review on at least 20 independently labelled cases with
+1. Collect the pre-registered ≥20-case independent Creative Review study using
    real motion clips and audio, then add explicit accepted-revision memory.
 2. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
    a pre-registered neutral ChitraBench against real baselines.
@@ -168,8 +179,9 @@ The evidence and reasoning for this rebaseline are in
   speech, music quality, or professional preference.
 - Creative conformance proves structural coverage and traceability. Creative
   Review 0.1 makes semantic judgment evidence-bound and scoreable, but four
-  author-labelled cases cannot prove professional taste. Independent
-  calibration, accepted-revision memory, and blind preference remain open.
+  author-labelled cases cannot prove professional taste. ADR-0030 makes an
+  independent study operational but does not supply its human labels.
+  Calibration data, accepted-revision memory, and blind preference remain open.
 - Release gates sample output frames at ≤250ms intervals plus choreography and
   transition neighborhoods. This is bounded coverage, not every-frame proof;
   shorter between-sample defects, rasterized text, and token-only CSS

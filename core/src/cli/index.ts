@@ -21,6 +21,7 @@ import { validateIntake, type IntakeT } from "../intake/schema.js";
 import { materializeIntake } from "../intake/materialize.js";
 import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyReleaseReceipt, type ReleaseArtifacts } from "../release/index.js";
 import { CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview } from "../creative/review.js";
+import { validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy } from "../creative/calibration.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -209,6 +210,31 @@ program
     const result = scoreCreativeReview(label.data, review.review);
     console.log(JSON.stringify(result, null, 2));
     process.exit(result.pass ? 0 : 1);
+  });
+
+program
+  .command("review-calibrate")
+  .argument("<study>", "independent calibration study JSON")
+  .option("-o, --out <file>", "write the complete deterministic result")
+  .option("--json", "print the complete deterministic result")
+  .description("Measure panel and candidate agreement without a composite taste score (ADR-0030)")
+  .action((file: string, opts: { out?: string; json?: boolean }) => {
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(path.resolve(file), "utf8")); } catch (e) { fail(`Cannot read ${file}: ${(e as Error).message}`); }
+    const validation = validateIndependentCalibrationStudy(raw);
+    if (!validation.ok) fail(`Invalid calibration study: ${validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+    const result = scoreIndependentCalibrationStudy(validation.study);
+    if (opts.out) {
+      const out = path.resolve(opts.out);
+      mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, `${JSON.stringify(result, null, 2)}\n`);
+    }
+    if (opts.json) console.log(JSON.stringify(result, null, 2));
+    else {
+      console.log(`✔ independent calibration valid — ${result.caseCount} cases, verdict pair agreement ${result.panel.verdictPairAgreement ?? "n/a"}, principle Jaccard ${result.panel.principleSetJaccard ?? "n/a"}, severity agreement ${result.panel.sharedPrincipleSeverityAgreement ?? "n/a"}`);
+      if (opts.out) console.log(`  result: ${opts.out}`);
+      if (!result.allReviewersConsentToPublicRelease) console.log("  private: at least one reviewer did not consent to public release");
+    }
   });
 
 program

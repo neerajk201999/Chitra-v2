@@ -28,7 +28,9 @@ slice with bounded temporal rendered gates, a non-bypassable hash-receipted
 `release` transaction, target-safe staging, beat-aware frame-cache identity,
 and measured two-pass final-bus audio.
 Remaining:
-- Independent critic runs (fresh sessions) + independent human labels; grow to ~20 cases across registers before publishing agreement stats.
+- ADR-0030 makes blind independent panel collection and separate agreement
+  metrics operational; collect ≥20 real cases and human annotations before
+  publishing critic-reliability statistics.
 - Narration/voiceover (word timestamps), energy-envelope tracks, and clip-audio pass-through. SFX hooks + deterministic beat detection + `at.onBeat` are built (ADR-0007/0011).
 - **Exit gate:** deterministic layer ≥80% on seeded defects (✅ 100%) AND critic layer measured against the calibration set with published agreement stats.
 
@@ -91,6 +93,12 @@ assessments, actionable findings, hidden-label scoring, severity/finding
 budgets, and a deterministic contract benchmark. It deliberately has no scalar
 taste score and is not a release blocker until independent calibration supports
 that use.
+Calibration science: ADR-0030 ships a strict study contract around complete
+Creative Reviews: at least three blind reviewers per case, blind candidates,
+subject/provenance/consent bindings, register/motion/audio coverage,
+thresholded consensus, visible disagreement, and separate verdict, principle,
+and severity metrics. The synthetic benchmark proves arithmetic and CLI
+mechanics only; the ≥20-case independent corpus remains to be collected.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
 Clean-room candidate 0.6 now authors and compares all 274 frames without copied
@@ -104,7 +112,7 @@ localizes the next largest appearance residual to the final mark. ADR-0025 adds
 bounded heterogeneous particle size/opacity/glow for that measured gap; exact
 reconstruction remains open.
 Remaining (priority order):
-- **Creative QA calibration**: independently label ≥20 cases across brand film,
+- **Creative QA data collection**: independently label ≥20 cases across brand film,
   product demo, and social short using video, motion clips, and audio; measure
   principle/severity/verdict agreement and false-positive rate.
 - **Accepted-revision memory**: learn explicit, reviewable deltas from accepted human

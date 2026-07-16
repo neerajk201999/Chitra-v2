@@ -5,12 +5,12 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 1. **Render speed ~2 fps/worker** (screenshot mode, single browser, PNG disk round-trip). Scheduled: per-scene parallel sessions + static-frame dedup + Linux BeginFrame mode (M5). Mitigated by the per-scene cache (only dirty scenes re-render).
 2. **No paint-settle guarantee** between `seek()` and screenshot beyond empirical determinism on macOS; Linux/CI golden-frame verification pending (M5). Determinism claims are same-machine only.
 3. **Audio covers music + SFX + detected beat timing** (ADR-0007/0011/0027) — still no narration/voiceover timeline, energy-envelope property tracks, or clip-audio pass-through. Music-led final muxes are two-pass normalized and measured at −14 ±0.5 LUFS with true peak ≤−1.5 dBTP; beat detection, `at.onBeat`, and beat-cut gates are live. (M2 remainder.)
-4. **VLM critic unproven**: ADR-0029 now provides a strict evidence-bound
-   Creative Review contract and deterministic hidden-label scorer, but the four
-   existing cases are author-labelled and mostly static. There is still no
-   measured independent human-agreement rate over motion clips and audio; the
-   deterministic layer's 10/10 seeded catch rate does not cover aesthetic
-   judgment (M2/M4).
+4. **VLM critic unproven**: ADR-0029 provides the review contract and ADR-0030
+   provides blind-panel provenance, consensus, disagreement, consent, coverage,
+   and separate agreement metrics. The four existing cases remain author-
+   labelled and mostly static; the ≥20-case independent motion/audio study is
+   not collected. The core validates declarations but cannot prove a reviewer
+   was genuinely independent, expert, or blind (M2/M4).
 5. **Expressiveness ceiling (partly closed)**: figures, video-in-scene,
    cursor/type choreography, real 3D primitives, DOM frame tracks, ADR-0028
    textured internal mesh/camera/light/exposure tracks, custom particles,
@@ -69,9 +69,10 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
   are losslessly premixed, two-pass normalized, AAC encoded, then measured;
   releases refuse music-led mixes outside −14 ±0.5 LUFS or above −1.5 dBTP.
 - **A6. Determinism is same-machine-uninterrupted only.** Interrupted/resumed renders diverged slightly (SSIM 0.9987); two current Card Vault reruns are byte-identical, but an earlier same-day artifact differs at MAE 0.000095/SSIM 0.999909 with no isolated cause. Cold/warm and cross-machine equivalence remain unproven. Scope the claim; add clean-environment, interruption, and golden-frame CI (M5).
-- **A7. Critic contract fixed; critic quality remains unvalidated (ADR-0029).**
+- **A7. Critic/study contracts fixed; critic quality remains unvalidated
+  (ADR-0029/0030).**
   Reports now bind subject, method, evidence, domains, findings, principles,
   severity, and uncertainty; hidden labels penalize spam. The four cases remain
-  author-biased. Needs ≥20 independently labelled cases with motion and sound
-  before any aesthetic-quality claim.
+  author-biased. The independent-study path is executable, but needs ≥20 real
+  labelled cases with motion and sound before any aesthetic-quality claim.
 - **A8. Figure token-only CSS is not structurally enforced.** The sanitizer strips executable/external content and ADR-0024 gates rendered text, but raw CSS colours/fonts remain possible despite the authoring convention. Add a real CSS parser/token validator before claiming theme purity.

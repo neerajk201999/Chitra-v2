@@ -128,9 +128,10 @@ it closes a real gap better than the existing stack.
 
 1. **Judgment contract (ADR-0029):** typed evidence-bound Creative Review,
    principle IDs, hidden-label scoring, and explicit confidence/uncertainty.
-2. **Independent calibration:** at least 20 cases across brand-film,
-   product-demo, and social-short; multiple human labels; motion clips and audio,
-   not contact sheets alone.
+2. **Independent calibration (ADR-0030):** use the pre-registered blind-panel
+   protocol in `benchmarks/independent-calibration`; at least 20 cases across
+   brand-film, product-demo, and social-short; at least three human reviews per
+   case; motion clips and audio, not contact sheets alone.
 3. **Accepted-revision memory:** store evidence → finding → accepted/rejected
    change → measured outcome; keep brand memory separate from universal craft.
 4. **Directorial search:** generate bounded narrative/storyboard alternatives,
