@@ -28,9 +28,10 @@ try {
     preferences: [], brand: { constraints: [] }, constraints: { mustInclude: [], mustAvoid: [], legal: [], accessibility: [] }, assumptions: [], openQuestions: [],
   };
   const directionRaw = {
-    directionVersion: "0.2.0", irVersion: "0.1.0", tier: "direction", id: "source-assisted-direction", title: "Trace the source", register: "product-demo",
+    directionVersion: "0.3.0", irVersion: "0.1.0", tier: "direction", id: "source-assisted-direction", title: "Trace the source", register: "product-demo",
     logline: "One approved asset proves a traceable reconstruction path.", narrativeArc: "Establish the approved source, render it faithfully, then hold for inspection.", tone: ["precise"], audience: "motion system builders",
     deliverable: { targetDurationMs: 1000, width: 320, height: 320 }, creativeConcept: { emotionalPromise: "Confidence replaces provenance ambiguity", governingIdea: "Every rendered source byte has a declared lineage", tension: "Untracked reference assets can invalidate a benchmark", resolution: "Rights and byte dependencies are checked before render", visualThesis: "One centered licensed card on a quiet field" },
+    productionApproach: { requirements: [{ id: "licensed-image", description: "Render the licensed card as the only hero", importance: "must", capabilityId: "image-ui", support: "native", approach: "Use a declared local figure asset", acceptanceTest: "The licensed card pixels are visible and provenance-bound" }] },
     trace: { intakeProjectId: "source-assisted-proof", objective: { primary: "Prove rights-aware source-assisted rendering", audience: "motion system builders", singleMessage: "Approved source bytes remain traceable" }, constraints: { mustInclude: [], mustAvoid: [], legal: [], accessibility: [] }, sourceIds: ["licensed-card"], preferenceIds: [], brandConstraintIds: [], assumptionIds: [] },
     scenes: [{ id: "licensed-card-shot", narrativeRole: "prove the source-assisted boundary", shotIntent: "The approved asset is visibly rendered and traceable", heroMoment: "The licensed card holds for inspection", pacingWeight: 1, sourceIds: ["licensed-card"], preferenceIds: [] }],
   };

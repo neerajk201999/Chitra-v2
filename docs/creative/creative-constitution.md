@@ -98,6 +98,15 @@ sessions inherit the taste instead of relearning it.
 
 ## 8. How this becomes measurable (the path from taste to gate)
 
+- **CC-PROD-1 — Capability claims are literal.** Direction support states must
+  match the versioned capability registry. An unsupported must-have cannot pass
+  Direction; a lower-priority unsupported requirement remains an explicit
+  finding and is never described as delivered. *(schema + creative conformance)*
+- **CC-PROD-2 — Asset-assisted means the asset reaches pixels.** A required
+  asset-assisted capability names a project-local path, and the Score must
+  actually render that path. A nearby native primitive is not a substitute.
+  *(schema + creative conformance)*
+
 Each principle above is a hypothesis about quality. The Chitra method: state it,
 find a deterministic or VLM-scored proxy, calibrate against labelled examples,
 then promote it to a `CC-*` gate in the Creative QA layer (M4). Examples already

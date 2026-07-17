@@ -11,6 +11,7 @@ import {
   runDirectionStoryboardConformance,
   runIntakeDirectionConformance,
   runStoryboardScoreConformance,
+  runProductionApproachConformance,
 } from "../src/gates/index.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -28,7 +29,7 @@ const intakeRaw = () => ({
 });
 
 const directionRaw = () => ({
-  directionVersion: "0.2.0", irVersion: "0.1.0", tier: "direction", id: "taste-direction", title: "Taste is the product", register: "brand-film",
+  directionVersion: "0.3.0", irVersion: "0.1.0", tier: "direction", id: "taste-direction", title: "Taste is the product", register: "brand-film",
   logline: "Rendering is common; directed judgment is rare.",
   narrativeArc: "Establish the rendering baseline, expose the missing judgment, then resolve with direction.",
   tone: ["assured", "restrained"], audience: "design-literate builders",
@@ -40,6 +41,7 @@ const directionRaw = () => ({
     resolution: "A governed creative ladder preserves intent",
     visualThesis: "Sparse type yields to one decisive contrast",
   },
+  productionApproach: { requirements: [{ id: "thesis-type", description: "Compose the central thesis as restrained typography", importance: "must", capabilityId: "typography-layout", support: "native", approach: "Use native type and shape elements", acceptanceTest: "Hero still has one unambiguous typographic hierarchy" }] },
   trace: {
     intakeProjectId: "creative-ladder",
     objective: { primary: "Show why directed video is different", audience: "design-literate builders", singleMessage: "Taste is the product" },
@@ -75,6 +77,30 @@ const storyboardRaw = () => ({
       transition: { intent: "Cut forward after the contrast settles", preferredType: "cut" },
     },
   ],
+});
+
+describe("production capability fit", () => {
+  it("blocks unsupported must-haves and missing asset-assisted heroes", () => {
+    const unsupported = directionRaw();
+    unsupported.productionApproach.requirements[0] = {
+      id: "taste-guarantee", description: "Guarantee professional taste without calibration", importance: "must",
+      capabilityId: "professional-taste", support: "unsupported", approach: "Claim the critic is sufficient",
+      acceptanceTest: "Independent reviewers prefer the result",
+    };
+    expect(validateDirection(unsupported).ok).toBe(false);
+
+    const assisted = directionRaw();
+    assisted.productionApproach.requirements[0] = {
+      id: "custom-product", description: "Show a custom industrial product as the hero", importance: "must",
+      capabilityId: "arbitrary-3d", support: "asset-assisted", approach: "Render an authorized product plate",
+      acceptanceTest: "The supplied product silhouette and materials remain faithful", assetPath: "assets/product.mp4",
+    };
+    const direction = validateDirection(assisted);
+    const score = validateScore(structuredClone(flagship));
+    expect(direction.ok && score.ok).toBe(true);
+    if (direction.ok && score.ok)
+      expect(runProductionApproachConformance(direction.direction, score.score).some((item) => item.ruleId === "CC-PROD-2" && item.severity === "P1")).toBe(true);
+  });
 });
 
 function fixtures() {

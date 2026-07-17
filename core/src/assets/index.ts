@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import puppeteer from "puppeteer";
+import { launchBrowser } from "../browser/index.js";
 import sharp from "sharp";
 
 export interface AssetReport {
@@ -70,7 +70,7 @@ export async function snapPage(
   assertHttpUrl(url);
   const width = opts.width ?? 1920;
   const height = opts.height ?? 1080;
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await launchBrowser({ headless: true });
   try {
     const page = await browser.newPage();
     await page.setViewport({ width, height, deviceScaleFactor: 2 });

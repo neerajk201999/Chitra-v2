@@ -11,6 +11,7 @@ Immutable, dated snapshots (2026-07-14). Conclusions drawn from these live in AD
 | [openmontage.md](openmontage.md) | OpenMontage | Idea source | Two-tier IR (intent `scene_plan` + executable EDL with per-cut `reason`); deterministic slop gates that block renders; default output is textbook slop — enforce invariants in code, not markdown |
 | [video-use.md](video-use.md) | video-use (browser-use) | Idea source | Bounded VLM feedback loop over composite filmstrip evidence images; "the LLM reads the video" (word-timestamped transcript as edit-addressing scheme) |
 | [stack-validation.md](stack-validation.md) | Implementation stack | Pre-build validation | Locked decisions: seek-protocol screenshot capture, Chrome flag set (with the BeginFrame-flag trap), GSAP drive, FFmpeg ladder, Fontsource OFL fonts, sharp evidence, mulberry32 |
+| [creative-production-stack-2026.md](creative-production-stack-2026.md) | Motion, compositing, 3D, assets, evaluation, and audio adoption map | Rebaseline after first Cursor use | Provider-neutral routing map: adopt only when licensing, weight, determinism, and watched-output evidence pass |
 
 ## The synthesis (what all six say together)
 

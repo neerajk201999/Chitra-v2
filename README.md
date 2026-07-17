@@ -21,14 +21,14 @@ prompt + optional sources → intake → direction → storyboard → motion →
 
 ## Status
 
-**v0.4.0 — public creative-intelligence preview.**
+**v0.5.0 — Cursor-first performance and capability-honesty release candidate.**
 `chitra intake` preserves objectives, mixed-source provenance, preferences,
 anti-references, brand constraints, assumptions, and evidence as locked JSON;
 the [intake benchmark](benchmarks/intake/results.md) verifies deterministic local
 fingerprints and explicit unlocked URLs. `chitra decompose` creates deterministic
 Style DNA and evidence; the [generated-fixture benchmark](benchmarks/reference-decomposer/results.md)
 reproduces exact known cuts/colors with byte-identical JSON and frames. The same
-Direction 0.2 and Storyboard 0.1 contracts preserve concept and shot intent; the
+Direction 0.3 and Storyboard 0.1 contracts preserve concept, capability fit, and shot intent; the
 [creative-ladder benchmark](benchmarks/creative-ladder/results.md) catches three
 seeded intent drifts across the complete chain. The same
 `chitra compare` adds exhaustive frame-index evidence for compatible films and
@@ -45,18 +45,17 @@ measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects
 
 ## Use it from your coding agent
 
-Requirements: Node 22.12+ and FFmpeg on `PATH`.
+Requirements: Node 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-git clone https://github.com/neerajk201999/Chitra-v2.git
-cd Chitra-v2
-npm install -g chitra-video
+npm install -g chitra-video@0.5.0
+npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
 
-Open the cloned folder in your coding agent. The npm package supplies the
-deterministic CLI; the repository supplies the skills, creative memory,
-examples, and agent entry points. See [Install and use Chitra](docs/INSTALL.md)
+Open your video project in the coding agent. npm supplies the deterministic CLI;
+the skills installer supplies the progressive creative workflow. Clone the full
+repository only for development/examples. See [Install and use Chitra](docs/INSTALL.md)
 for explicit Claude Code, Codex, Cursor, and Gemini CLI commands, or [run the
 friend test](docs/quickstarts/README.md) with two ready-to-use prompts and a
 compact feedback checklist.
@@ -73,10 +72,11 @@ chitra init --style night --register brand-film --title "My film"   # gate-passi
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
 chitra compare reference.mp4 out.mp4 -o comparison.json --evidence comparison-evidence
 chitra validate score.json      # schema + static gates (fast)
+chitra capabilities --json      # feasibility truth before Direction
 chitra check score.json         # + rendered-frame gates: contrast, safe zones, overlap, blanks
 chitra frame score.json -t 1800 -o peek.png   # one-frame preview in seconds
-chitra render score.json -o draft.mp4 -q draft # diagnostic draft; only dirty scenes re-render
 chitra evidence score.json -o evidence/       # contact sheet + hero frames + cut strips
+chitra render score.json -o draft.mp4 -q draft # sampled diagnostic preview; only dirty scenes re-render
 chitra review-validate creative-review.json   # validate isolated, evidence-bound judgment
 chitra review-score labels-v2.json creative-review.json --case uniform-monotony
 chitra review-calibrate study.json -o calibration-result.json # independent panel/candidate agreement

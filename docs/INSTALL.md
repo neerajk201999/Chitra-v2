@@ -3,40 +3,36 @@
 Chitra has two parts: the `chitra` CLI performs deterministic video work, while
 agent skills direct and critique the film. Install both for the complete loop.
 
-Requirements: Git, Node.js 22.12 or newer, and FFmpeg on `PATH`. Confirm them
-with `git --version`, `node --version`, and `ffmpeg -version`; `chitra probe`
-checks the runtime again after installation.
+Requirements: Node.js 22.12+, FFmpeg on `PATH`, and installed Chrome, Chromium,
+or Edge. Git is needed only for a repository clone. `chitra probe` launches the
+actual browser and checks FFmpeg after installation.
 
 ## Recommended public-preview install
 
-For the complete system, install the published CLI and open the public
-repository in the coding agent. Keeping the repository open gives the agent the
-skills, schemas, creative memory, examples, and honest capability boundaries.
+Install the CLI and agent skills from a normal terminal before opening the
+project in Cursor/Claude/Codex. This avoids agent-sandbox Git permissions and
+does not download a second browser:
 
 ```bash
-git clone https://github.com/neerajk201999/Chitra-v2.git
-cd Chitra-v2
-npm install -g chitra-video
+npm install -g chitra-video@0.5.0
+npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
 
-The CLI can be installed by itself with `npm install -g chitra-video`, but that
-does not install creative direction into a model. For another project, keep the
-public repository clone and install its canonical skills into the target agent:
+Select a harness explicitly when auto-detection is ambiguous:
 
 ```bash
-npx skills add /absolute/path/to/Chitra-v2 --skill '*' --copy --yes
+npx skills add neerajk201999/Chitra-v2 --agent cursor --skill '*' --copy --global --yes
+npx skills add neerajk201999/Chitra-v2 --agent claude-code --skill '*' --copy --global --yes
+npx skills add neerajk201999/Chitra-v2 --agent codex --skill '*' --copy --global --yes
+npx skills add neerajk201999/Chitra-v2 --agent gemini-cli --skill '*' --copy --global --yes
 ```
 
-Add `--global` to install the skills for the detected agent across projects.
-
-Or select a harness explicitly:
+Clone only when developing Chitra or when the agent needs the full examples and
+architecture memory. Run this outside an agent sandbox:
 
 ```bash
-npx skills add /absolute/path/to/Chitra-v2 --agent claude-code --skill '*' --copy --yes
-npx skills add /absolute/path/to/Chitra-v2 --agent codex --skill '*' --copy --yes
-npx skills add /absolute/path/to/Chitra-v2 --agent cursor --skill '*' --copy --yes
-npx skills add /absolute/path/to/Chitra-v2 --agent gemini-cli --skill '*' --copy --yes
+git clone https://github.com/neerajk201999/Chitra-v2.git
 ```
 
 ## Native plugin paths
@@ -69,9 +65,9 @@ From a project directory:
 chitra intake intake.json -o intake.lock.json
 chitra init . --style night --register brand-film --title "My film"
 chitra creative-check intake.lock.json direction.json storyboard.json score.json
+chitra evidence score.json -o out/evidence # inspect stills before motion
 chitra check score.json
 chitra render score.json -o out/draft.mp4 -q draft
-chitra evidence score.json -o out/evidence
 # After the evidence critique and revisions:
 chitra release intake.lock.json direction.json storyboard.json score.json \
   -o out/final.mp4 -e out/evidence -r out/release.json
@@ -102,6 +98,8 @@ preferences, brand constraints, or approval.
 - Source install and isolated tarball install: verified.
 - Public GitHub clone and isolated `chitra-video@0.4.0` registry install/probe:
   verified.
+- 0.5.0 local release candidate: 3.2s warm-cache install, 93.7 MiB, zero
+  browser-download bytes; first browser frame in 8.8s. Public proof pending.
 - Claude Code and Codex marketplace installation: exercised in isolated homes.
 - Claude Code, Codex, and Cursor manifests: validated/version-checked.
 - Canonical skills: installed locally for Claude Code, Codex, Cursor, and

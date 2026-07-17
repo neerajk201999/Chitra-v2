@@ -1,6 +1,6 @@
 # Creative ladder benchmark
 
-**Verified:** 2026-07-16 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0
+**Verified:** 2026-07-17 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0
 
 `node benchmarks/creative-ladder/run.mjs --check` validates a complete
 Intake→Direction→Storyboard→Score chain, runs all three conformance boundaries,

@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-17 · **Package:** 0.4.0 · **Intake IR:** 0.1.0 · **Direction:** 0.2.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0
+**Verified:** 2026-07-17 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -13,7 +13,7 @@ and CHANGELOG.
   deliverable, mixed-source roles/rights, preferences and anti-references, brand
   constraints, assumptions, open questions, evidence links, and deterministic
   local/inline content fingerprints. Uncaptured URLs stay explicitly unlocked.
-- ADR-0018 Direction 0.2 + Storyboard 0.1 creative ladder: governing concept,
+- ADR-0018/0031 Direction 0.3 + Storyboard 0.1 creative ladder: governing concept,
   source/preference/brand/assumption trace, shot composition/camera/type/copy/
   colour/timing/audio intent, and deterministic conformance across all four
   tiers through `chitra conform` and `chitra creative-check`.
@@ -74,13 +74,24 @@ and CHANGELOG.
   thresholded consensus, explicit disagreement, and separate panel/candidate
   agreement dimensions through `chitra review-calibrate`. Declarations are
   bound and surfaced, not independently verified by the core.
+- ADR-0031 first-use recovery: system-browser discovery with a real launch
+  probe, executable packed CLI, browser-download-free installation, disk
+  preflight, sampled JPEG draft profile, progressive skill references,
+  machine-readable capabilities, and Direction 0.3 production requirements.
+  Asset-assisted must-haves must reach rendered Score paths; unsupported
+  must-haves cannot validate.
 
 ## Evidence, not claims
 
+- Cursor-derived recovery benchmarks: isolated local tarball installation takes
+  3.2s, occupies 93.7 MiB, and writes zero browser-cache bytes; install through
+  a real browser frame completes in 8.8s. A 9.6s full-HD/vertical preview
+  captures 115 JPEG frames at 12fps in 8.1s using 3.0 MiB cache. The failed
+  pre-fix Cursor run took 301.5s for 510 PNG frames and exhausted disk.
 - Public distribution: unauthenticated clone resolved protected `main` at
   `c2b666670d87294763ebedabdd0b7922fc140346`; isolated npm-prefix installation
   fetched `chitra-video@0.4.0`, reported CLI 0.4.0, and passed runtime probe.
-- Unit suite: 70 tests.
+- Unit suite: 74 tests.
 - Creative Review contract benchmark: valid typed review, hidden
   principle/severity/verdict matching, deterministic repeated scoring, the
   documented label-collection CLI flow, and rejection of detached evidence,
@@ -156,11 +167,14 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Collect the pre-registered ≥20-case independent Creative Review study using
+1. Publish and independently retest the 0.5.0 Cursor-first recovery on a cold
+   network/cache, then use the same Aether brief to measure still-first
+   feasibility and preview quality.
+2. Collect the pre-registered ≥20-case independent Creative Review study using
    real motion clips and audio, then add explicit accepted-revision memory.
-2. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
+3. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
    a pre-registered neutral ChitraBench against real baselines.
-3. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
+4. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
    ADR-0028 before claiming improvement. Add masks, deeper comps, blend modes,
    motion blur, or richer audio only when
    a rights-approved measured residual isolates that capability. Never infer
@@ -191,11 +205,11 @@ The evidence and reasoning for this rebaseline are in
   transition neighborhoods. This is bounded coverage, not every-frame proof;
   shorter between-sample defects, rasterized text, and token-only CSS
   enforcement remain open.
-- GitHub is private and `chitra-video` is unpublished; native manifests and
-  isolated installs are verified, but public and three-harness outside-user
-  installation are not.
-- GitHub vulnerability alerts are enabled. Enforced branch protection is not
-  available for this private repository on the current GitHub plan.
+- GitHub and `chitra-video@0.4.0` are public. The 0.5.0 recovery is a local
+  release candidate until PR CI, merge, npm publication, and a fresh registry
+  install pass. Three-harness outside-user timing remains open.
+- GitHub vulnerability alerts/private reporting and protected `main` are live;
+  a single maintainer remains a governance and review ceiling.
 
 ## Invariants for every change
 

@@ -21,10 +21,11 @@ const intakeRaw = {
   constraints: { mustInclude: ["Taste is the product"], mustAvoid: ["Generic feature-list slideshow"], legal: [], accessibility: [] },
 };
 const directionRaw = {
-  directionVersion: "0.2.0", irVersion: "0.1.0", tier: "direction", id: "taste-direction", title: "Taste is the product", register: "brand-film",
+  directionVersion: "0.3.0", irVersion: "0.1.0", tier: "direction", id: "taste-direction", title: "Taste is the product", register: "brand-film",
   logline: "Rendering is common; directed judgment is rare.", narrativeArc: "Establish the rendering baseline, expose the missing judgment, then resolve with direction.", tone: ["assured", "restrained"], audience: "design-literate builders",
   deliverable: { targetDurationMs: 8000, width: 1920, height: 1080 },
   creativeConcept: { emotionalPromise: "Clarity replaces noise", governingIdea: "Taste is the product", tension: "Every tool renders but few can direct", resolution: "A governed creative ladder preserves intent", visualThesis: "Sparse type yields to one decisive contrast" },
+  productionApproach: { requirements: [{ id: "thesis-type", description: "Compose the central thesis as restrained typography", importance: "must", capabilityId: "typography-layout", support: "native", approach: "Use native type and shape elements", acceptanceTest: "Hero still has one unambiguous typographic hierarchy" }] },
   trace: { intakeProjectId: "creative-ladder", objective: { primary: "Show why directed video is different", audience: "design-literate builders", singleMessage: "Taste is the product" }, constraints: { mustInclude: ["Taste is the product"], mustAvoid: ["Generic feature-list slideshow"], legal: [], accessibility: [] }, sourceIds: ["user-brief"], preferenceIds: ["restraint"], brandConstraintIds: ["no-logo-open"], assumptionIds: [] },
   scenes: [
     { id: "cold-open", narrativeRole: "establish the baseline", shotIntent: "Rendering feels abundant but incomplete", pacingWeight: 1, sourceIds: ["user-brief"], preferenceIds: ["restraint"] },

@@ -926,6 +926,30 @@ function renderedAssets(score: ScoreT): RenderedAsset[] {
   return assets;
 }
 
+/** ADR-0031: expensive Score work cannot silently substitute an unsupported hero. */
+export function runProductionApproachConformance(direction: DirectionT, score: ScoreT): Finding[] {
+  const findings: Finding[] = [];
+  const scoreAssets = new Set(renderedAssets(score).map((asset) => asset.path));
+  direction.productionApproach.requirements.forEach((requirement, index) => {
+    const path = `direction.productionApproach.requirements[${index}]`;
+    if (requirement.support === "asset-assisted" && requirement.assetPath && !scoreAssets.has(requirement.assetPath))
+      findings.push({
+        ruleId: "CC-PROD-2",
+        severity: requirement.importance === "must" ? "P1" : "P2",
+        path,
+        message: `${requirement.importance}-level asset-assisted requirement "${requirement.id}" planned ${requirement.assetPath}, but the Score does not render it`,
+      });
+    if (requirement.support === "unsupported")
+      findings.push({
+        ruleId: "CC-PROD-1",
+        severity: requirement.importance === "should" ? "P2" : "P3",
+        path,
+        message: `Requirement "${requirement.id}" remains unsupported and must not be described as delivered`,
+      });
+  });
+  return findings;
+}
+
 /** ADR-0023: rendered bytes must preserve Intake rights and reconstruction mode. */
 export function runAssetProvenanceConformance(intake: IntakeT, direction: DirectionT, storyboard: StoryboardT, score: ScoreT): Finding[] {
   const findings: Finding[] = [];
@@ -986,6 +1010,7 @@ export function runCreativeConformance(intake: IntakeT, direction: DirectionT, s
     ...runIntakeDirectionConformance(intake, direction),
     ...runDirectionStoryboardConformance(direction, storyboard),
     ...runStoryboardScoreConformance(storyboard, score, projectDir),
+    ...runProductionApproachConformance(direction, score),
     ...runAssetProvenanceConformance(intake, direction, storyboard, score),
   ];
 }

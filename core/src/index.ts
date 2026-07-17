@@ -1,5 +1,6 @@
 export * from "./ir/schema.js";
 export * from "./motion/tokens.js";
+export * from "./capabilities/index.js";
 export { compile, resolveSceneTimeline, totalDurationMs, type CompileResult } from "./compile/index.js";
 export { openSession, renderScore, renderInputFiles, sceneHash, scoreHash, type RenderSession, type RenderResult, type TextRegion, type Quality } from "./render/index.js";
 export { runStaticGates, runFrameGates, frameGateSampleTimes, FRAME_GATE_INTERVAL_MS, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runAssetProvenanceConformance, runCreativeConformance, summarize, type Finding } from "./gates/index.js";
