@@ -15,6 +15,7 @@ import {
   TRANSITIONS,
   TYPE_SCALE,
 } from "../motion/tokens.js";
+import { CAPABILITIES, CAPABILITY_IDS } from "../capabilities/index.js";
 
 const id = z
   .string()
@@ -44,7 +45,7 @@ const typeRole = z.enum(Object.keys(TYPE_SCALE) as [string, ...string[]]);
 const transition = z.enum(TRANSITIONS);
 
 // ── Tier 1: Direction ──────────────────────────────────────────────────────
-export const DIRECTION_VERSION = "0.2.0";
+export const DIRECTION_VERSION = "0.3.0";
 export const STORYBOARD_VERSION = "0.1.0";
 
 export const SceneDirection = z.object({
@@ -85,6 +86,19 @@ export const Direction = z.object({
     visualThesis: z.string().min(8),
     soundThesis: z.string().min(8).optional(),
   }),
+  productionApproach: z.object({
+    requirements: z.array(z.object({
+      id,
+      description: z.string().min(8),
+      importance: z.enum(["must", "should", "could"]),
+      capabilityId: z.enum(CAPABILITY_IDS),
+      support: z.enum(["native", "asset-assisted", "unsupported"]),
+      approach: z.string().min(8),
+      acceptanceTest: z.string().min(8),
+      assetPath: projectAssetPath.optional(),
+      risk: z.string().min(8).optional(),
+    })).min(1),
+  }),
   trace: z.object({
     intakeProjectId: id,
     objective: z.object({
@@ -116,6 +130,17 @@ export const Direction = z.object({
   unique(value.trace.preferenceIds, ["trace", "preferenceIds"]);
   unique(value.trace.brandConstraintIds, ["trace", "brandConstraintIds"]);
   unique(value.trace.assumptionIds, ["trace", "assumptionIds"]);
+  unique(value.productionApproach.requirements.map((entry) => entry.id), ["productionApproach", "requirements"]);
+  const capabilitySupport = new Map(CAPABILITIES.map((entry) => [entry.id, entry.support]));
+  value.productionApproach.requirements.forEach((entry, index) => {
+    const path = ["productionApproach", "requirements", index] as Array<string | number>;
+    if (entry.support !== capabilitySupport.get(entry.capabilityId))
+      ctx.addIssue({ code: "custom", path: [...path, "support"], message: `${entry.capabilityId} support must match the capability registry` });
+    if (entry.importance === "must" && entry.support === "unsupported")
+      ctx.addIssue({ code: "custom", path, message: "unsupported must-have blocks Direction approval" });
+    if (entry.support === "asset-assisted" && !entry.assetPath)
+      ctx.addIssue({ code: "custom", path: [...path, "assetPath"], message: "asset-assisted requirement needs a planned project-local asset path" });
+  });
   const sceneIds = new Set<string>();
   value.scenes.forEach((scene, index) => {
     if (sceneIds.has(scene.id))

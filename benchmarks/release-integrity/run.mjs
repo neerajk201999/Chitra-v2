@@ -23,10 +23,11 @@ const intake = {
   preferences: [], brand: { constraints: [] }, constraints: { mustInclude: ["Release integrity."], mustAvoid: [], legal: [], accessibility: [] }, assumptions: [], openQuestions: [],
 };
 const direction = {
-  directionVersion: "0.2.0", irVersion: "0.1.0", tier: "direction", id: "release-direction", title: "Release proof", register: "product-demo",
+  directionVersion: "0.3.0", irVersion: "0.1.0", tier: "direction", id: "release-direction", title: "Release proof", register: "product-demo",
   logline: "One checked claim becomes one bound artifact.", narrativeArc: "State the claim, hold it for inspection, then release cleanly.", tone: ["calm", "precise"], audience: "Chitra builders",
   deliverable: { targetDurationMs: 1800, width: 320, height: 320 },
   creativeConcept: { emotionalPromise: "Confidence replaces release ambiguity", governingIdea: "A release is a verified transaction", tension: "Separate checks can become stale", resolution: "One transaction binds inputs and output", visualThesis: "One centered statement on a restrained field" },
+  productionApproach: { requirements: [{ id: "release-type", description: "Hold one inspectable release statement", importance: "must", capabilityId: "typography-layout", support: "native", approach: "Use one native headline element", acceptanceTest: "Release statement is centered, legible, and isolated" }] },
   trace: { intakeProjectId: "release-proof", objective: intake.objective, constraints: intake.constraints, sourceIds: ["brief"], preferenceIds: [], brandConstraintIds: [], assumptionIds: [] },
   scenes: [{ id: "release", narrativeRole: "resolve stale release ambiguity", shotIntent: "Hold one verified release claim", heroMoment: "The release claim settles", pacingWeight: 1, sourceIds: ["brief"], preferenceIds: [] }],
 };

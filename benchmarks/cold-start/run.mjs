@@ -2,7 +2,7 @@
 /** ADR-0016: install the packed package into an isolated prefix and prove the
  *  installed binary can initialize, validate, and capture a browser frame. */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,7 @@ const core = path.join(root, "core");
 const check = process.argv.includes("--check");
 const work = mkdtempSync(path.join(os.tmpdir(), "chitra-cold-start-"));
 const prefix = path.join(work, "install");
+const browserCache = path.join(work, "browser-cache");
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const started = Date.now();
 
@@ -21,16 +22,30 @@ function run(command, args, cwd = root) {
     cwd,
     encoding: "utf8",
     maxBuffer: 1 << 28,
+    env: { ...process.env, PUPPETEER_CACHE_DIR: browserCache },
     shell: process.platform === "win32" && command.endsWith(".cmd"),
   });
   if (result.error || result.status !== 0)
     throw new Error(`${command} ${args.join(" ")} failed: ${(result.stderr || result.stdout || result.error?.message || "").slice(-1200)}`);
   return result.stdout.trim();
 }
+function treeBytes(dir) {
+  if (!existsSync(dir)) return 0;
+  return readdirSync(dir, { withFileTypes: true }).reduce((sum, entry) => {
+    const file = path.join(dir, entry.name);
+    return sum + (entry.isDirectory() ? treeBytes(file) : statSync(file).size);
+  }, 0);
+}
 try {
   const tgz = run(npm, ["pack", "--pack-destination", work, "--silent"], core).split(/\r?\n/).at(-1);
   const tarball = path.join(work, tgz);
+  if (process.platform !== "win32" && (statSync(path.join(core, "dist/cli/index.js")).mode & 0o111) === 0)
+    throw new Error("packed CLI source is not executable");
+  const installStarted = Date.now();
   run(npm, ["install", "--global", "--prefix", prefix, tarball, "--silent"]);
+  const installSeconds = (Date.now() - installStarted) / 1000;
+  if (treeBytes(browserCache) !== 0) throw new Error("package install downloaded browser bytes");
+  const installedMiB = treeBytes(prefix) / 1024 / 1024;
   const chitra = process.platform === "win32" ? path.join(prefix, "chitra.cmd") : path.join(prefix, "bin", "chitra");
   const version = run(chitra, ["--version"]);
   run(chitra, ["probe"]);
@@ -53,11 +68,12 @@ try {
   if (!existsSync(frame) || statSync(frame).size < 1000) throw new Error("installed package did not produce a valid frame PNG");
 
   const elapsedSeconds = (Date.now() - started) / 1000;
-  const report = `# Isolated install benchmark — 2026-07-16
+  const report = `# Isolated install benchmark — 2026-07-17
 
 ADR-0016 source-package verification in a fresh temporary install prefix.
 
 - Packed and globally installed: **chitra-video ${version}**
+- Install: **${installSeconds.toFixed(1)}s, ${installedMiB.toFixed(1)} MiB, zero browser-download bytes**
 - Runtime probe: **passed**
 - Installed-package Intake validation and source lock: **passed**
 - Starter initialization and static validation: **passed**

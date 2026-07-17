@@ -11,13 +11,14 @@
  */
 import { createHash } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync, rmSync, statfsSync, statSync } from "node:fs";
 import path from "node:path";
-import puppeteer, { type Browser, type Page } from "puppeteer";
+import type { Browser, Page } from "puppeteer-core";
 import type { ScoreT } from "../ir/schema.js";
 import { compile, resolveSceneTimeline, type CompileResult } from "../compile/index.js";
 import { resolveProjectAsset } from "../assets/local.js";
 import { audioInvariantIssues, measureAudio, type AudioMeasurement } from "../audio/measure.js";
+import { launchBrowser } from "../browser/index.js";
 
 /**
  * Chrome flags mined from HyperFrames' engine (docs/research/stack-validation.md §2).
@@ -43,9 +44,9 @@ const DETERMINISTIC_FLAGS = [
 
 export type Quality = "draft" | "standard" | "high";
 const ENCODE = {
-  draft: { preset: "ultrafast", crf: 28 },
-  standard: { preset: "medium", crf: 18 },
-  high: { preset: "slow", crf: 15 },
+  draft: { preset: "ultrafast", crf: 28, maxFps: 12, extension: "jpg", capture: { type: "jpeg" as const, quality: 82 }, bytesPerPixel: 0.18 },
+  standard: { preset: "medium", crf: 18, maxFps: null, extension: "png", capture: { type: "png" as const }, bytesPerPixel: 1.5 },
+  high: { preset: "slow", crf: 15, maxFps: null, extension: "png", capture: { type: "png" as const }, bytesPerPixel: 1.5 },
 } as const;
 
 /**
@@ -149,7 +150,7 @@ export interface RenderSession {
   compiled: CompileResult;
   pageFile: string;
   close(): Promise<void>;
-  seekAndCapture(ms: number): Promise<Buffer>;
+  seekAndCapture(ms: number, capture?: { type: "png" } | { type: "jpeg"; quality: number }): Promise<Buffer>;
   contrastCapture(ms: number): Promise<Buffer>;
   textRegions(ms: number): Promise<TextRegion[]>;
 }
@@ -234,7 +235,7 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
   const flags = has3d
     ? [...DETERMINISTIC_FLAGS, "--use-gl=angle", "--use-angle=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"]
     : DETERMINISTIC_FLAGS;
-  const browser = await puppeteer.launch({ headless: true, args: flags });
+  const browser = await launchBrowser({ headless: true, args: flags });
   const page = await browser.newPage();
   await page.setViewport({ width: compiled.width, height: compiled.height, deviceScaleFactor: 1 });
   await page.goto(`file://${pageFile}`, { waitUntil: "load" });
@@ -264,9 +265,9 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
     async close() {
       await browser.close();
     },
-    async seekAndCapture(ms: number) {
+    async seekAndCapture(ms: number, capture = { type: "png" }) {
       await page.evaluate(`window.__chitra.seek(${ms})`);
-      return Buffer.from(await stage.screenshot({ type: "png" }));
+      return Buffer.from(await stage.screenshot(capture));
     },
     async contrastCapture(ms: number) {
       await page.evaluate(`window.__chitra.seek(${ms})`);
@@ -293,6 +294,8 @@ export interface RenderResult {
   cachedFrames: number;
   durationMs: number;
   wallMs: number;
+  captureFps: number;
+  cacheBytes: number;
   audio: AudioMeasurement;
 }
 
@@ -300,6 +303,45 @@ export interface RenderOptions {
   quality?: Quality;
   cacheDir?: string;
   onProgress?: (done: number, total: number) => void;
+}
+
+const MIB = 1024 * 1024;
+const DISK_RESERVE_BYTES = 256 * MIB;
+
+export function renderStorageEstimate(score: ScoreT, quality: Quality): number {
+  const profile = ENCODE[quality];
+  const fps = Math.min(score.meta.fps, profile.maxFps ?? score.meta.fps);
+  const durationMs = score.scenes.reduce((sum, scene) => sum + scene.durationMs, 0);
+  const frames = Math.ceil((durationMs / 1000) * fps);
+  return Math.ceil(frames * score.meta.width * score.meta.height * profile.bytesPerPixel);
+}
+
+function assertRenderStorage(score: ScoreT, projectDir: string, quality: Quality): void {
+  const stat = statfsSync(projectDir);
+  const available = Number(stat.bavail) * Number(stat.bsize);
+  const estimate = renderStorageEstimate(score, quality);
+  if (available < estimate + DISK_RESERVE_BYTES) {
+    throw new Error(
+      `insufficient disk for ${quality} render: about ${(estimate / MIB).toFixed(0)} MiB cache + ` +
+      `256 MiB safety reserve required, ${(available / MIB).toFixed(0)} MiB available. ` +
+      `Run chitra clean <project>, free disk, or use -q draft.`
+    );
+  }
+}
+
+/** Remove frame caches written before ADR-0031 introduced profile directories. */
+export function pruneLegacyFrameCaches(cacheDir: string): number {
+  if (!existsSync(cacheDir)) return 0;
+  let removed = 0;
+  for (const entry of readdirSync(cacheDir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !/^[0-9a-f]{16}$/.test(entry.name)) continue;
+    const dir = path.join(cacheDir, entry.name);
+    const files = readdirSync(dir, { withFileTypes: true });
+    if (!files.length || files.some((file) => !file.isFile() || (file.name !== "done" && !/^f\d{6}\.png$/.test(file.name)))) continue;
+    rmSync(dir, { recursive: true, force: true });
+    removed++;
+  }
+  return removed;
 }
 
 export async function renderScore(
@@ -311,10 +353,15 @@ export async function renderScore(
   const t0 = Date.now();
   const quality = opts.quality ?? "standard";
   const cacheDir = opts.cacheDir ?? path.join(projectDir, ".chitra-cache");
+  mkdirSync(cacheDir, { recursive: true });
+  pruneLegacyFrameCaches(cacheDir);
+  assertRenderStorage(score, cacheDir, quality);
   const session = await openSession(score, projectDir, cacheDir);
   const { compiled } = session;
-  const fps = compiled.fps;
+  const profile = ENCODE[quality];
+  const fps = Math.min(compiled.fps, profile.maxFps ?? compiled.fps);
   const frameMs = 1000 / fps;
+  const frameCacheDir = path.join(cacheDir, quality === "draft" ? "draft-jpeg-12fps" : "full-png");
 
   try {
     // Per-scene frame plan
@@ -327,14 +374,14 @@ export async function renderScore(
     for (let s = 0; s < score.scenes.length; s++) {
       const bounds = compiled.sceneBoundsMs[s];
       const hash = sceneHash(score, s, projectDir);
-      const dir = path.join(cacheDir, hash);
+      const dir = path.join(frameCacheDir, hash);
       const firstFrame = Math.ceil(bounds.startMs / frameMs - 1e-6);
       const endFrame = Math.min(totalFrames, Math.ceil(bounds.endMs / frameMs - 1e-6));
       const count = endFrame - firstFrame;
       const complete = existsSync(path.join(dir, "done")) && readdirSync(dir).length >= count + 1;
       mkdirSync(dir, { recursive: true });
       for (let f = 0; f < count; f++) {
-        const file = path.join(dir, `f${String(f).padStart(6, "0")}.png`);
+        const file = path.join(dir, `f${String(f).padStart(6, "0")}.${profile.extension}`);
         framePaths.push(file);
         if (complete) {
           cached++;
@@ -342,7 +389,7 @@ export async function renderScore(
           continue;
         }
         const ms = (firstFrame + f) * frameMs;
-        writeFileSync(file, await session.seekAndCapture(ms));
+        writeFileSync(file, await session.seekAndCapture(ms, profile.capture));
         rendered++;
         done++;
         opts.onProgress?.(done, totalFrames);
@@ -351,7 +398,7 @@ export async function renderScore(
     }
 
     // Encode: pipe PNGs in order (stack-validation §4)
-    const enc = ENCODE[quality];
+    const enc = profile;
     mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
     const music = score.audio?.music;
     const sfx = collectSfx(score, projectDir, compiled);
@@ -377,8 +424,8 @@ export async function renderScore(
     // (this filled a user's disk once; never again). media/ holds pre-extracted
     // video frames (ADR-0007) and is pruned by its own keep-set.
     const keep = new Set(score.scenes.map((_, i) => sceneHash(score, i, projectDir)));
-    for (const d of readdirSync(cacheDir, { withFileTypes: true }))
-      if (d.isDirectory() && d.name !== "media" && !keep.has(d.name)) rmSync(path.join(cacheDir, d.name), { recursive: true, force: true });
+    for (const d of readdirSync(frameCacheDir, { withFileTypes: true }))
+      if (d.isDirectory() && !keep.has(d.name)) rmSync(path.join(frameCacheDir, d.name), { recursive: true, force: true });
     const mediaDir = path.join(cacheDir, "media");
     if (existsSync(mediaDir)) {
       const mediaKeep = prepareMedia(score, projectDir, cacheDir).keep;
@@ -393,6 +440,8 @@ export async function renderScore(
       cachedFrames: cached,
       durationMs: compiled.durationMs,
       wallMs: Date.now() - t0,
+      captureFps: fps,
+      cacheBytes: framePaths.reduce((sum, file) => sum + statSync(file).size, 0),
       audio,
     };
   } finally {

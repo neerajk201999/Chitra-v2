@@ -48,6 +48,9 @@ hash manifest, and stale-version CI checks (ADR-0016) · isolated tarball instal
 benchmark through a real browser frame · MO-EDIT-5 no-dead-air gate · render-
 cache auto-pruning.
 Remaining:
+- Ship and independently re-run the 0.5.0 Cursor recovery: zero browser download,
+  real browser probe, executable CLI, sampled preview, disk preflight, and typed
+  capability fit. Local benchmarks are green; public registry proof is pending.
 - Three outside testers across Claude Code, Codex, and Cursor; record network-cold install-to-first-frame time and first-use failures.
 - Router + per-register workflow skills (product-launch, social-short as separate workflows).
 - **Exit gate:** cold-start test in 3 harnesses by 3 outside testers hits the 10-minute bar.
@@ -75,6 +78,9 @@ Creative ladder: ADR-0018 Direction 0.2 + Storyboard 0.1 → explicit concept an
 shot design, stable source/preference traces, three adjacent-tier conformance
 boundaries, `chitra creative-check`, 55 tests, and a benchmark that catches all
 three seeded intent drifts.
+ADR-0031 advances Direction to 0.3 with registry-bound production requirements:
+unsupported must-haves fail schema validation and asset-assisted must-haves must
+reach the rendered Score path.
 Reference comparison: ADR-0019 `chitra compare` → strict exhaustive frame-index
 mode, explicit normalized sampling, transparent visual/audio-energy metrics,
 deterministic per-frame diff evidence, and generated exact/drift fixtures.

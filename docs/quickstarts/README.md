@@ -7,18 +7,16 @@ evidence.
 
 ## Install
 
-Requirements: Node.js 22.12 or newer and FFmpeg on `PATH`.
+Requirements: Node.js 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-git clone https://github.com/neerajk201999/Chitra-v2.git
-cd Chitra-v2
-npm install -g chitra-video
+npm install -g chitra-video@0.5.0
+npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
 
-Open the cloned `Chitra-v2` folder in Claude Code, Codex, Cursor, or Gemini CLI.
-Paste one prompt below. The agent should follow `AGENTS.md` and the
-`create-video` skill automatically.
+Open a new project folder in Claude Code, Codex, Cursor, or Gemini CLI. Paste one
+prompt below. The agent should route through the installed `create-video` skill.
 
 ## Prompt A — no assets or reference
 

@@ -6,6 +6,26 @@ versioned separately.
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-07-17
+
+### Fixed
+
+- Cursor-first installation now uses an existing Chrome/Chromium/Edge through
+  `puppeteer-core`, downloads no browser during npm install, publishes an
+  executable CLI, and makes `chitra probe` launch the resolved browser.
+- Draft rendering is a true preview profile: at most 12fps JPEG capture,
+  profile-isolated cache, disk preflight, and explicit fps/cache reporting.
+
+### Added
+
+- ADR-0031 capability-fit gate, machine-readable `chitra capabilities`, typed
+  Direction 0.3 production requirements, and Score conformance for required
+  asset-assisted heroes.
+- Progressive create-video references, sparse-evidence-before-motion workflow,
+  and whole-skill-tree integrity hashes to reduce agent context duplication.
+- Install and draft-preview regression benchmarks derived from the first
+  independent Cursor run.
+
 ## [0.4.0] — 2026-07-17
 
 ### Added

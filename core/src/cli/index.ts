@@ -12,6 +12,8 @@ import { Command } from "commander";
 import { validateScore, validateDirection, validateStoryboard, type ScoreT, type DirectionT, type StoryboardT } from "../ir/schema.js";
 import { FRAME_GATE_INTERVAL_MS, frameGateSampleTimes, runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runCreativeConformance, summarize, type Finding } from "../gates/index.js";
 import { COMPILER_CACHE_VERSION, openSession, renderScore, type Quality } from "../render/index.js";
+import { launchBrowser, resolveBrowserExecutable } from "../browser/index.js";
+import { CAPABILITIES, CAPABILITY_MATRIX_VERSION } from "../capabilities/index.js";
 import { generateEvidence } from "../evidence/index.js";
 import { fetchAsset, snapPage, writeAssetLog } from "../assets/index.js";
 import { analyzeAudio } from "../audio/analyze.js";
@@ -342,9 +344,11 @@ program
       rendered: r.renderedFrames,
       fromCache: r.cachedFrames,
       wallSeconds: +(r.wallMs / 1000).toFixed(1),
+      captureFps: r.captureFps,
+      cacheMiB: +(r.cacheBytes / 1024 / 1024).toFixed(1),
       audio: r.audio,
     };
-    console.log(opts.json ? JSON.stringify(out, null, 2) : `✔ ${out.out} — ${out.frames} frames (${out.fromCache} cached) in ${out.wallSeconds}s`);
+    console.log(opts.json ? JSON.stringify(out, null, 2) : `✔ ${out.out} — ${out.frames} frames @ ${out.captureFps}fps (${out.fromCache} cached, ${out.cacheMiB} MiB) in ${out.wallSeconds}s`);
   });
 
 program
@@ -800,18 +804,36 @@ program
   });
 
 program
+  .command("capabilities")
+  .option("--json", "machine-readable capability matrix")
+  .description("Report native, asset-assisted, and unsupported production capabilities")
+  .action((opts: { json?: boolean }) => {
+    if (opts.json) {
+      console.log(JSON.stringify({ version: CAPABILITY_MATRIX_VERSION, capabilities: CAPABILITIES }, null, 2));
+      return;
+    }
+    console.log(`Chitra capability matrix ${CAPABILITY_MATRIX_VERSION}`);
+    for (const capability of CAPABILITIES)
+      console.log(`${capability.support.padEnd(15)} ${capability.id.padEnd(34)} ${capability.boundary}`);
+  });
+
+program
   .command("probe")
-  .description("Verify the environment: ffmpeg, bundled Chrome, fonts")
-  .action(() => {
+  .description("Verify ffmpeg and launch an installed system browser")
+  .action(async () => {
     const ff = spawnSync("ffmpeg", ["-version"], { encoding: "utf8" });
     console.log(ff.status === 0 ? `✔ ffmpeg: ${ff.stdout.split("\n")[0]}` : "✖ ffmpeg not found on PATH — install ffmpeg");
     try {
-      // Puppeteer resolves its vendored browser lazily; a launch is the real probe.
-      console.log("✔ puppeteer installed (browser downloads on first render if needed)");
-    } catch {
-      console.log("✖ puppeteer missing");
+      const executable = resolveBrowserExecutable();
+      const browser = await launchBrowser({ headless: true });
+      const version = await browser.version();
+      await browser.close();
+      console.log(`✔ browser: ${version} (${executable})`);
+    } catch (error) {
+      console.log(`✖ browser: ${(error as Error).message}`);
+      process.exitCode = 1;
     }
-    process.exit(ff.status === 0 ? 0 : 1);
+    if (ff.status !== 0) process.exitCode = 1;
   });
 
 /** A minimal three-scene score that passes every gate in every register. */

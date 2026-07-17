@@ -1,8 +1,11 @@
-# Known Issues (v0.4.0 — 2026-07-17)
+# Known Issues (v0.5.0 release candidate — 2026-07-17)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 
-1. **Render speed ~2 fps/worker** (screenshot mode, single browser, PNG disk round-trip). Scheduled: per-scene parallel sessions + static-frame dedup + Linux BeginFrame mode (M5). Mitigated by the per-scene cache (only dirty scenes re-render).
+1. **Release render speed remains ~2 fps/worker** (screenshot mode, single
+   browser, PNG disk round-trip). ADR-0031 makes diagnostic preview a separate
+   ≤12fps JPEG profile: the 9.6s fixture renders 115 frames in 8.1s with 3.0 MiB
+   cache. Full-fps release still needs streaming/chunking or a new backend (M5).
 2. **No paint-settle guarantee** between `seek()` and screenshot beyond empirical determinism on macOS; Linux/CI golden-frame verification pending (M5). Determinism claims are same-machine only.
 3. **Audio covers music + SFX + detected beat timing** (ADR-0007/0011/0027) — still no narration/voiceover timeline, energy-envelope property tracks, or clip-audio pass-through. Music-led final muxes are two-pass normalized and measured at −14 ±0.5 LUFS with true peak ≤−1.5 dBTP; beat detection, `at.onBeat`, and beat-cut gates are live. (M2 remainder.)
 4. **VLM critic unproven**: ADR-0029 provides the review contract and ADR-0030
@@ -22,12 +25,19 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    frames at ≤250ms intervals plus animation/cut/transition neighborhoods.
    Shorter violations between those frames can still slip through; every-frame
    QA remains reserved for a benchmark that proves the added cost is necessary.
-7. **Outside-user cold starts are not measured yet.** Public GitHub access,
-   `chitra-video@0.4.0`, an unauthenticated clone, isolated registry install and
-   probe, native Claude/Codex/Cursor manifests, and `npx skills` are verified.
+7. **Outside-user cold starts are only partly measured.** The first Cursor run
+   exposed sandbox clone retries, a 539 MB Puppeteer cache/corrupt extraction,
+   non-executable CLI, false-green probe, five-minute draft, and disk exhaustion.
+   ADR-0031 fixes those paths in the 0.5.0 release candidate; local isolated
+   install is 3.2s/93.7 MiB with zero browser bytes and first frame is 8.8s.
+   A cold public-registry retest and independent Claude/Codex runs remain.
+   Public GitHub access, `chitra-video@0.4.0`, an unauthenticated clone,
+   isolated registry install/probe, native Claude/Codex/Cursor manifests, and
+   `npx skills` are verified.
    Three independent users across three harnesses remain the M3 exit gate.
 8. **Distribution/parallel rendering unimplemented** (design in ADR-0002 consequences; M5).
-9. **Ctrl-C mid-render** may briefly orphan the vendored Chrome process (no explicit signal handler).
+9. **Ctrl-C mid-render** may briefly orphan the launched system-browser process
+   (no explicit signal handler).
 10. **Example corpus is 2 scores**; agents compose better from a gallery (M3).
 11. **Reference analysis is intentionally low-level.** FFmpeg scene scoring can
     miss soft edits or treat large motion as a cut; palette is quantized RGB;

@@ -1,5 +1,5 @@
 {
-  "directionVersion": "0.2.0",
+  "directionVersion": "0.3.0",
   "irVersion": "0.1.0",
   "tier": "direction",
   "id": "chitra-taste-direction",
@@ -20,6 +20,17 @@
     "tension": "The industry over-invests in rendering",
     "resolution": "Chitra invests in direction and critique",
     "visualThesis": "One imbalanced chart makes the argument visible"
+  },
+  "productionApproach": {
+    "requirements": [{
+      "id": "chart-layout",
+      "description": "Render one typographic chart as the visual argument",
+      "importance": "must",
+      "capabilityId": "typography-layout",
+      "support": "native",
+      "approach": "Use native text and chart elements",
+      "acceptanceTest": "The chart owns the hierarchy without competing heroes"
+    }]
   },
   "trace": {
     "intakeProjectId": "chitra-taste-film",

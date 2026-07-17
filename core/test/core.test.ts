@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,7 +7,9 @@ import sharp from "sharp";
 import { validateScore, type ScoreT } from "../src/ir/schema.js";
 import { compile, resolveSceneTimeline, totalDurationMs } from "../src/compile/index.js";
 import { frameGateSampleTimes, runFrameGates, runStaticGates, runConformance } from "../src/gates/index.js";
-import { sceneHash, type RenderSession } from "../src/render/index.js";
+import { pruneLegacyFrameCaches, renderStorageEstimate, sceneHash, type RenderSession } from "../src/render/index.js";
+import { browserCandidates } from "../src/browser/index.js";
+import { CAPABILITIES } from "../src/capabilities/index.js";
 import { assertReleaseTargets } from "../src/release/index.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -69,6 +71,33 @@ describe("IR schema (Quality Engine layer 1)", () => {
     const grouped = structuredClone(score);
     grouped.scenes[0].choreography[0].target = "product*";
     expect(runStaticGates(grouped).some((finding) => finding.ruleId === "MO-3D-2" && finding.severity === "P1")).toBe(true);
+  });
+});
+
+describe("first-use runtime profile", () => {
+  it("prefers an explicit browser and makes draft storage materially smaller", () => {
+    expect(browserCandidates({ CHITRA_BROWSER_PATH: "/chosen/chrome" }, "darwin")[0]).toBe("/chosen/chrome");
+    const score = validFixture();
+    expect(renderStorageEstimate(score, "draft")).toBeLessThan(renderStorageEstimate(score, "standard") / 3);
+  });
+  it("does not claim arbitrary product CGI or professional taste as native", () => {
+    expect(CAPABILITIES.find((item) => item.id === "arbitrary-3d")?.support).toBe("asset-assisted");
+    expect(CAPABILITIES.find((item) => item.id === "professional-taste")?.support).toBe("unsupported");
+  });
+  it("removes only pre-profile frame caches before disk preflight", () => {
+    const cache = mkdtempSync(path.join(os.tmpdir(), "chitra-legacy-cache-"));
+    try {
+      for (const name of ["0123456789abcdef", "fedcba9876543210", "draft-jpeg-12fps", "full-png", "media"])
+        mkdirSync(path.join(cache, name));
+      writeFileSync(path.join(cache, "0123456789abcdef", "f000000.png"), "frame");
+      writeFileSync(path.join(cache, "fedcba9876543210", "keep.txt"), "not a Chitra frame cache");
+      expect(pruneLegacyFrameCaches(cache)).toBe(1);
+      expect(existsSync(path.join(cache, "0123456789abcdef"))).toBe(false);
+      for (const name of ["fedcba9876543210", "draft-jpeg-12fps", "full-png", "media"])
+        expect(existsSync(path.join(cache, name))).toBe(true);
+    } finally {
+      rmSync(cache, { recursive: true, force: true });
+    }
   });
 });
 
