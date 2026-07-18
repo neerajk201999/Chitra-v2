@@ -1,17 +1,20 @@
 # Capability audit — current competitive surface and Chitra decisions
 
-**Evidence cut:** 2026-07-18. **Chitra:** 0.5.0 release candidate through ADR-0036.
+**Evidence cut:** 2026-07-18. **Chitra:** 0.5.0 release candidate through ADR-0037.
 **Primary sources:** current repositories, package manifests, published npm
 metadata, official documentation, and executable Chitra registries. Product
 behavior that could not be inspected is labelled unverified.
 
 ## Executive conclusion
 
-Chitra is now easier and lighter than its failed Cursor run, but public `0.5.0`
-is not yet proven because npm authentication expired. The local package installs
+Chitra is now easier and lighter than its failed Cursor run. Stable npm `0.5.0`
+is not yet proven because authentication expired, but the SHA-pinned public
+GitHub prerelease now passes the same functional install transaction. The local package installs
 in 1.4 seconds with a warm cache, occupies 62.8 MiB, downloads no browser,
 launches a real system-browser frame within a 6.5-second end-to-end install
-check, and renders a 9.6-second 1080×1920 12fps preview
+check. The public-URL path installs in 3.9 seconds/62.9 MiB and reaches a real
+frame in 11.7 seconds with warm dependencies. Chitra renders a 9.6-second
+1080×1920 12fps preview
 in 8.1 seconds. Those are measured local facts, not a universal cold-network
 claim. Public npm remains `0.4.0`.
 

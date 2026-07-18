@@ -71,3 +71,9 @@ bump the package without changing IR version. A release requires:
 
 Publishing, pushing, and remote repository creation are owner-controlled
 external actions; local verification never implies they occurred.
+
+ADR-0037 permits a prerelease test artifact before stable npm publication when
+the registry is unavailable. It must point at protected, fully verified `main`,
+record the exact SHA-256, remain explicitly prerelease, and pass the public-URL
+isolated install transaction. It does not satisfy the annotated stable-tag or
+fresh registry-install requirements above.

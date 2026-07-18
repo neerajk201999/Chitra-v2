@@ -2,7 +2,8 @@
 /** ADR-0016: install the packed package into an isolated prefix and prove the
  *  installed binary can initialize, validate, and capture a browser frame. */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,6 +13,17 @@ const root = path.resolve(here, "../..");
 const core = path.join(root, "core");
 const check = process.argv.includes("--check");
 const printReport = process.argv.includes("--report");
+function option(name) {
+  const index = process.argv.indexOf(name);
+  if (index < 0) return undefined;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith("--")) throw new Error(`${name} requires a value`);
+  return value;
+}
+const packageSource = option("--source");
+const expectedSha256 = option("--sha256");
+if (expectedSha256 && !/^[0-9a-f]{64}$/.test(expectedSha256)) throw new Error("--sha256 must be a lowercase SHA-256 digest");
+if (packageSource && new URL(packageSource).protocol !== "https:") throw new Error("--source must be an HTTPS URL");
 const work = mkdtempSync(path.join(os.tmpdir(), "chitra-cold-start-"));
 const prefix = path.join(work, "install");
 const browserCache = path.join(work, "browser-cache");
@@ -38,9 +50,26 @@ function treeBytes(dir) {
   }, 0);
 }
 try {
-  const tgz = run(npm, ["pack", "--pack-destination", work, "--silent"], core).split(/\r?\n/).at(-1);
-  const tarball = path.join(work, tgz);
-  if (process.platform !== "win32" && (statSync(path.join(core, "dist/cli/index.js")).mode & 0o111) === 0)
+  let tarball, sourceLabel;
+  if (packageSource) {
+    const response = await fetch(packageSource, { redirect: "follow", signal: AbortSignal.timeout(30_000) });
+    if (!response.ok) throw new Error(`package download failed: ${response.status} ${response.statusText}`);
+    const declaredBytes = Number(response.headers.get("content-length") ?? 0);
+    if (declaredBytes > 10 * 1024 * 1024) throw new Error(`package download declares ${declaredBytes} bytes; 10 MiB ceiling exceeded`);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.length > 10 * 1024 * 1024) throw new Error(`package download is ${bytes.length} bytes; 10 MiB ceiling exceeded`);
+    tarball = path.join(work, "chitra-public-preview.tgz");
+    writeFileSync(tarball, bytes);
+    sourceLabel = packageSource;
+  } else {
+    const tgz = run(npm, ["pack", "--pack-destination", work, "--silent"], core).split(/\r?\n/).at(-1);
+    tarball = path.join(work, tgz);
+    sourceLabel = "local source package";
+  }
+  const artifactSha256 = createHash("sha256").update(readFileSync(tarball)).digest("hex");
+  if (expectedSha256 && artifactSha256 !== expectedSha256)
+    throw new Error(`package SHA-256 ${artifactSha256} does not match expected ${expectedSha256}`);
+  if (!packageSource && process.platform !== "win32" && (statSync(path.join(core, "dist/cli/index.js")).mode & 0o111) === 0)
     throw new Error("packed CLI source is not executable");
   const installStarted = Date.now();
   run(npm, ["install", "--global", "--prefix", prefix, tarball, "--silent"]);
@@ -79,6 +108,8 @@ try {
 ADR-0016 source-package verification in a fresh temporary install prefix.
 
 - Packed and globally installed: **chitra-video ${version}**
+- Package source: **${sourceLabel}**
+- Artifact SHA-256: **${artifactSha256}${expectedSha256 ? ", matched expected digest" : ""}**
 - Install: **${installSeconds.toFixed(1)}s, ${installedMiB.toFixed(1)} MiB, zero browser-download bytes**
 - Runtime probe: **passed**
 - Licensed minimal Three/font runtime assets: **packed**
@@ -88,7 +119,7 @@ ADR-0016 source-package verification in a fresh temporary install prefix.
 - Elapsed on this machine with a warm npm dependency cache: **${elapsedSeconds.toFixed(1)}s**
 
 This is a functional install check, not the M3 outside-user/network-cold timing claim.
-Reproduce: \`node benchmarks/cold-start/run.mjs\`.
+Reproduce: \`${packageSource ? "node benchmarks/public-preview-install/run.mjs" : "node benchmarks/cold-start/run.mjs"}\`.
 `;
   if (!check) writeFileSync(path.join(here, "results.md"), report);
   if (printReport) process.stdout.write(report);

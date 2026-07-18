@@ -17,6 +17,12 @@
 > imported-animation, media/audio, player, and distribution gaps. Renderer work
 > remains residual/user-job driven, but the renderer is not literally complete.
 >
+> **Public-preview recovery (2026-07-18, ADR-0037).** Because npm authentication
+> still returns 401, the exact protected-main 0.5.0 package is also available as
+> a SHA-pinned GitHub prerelease. A URL-based fresh-prefix install completes
+> version/probe/Intake/init/validate/real-frame in 11.7s on this machine. This
+> unblocks friend tests; it is not stable npm or outside-user/cross-OS proof.
+>
 > **P0 footage slice (2026-07-18, ADR-0034/0035).** Provider-neutral word transcripts
 > now lock to exact local footage, pack into bounded phrase context, conform an
 > explainable word-addressed EDL, and render normalized source-audio-preserving

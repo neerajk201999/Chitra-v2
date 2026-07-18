@@ -59,7 +59,7 @@ contract and integrity benchmark pass; its creative choices remain uncalibrated.
 Requirements: Node 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-npm install -g chitra-video
+npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.1/chitra-video-0.5.0.tgz
 npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
@@ -71,9 +71,10 @@ for explicit Claude Code, Codex, Cursor, and Gemini CLI commands, or [run the
 friend test](docs/quickstarts/README.md) with two ready-to-use prompts and a
 compact feedback checklist.
 
-The public registry currently resolves `0.4.0`; `0.5.0` remains a release
-candidate until npm authentication, publication, and a fresh registry install
-pass. Do not interpret the command above as evidence that `0.5.0` is public.
+The command above installs the public, SHA-256-verified `0.5.0` GitHub
+prerelease. The public registry still resolves `0.4.0`; stable npm `0.5.0`
+remains blocked until authentication, publication, and a fresh registry install
+pass. See [the public artifact benchmark](benchmarks/public-preview-install/results.md).
 
 Then ask for the outcome in your own language. A plain direction prompt is
 enough; references, images, links, screenshots, footage, audio, brand material,
@@ -89,7 +90,7 @@ chitra edit-render transcript.lock.json edit.json --project . -o assets/edit.mp4
 chitra edit-evidence transcript.lock.json edit.json --project . -o edit-evidence --segment opening proof # targeted picture/sound evidence
 chitra direction-search-lock intake.lock.json search.json --project . -o search.lock.json # bind 2–4 candidate Directions
 chitra direction-probes intake.lock.json search.lock.json --project . -o direction-probes # identity-free comparable stills
-chitra direction-select <probe-dir>/manifest.json selection.json -o selection-receipt.json # re-hash evidence and resolve exact winner
+chitra direction-select direction-probes/SEARCH_DIGEST/manifest.json selection.json -o selection-receipt.json # re-hash evidence and resolve exact winner
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # preserve intent across every tier
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
