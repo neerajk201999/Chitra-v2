@@ -154,6 +154,10 @@ subject/provenance/consent bindings, register/motion/audio coverage,
 thresholded consensus, visible disagreement, and separate verdict, principle,
 and severity metrics. The synthetic benchmark proves arithmetic and CLI
 mechanics only; the ≥20-case independent corpus remains to be collected.
+Brand foundation: ADR-0040 ships Brand System 0.1 with locked sources/rules,
+resolved palette/type roles, project-local WOFF2 rendering, exact cross-tier
+conformance, provenance, and cache invalidation. Automatic semantic extraction
+and professionally good brand expression remain outside-workflow evidence gaps.
 Card Vault benchmark target registered: immutable source hash, exact 274-frame
 geometry/timing, exhaustive freeze lower baseline, and worst-frame evidence.
 Clean-room candidate 0.6 now authors and compares all 274 frames without copied
@@ -186,7 +190,7 @@ Remaining (priority order):
 - **Exit gate:** ≥70% blind preference over HyperFrames on identical briefs; methodology withstands external scrutiny (pre-registered protocol).
 
 ## M6 — Ecosystem → v1.0
-Brand ingestion ("BRAND.md for motion": logo, palette, type, motion personality → tokens), style/block registry with `chitra add`, remaining workflows (feature-demo, PR-to-video, screen-recording ingestion via video-use patterns), distributed rendering (chunk-and-concat), WebCodecs backend spike.
+Outside-tested semantic brand research (Brand System 0.1 now locks executable facts), style/block registry with `chitra add`, remaining workflows (feature-demo, PR-to-video, screen-recording ingestion via video-use patterns), distributed rendering (chunk-and-concat), WebCodecs backend spike.
 
 ## Standing risks (tracked here, reviewed each milestone)
 1. **Taste ceiling** — encoded rules may plateau below "Apple-grade." Mitigation: ChitraBench measures it honestly; revision loop + growing rule registry; human escalation is a feature, not a failure.

@@ -13,10 +13,14 @@ export interface ReleaseArtifacts {
   direction: string;
   storyboard: string;
   score: string;
+  brand?: string;
 }
 
+type ReleaseInputName = "intake" | "direction" | "storyboard" | "score";
+type ReleaseFileBinding = { path: string; sha256: string };
+
 export interface ReleaseFingerprint {
-  files: Record<keyof ReleaseArtifacts, { path: string; sha256: string }>;
+  files: Record<ReleaseInputName, ReleaseFileBinding> & { brand?: ReleaseFileBinding };
   renderHash: string;
   inputHash: string;
 }
@@ -40,7 +44,7 @@ export function assertReleaseTargets(
   targets: { out: string; evidence: string; receipt: string }
 ): void {
   const protectedFiles = new Set([
-    ...Object.values(artifacts).map(canonicalPath),
+    ...Object.values(artifacts).filter((file): file is string => !!file).map(canonicalPath),
     ...renderInputFiles(score, projectDir).map(canonicalPath),
   ]);
   const out = canonicalPath(targets.out);
@@ -73,7 +77,7 @@ export function releaseFingerprint(
   projectDir: string,
   tool: { packageVersion: string; compilerCacheVersion: string }
 ): ReleaseFingerprint {
-  const files = Object.fromEntries(Object.entries(artifacts).map(([key, file]) => {
+  const files = Object.fromEntries(Object.entries(artifacts).filter((entry): entry is [string, string] => !!entry[1]).map(([key, file]) => {
     const absolute = path.resolve(file);
     if (!existsSync(absolute)) throw new Error(`release input not found: ${absolute}`);
     return [key, { path: absolute, sha256: sha256File(absolute) }];
@@ -110,6 +114,7 @@ export const ReleaseReceiptSchema = z.object({
       direction: z.object({ path: z.string().min(1), sha256: z.string().length(64) }),
       storyboard: z.object({ path: z.string().min(1), sha256: z.string().length(64) }),
       score: z.object({ path: z.string().min(1), sha256: z.string().length(64) }),
+      brand: z.object({ path: z.string().min(1), sha256: z.string().length(64) }).optional(),
     }),
     renderHash: z.string().length(64),
     inputHash: z.string().length(64),
@@ -177,6 +182,13 @@ export function verifyReleaseReceipt(receiptFile: string): { ok: boolean; issues
     artifacts[key] = file;
     if (!existsSync(file)) issues.push(`${key} input is missing: ${file}`);
     else if (sha256File(file) !== binding.sha256) issues.push(`${key} input hash changed`);
+  }
+  if (receipt.inputs.files.brand) {
+    const binding = receipt.inputs.files.brand;
+    const file = path.resolve(base, binding.path);
+    artifacts.brand = file;
+    if (!existsSync(file)) issues.push(`brand input is missing: ${file}`);
+    else if (sha256File(file) !== binding.sha256) issues.push("brand input hash changed");
   }
   if (!issues.some((issue) => issue.includes("input is missing"))) {
     try {

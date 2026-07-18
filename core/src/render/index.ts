@@ -54,7 +54,7 @@ const ENCODE = {
  * markup changes, GSAP upgrades). Part of every scene hash — without it the
  * cache serves frames compiled by an older compiler.
  */
-export const COMPILER_CACHE_VERSION = "15";
+export const COMPILER_CACHE_VERSION = "16";
 
 /** Content digest of a file, memoized on (path, mtime, size) — video files are
  *  tens of MB and sceneHash runs per scene per render. */
@@ -84,6 +84,7 @@ function sceneAssetSources(scene: ScoreT["scenes"][number]): string[] {
 /** Every local byte source that can affect rendered pixels, timing, or audio. */
 export function renderInputFiles(score: ScoreT, projectDir = "."): string[] {
   const sources = new Set(score.scenes.flatMap(sceneAssetSources));
+  for (const font of score.style.fontAssets) sources.add(font.src);
   if (score.audio?.music) sources.add(score.audio.music.src);
   return [...sources].map((source) => resolveProjectAsset(projectDir, source)).sort();
 }
@@ -94,6 +95,10 @@ export function renderInputFiles(score: ScoreT, projectDir = "."): string[] {
  *  reference must fail loudly at hash time, not render as a broken-image frame. */
 function assetDigests(score: ScoreT, sceneIndex: number, projectDir: string): Record<string, string> {
   const out: Record<string, string> = {};
+  for (const font of score.style.fontAssets) {
+    const file = resolveProjectAsset(projectDir, font.src);
+    out[font.src] = fileDigest(file);
+  }
   for (const idx of [sceneIndex - 1, sceneIndex, sceneIndex + 1]) {
     const scene = score.scenes[idx];
     if (!scene) continue;

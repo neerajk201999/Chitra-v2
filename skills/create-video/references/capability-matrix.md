@@ -6,6 +6,7 @@ adds the production interpretation needed during Direction.
 | Requirement | Native | Asset-assisted | Boundary |
 |---|---:|---:|---|
 | Typography, layouts, shapes, gradients | yes | yes | No calibrated professional optical-spacing guarantee. |
+| Locked Brand System and local WOFF2 typography | yes | host semantic research | Exact rules/palette/type survival; automatic brand interpretation and professional expression remain review work. |
 | Images, screenshots, product UI | yes | yes | Rasterized text has weaker structural inspection. |
 | Video plates/footage | yes | yes | `edit-render` preserves clip audio; Score video elements remain visual-only. |
 | Cursor/type interactions | yes | yes | Not arbitrary website execution. |

@@ -32,6 +32,7 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 
 DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pixels)
   intake/    multimodal source/provenance contract and deterministic locking
+  brand/     reusable locked rules/palette/typography plus local-font evidence
   creative/  bounded Direction search, identity-free still evidence, blind
              selection receipts, review/calibration, and scoped revision memory
   editing/   locked word transcripts → compact phrase context → typed EDL →

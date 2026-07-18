@@ -39,7 +39,7 @@ export const CAPABILITIES: Capability[] = [
   { id: "imported-animation", support: "asset-assisted", mechanism: "owned/licensed pre-rendered still or video", boundary: "no seekable Lottie, Rive, or glTF adapter" },
   { id: "player-studio", support: "unsupported", mechanism: "evidence and rendered files only", boundary: "no embeddable player or timeline editor" },
   { id: "distributed-render", support: "unsupported", mechanism: "single local render worker", boundary: "no chunk plan, remote workers, or deterministic assembly" },
-  { id: "brand-system", support: "asset-assisted", mechanism: "locked brand sources and explicit Direction constraints", boundary: "no automated brand token, motif, or motion-personality IR" },
+  { id: "brand-system", support: "native", mechanism: "locked Brand System IR, exact rule/palette/type conformance, local WOFF2 rendering, and cache/provenance binding", boundary: "host agent still interprets evidence; no automatic semantic brand extraction or professional-expression guarantee" },
   { id: "accepted-revision-memory", support: "native", mechanism: "typed scoped ledger and deterministic bounded context compiler", boundary: "no real outside-user taste-lift evidence yet" },
   { id: "directorial-search", support: "native", mechanism: "locked 2–4 Direction search, comparable still probes, identity-free packet, blind selection receipt", boundary: "process and integrity are measured; selection quality and reviewer blindness are not independently proven" },
 ];

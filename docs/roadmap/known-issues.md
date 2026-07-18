@@ -86,7 +86,9 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     Chitra has no bundled transcription, deterministic semantic cut judgment,
     visual-event addressing outside transcript tokens, TTS/narration generation,
     Lottie/Rive import, masks/mattes/blend modes/deep
-    local comps, mature player/studio, or distributed renderer. “All competitor
+    local comps, mature player/studio, or distributed renderer. Brand System 0.1
+    locks and renders exact rules/palette/type but does not automatically infer
+    semantic roles or prove professional brand expression. “All competitor
     capabilities” is not a current claim.
 17. **Directorial search has integrity evidence, not taste evidence.** ADR-0036
     enforces two to four distinct locked Directions, comparable probe roles,

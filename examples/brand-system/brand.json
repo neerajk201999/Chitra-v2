@@ -1,0 +1,40 @@
+{
+  "brandVersion": "0.1.0",
+  "tier": "brand-system",
+  "brandId": "acme",
+  "name": "Acme",
+  "styleName": "acme-motion",
+  "sourceIds": ["brand-guide"],
+  "palette": {
+    "bg": "#0a0a0e",
+    "surface": "#1b1b24",
+    "primary": "#6e7bf2",
+    "accent": "#8ee8c8",
+    "text": "#f2f2f6",
+    "textDim": "#a2a2ae",
+    "onMedia": "#ffffff"
+  },
+  "typography": {
+    "display": { "family": "Space Grotesk", "weight": 500 },
+    "text": { "family": "Inter", "weight": 400 },
+    "mono": { "family": "JetBrains Mono", "weight": 400 },
+    "trackingDisplay": -0.02
+  },
+  "fontAssets": [],
+  "rules": [
+    {
+      "id": "earn-wordmark",
+      "statement": "Earn the wordmark only after the product proof",
+      "priority": "must",
+      "domain": "logo",
+      "sourceIds": ["brand-guide"]
+    },
+    {
+      "id": "precise-motion",
+      "statement": "Use restrained precise motion with one hero action",
+      "priority": "must",
+      "domain": "motion",
+      "sourceIds": ["brand-guide"]
+    }
+  ]
+}
