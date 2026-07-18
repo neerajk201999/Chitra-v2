@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-17 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0
+**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -80,18 +80,28 @@ and CHANGELOG.
   machine-readable capabilities, and Direction 0.3 production requirements.
   Asset-assisted must-haves must reach rendered Score paths; unsupported
   must-haves cannot validate.
+- ADR-0032 Revision Memory 0.1: accepted/rejected/reverted human decisions bind
+  subject, review finding, exact patch, outcome evidence, and reusable guidance;
+  project/brand retrieval is exact-scope, universal promotion requires declared
+  ≥20-case independent calibration, and context is deterministically bounded.
 
 ## Evidence, not claims
 
-- Cursor-derived recovery benchmarks: isolated local tarball installation takes
-  3.2s, occupies 93.7 MiB, and writes zero browser-cache bytes; install through
-  a real browser frame completes in 8.8s. A 9.6s full-HD/vertical preview
+- Cursor-derived recovery benchmarks after ADR-0033: isolated local tarball
+  installation takes 1.4s with a warm dependency cache, occupies 62.8 MiB, and
+  writes zero browser-cache bytes; install through a real browser frame completes
+  in 6.5s. The preceding 0.5 candidate measured 3.2s/93.7 MiB/8.8s. A 9.6s
+  full-HD/vertical preview
   captures 115 JPEG frames at 12fps in 8.1s using 3.0 MiB cache. The failed
   pre-fix Cursor run took 301.5s for 510 PNG frames and exhausted disk.
+- Revision-memory benchmark: 200 records across two brands yield 100 eligible
+  exact-brand entries, select 23 within a 5,913-character complete context,
+  leak zero foreign-brand records, retain rejections only as avoid guidance,
+  and compile byte-identically on repetition.
 - Public distribution: unauthenticated clone resolved protected `main` at
   `c2b666670d87294763ebedabdd0b7922fc140346`; isolated npm-prefix installation
   fetched `chitra-video@0.4.0`, reported CLI 0.4.0, and passed runtime probe.
-- Unit suite: 74 tests.
+- Unit suite: 79 tests.
 - Creative Review contract benchmark: valid typed review, hidden
   principle/severity/verdict matching, deterministic repeated scoring, the
   documented label-collection CLI flow, and rejection of detached evidence,
@@ -170,11 +180,13 @@ Ordered next slices:
 1. Publish and independently retest the 0.5.0 Cursor-first recovery on a cold
    network/cache, then use the same Aether brief to measure still-first
    feasibility and preview quality.
-2. Collect the pre-registered ≥20-case independent Creative Review study using
-   real motion clips and audio, then add explicit accepted-revision memory.
-3. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
+2. Add provider-neutral transcript/clip-audio IR, compact phrase-addressed EDL,
+   and on-demand word-aligned evidence for product demos and raw footage.
+3. Collect the pre-registered ≥20-case independent Creative Review study using
+   real motion clips/audio and populate ADR-0032 with actual accepted outcomes.
+4. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
    a pre-registered neutral ChitraBench against real baselines.
-4. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
+5. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
    ADR-0028 before claiming improvement. Add masks, deeper comps, blend modes,
    motion blur, or richer audio only when
    a rights-approved measured residual isolates that capability. Never infer
@@ -200,7 +212,7 @@ The evidence and reasoning for this rebaseline are in
   Review 0.1 makes semantic judgment evidence-bound and scoreable, but four
   author-labelled cases cannot prove professional taste. ADR-0030 makes an
   independent study operational but does not supply its human labels.
-  Calibration data, accepted-revision memory, and blind preference remain open.
+  Calibration data, real accepted-revision outcomes, and blind preference remain open.
 - Release gates sample output frames at ≤250ms intervals plus choreography and
   transition neighborhoods. This is bounded coverage, not every-frame proof;
   shorter between-sample defects, rasterized text, and token-only CSS
@@ -208,6 +220,13 @@ The evidence and reasoning for this rebaseline are in
 - GitHub and `chitra-video@0.4.0` are public. The 0.5.0 recovery is a local
   release candidate until PR CI, merge, npm publication, and a fresh registry
   install pass. Three-harness outside-user timing remains open.
+- ADR-0033 vendors only the executed MIT Three.js module and nine OFL font
+  files, removing five full runtime packages. The npm artifact is 561.3 kB
+  compressed/2.04 MB unpacked before dependencies; installed footprint falls
+  33% from 93.7 to 62.8 MiB. GSAP remains a normal licensed dependency.
+- The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”
+  claim: it now has a sophisticated human plan/sketch/final-preview loop.
+  Chitra still has no calibrated evidence that its critic or output is better.
 - GitHub vulnerability alerts/private reporting and protected `main` are live;
   a single maintainer remains a governance and review ceiling.
 

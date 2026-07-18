@@ -14,7 +14,7 @@ project in Cursor/Claude/Codex. This avoids agent-sandbox Git permissions and
 does not download a second browser:
 
 ```bash
-npm install -g chitra-video@0.5.0
+npm install -g chitra-video
 npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
@@ -98,8 +98,9 @@ preferences, brand constraints, or approval.
 - Source install and isolated tarball install: verified.
 - Public GitHub clone and isolated `chitra-video@0.4.0` registry install/probe:
   verified.
-- 0.5.0 local release candidate: 3.2s warm-cache install, 93.7 MiB, zero
-  browser-download bytes; first browser frame in 8.8s. Public proof pending.
+- 0.5.0 local release candidate after ADR-0033: 1.4s warm-cache install,
+  62.8 MiB, zero browser-download bytes; the complete install/probe/first-frame
+  check finishes in 6.5s. Public proof pending; npm currently resolves 0.4.0.
 - Claude Code and Codex marketplace installation: exercised in isolated homes.
 - Claude Code, Codex, and Cursor manifests: validated/version-checked.
 - Canonical skills: installed locally for Claude Code, Codex, Cursor, and

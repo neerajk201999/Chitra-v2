@@ -28,6 +28,32 @@ No scalar “taste score” represents this. Hard constraints block. Individual
 craft domains are assessed as exceptional/strong/acceptable/weak/blocking, with
 confidence and evidence. Tradeoffs remain visible to the director and user.
 
+## Precise creative-system definitions
+
+These terms are separate controls, not interchangeable mood words. Measurable
+characteristics are diagnostic proxies; subjective judgment remains evidence-
+bound and calibrated against watched work.
+
+| System | Operational definition | Measurable characteristics | Irreducibly judged component |
+|---|---|---|---|
+| Taste | selection and omission that make all craft choices serve intent in a specific context | defect rate, exception reasons, preference consistency, blind choice | whether the selection feels inevitable and distinctive |
+| Motion | authored change of visual state that communicates meaning, causality, hierarchy, or feeling | paths, properties, velocities, easing, overshoot, settle, continuity | whether movement belongs to the subject and moment |
+| Timing | duration and placement of an event relative to perception and surrounding events | frames, reading time, beat offset, anticipation/settle length | whether the event arrives at the emotionally right instant |
+| Rhythm | patterned contrast between activity and rest across time | event density, hold distribution, cut intervals, energy curve | whether variation builds attention rather than merely changing speed |
+| Composition | spatial organization of attention and relationships inside a frame | alignment, bounds, scale ratios, saliency proxy, negative-space distribution | whether the frame feels intentionally resolved |
+| Typography | verbal meaning embodied through type choice, scale, spacing, lineation, and motion | size, contrast, line length, reading duration, treatment count | whether the voice and cadence fit the brand and statement |
+| Visual hierarchy | ordered probability of what a viewer notices and understands | saliency/contrast/scale ordering, overlap, eye-trace handoff | whether the intended priority is immediately legible |
+| Camera language | framing and viewpoint change used as a narrative verb | FOV, position, rotation, parallax, shot scale, move count | what intimacy, confidence, discovery, or power the viewpoint communicates |
+| Narrative | causal organization of information and feeling toward a change/payoff | beat roles, premise trace, tension-before-resolution, payoff time budget | whether the audience cares about and believes the change |
+| Pacing | allocation of screen time to comprehension, tension, surprise, and rest | shot duration, copy load, task completion time, acceleration/release | whether the film feels urgent, calm, dense, or luxurious for the right reason |
+| Brand consistency | recognizable continuity of visual, verbal, motion, and sonic decisions | token/source adherence, cross-film deltas, scoped accepted revisions | whether the work belongs to this brand rather than its category |
+| Creative quality | coherence of intent, selection, attention, specificity, truth, and finish in the watched result | gates plus domain judgments and blind preference | the achieved feeling and memorable authored point of view |
+
+Chitra reasons about these systems in Direction/Storyboard fields, executes
+addressable decisions in Score, measures available proxies in gates/evidence,
+records semantic judgment in Creative Review, calibrates it through independent
+panels, and retains only explicit evidenced outcomes through ADR-0032.
+
 ## What each discipline decides
 
 | Discipline | Decisions | Evidence | Common failure |

@@ -46,3 +46,7 @@ Deliver final video, receipt, contact sheet, elapsed time, and every remaining
 limitation. If the same P1/P2 or visual defect survives a targeted revision,
 record it as a capability/system gap rather than spending unbounded tokens.
 
+After the user explicitly accepts, rejects, or reverts a revision, load
+`revision-memory.md`. Record the exact review finding, patch digest, watched
+evidence, outcome, and narrow project/brand scope; validate before commit. Never
+infer acceptance from silence and never promote a single result universally.

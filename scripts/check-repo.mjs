@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const readJson = (file) => JSON.parse(readFileSync(path.join(root, file), "utf8"));
@@ -10,6 +11,25 @@ const pkg = readJson("core/package.json");
 const lock = readJson("core/package-lock.json");
 const manifest = readJson("skills/manifest.json");
 const failures = [];
+const runtimeAssetHashes = {
+  "core/runtime-assets/three/three.module.js": "0a3368c165eea773490aec7b77c22de70e3eac288503409256fdbf4d12578416",
+  "core/runtime-assets/fonts/inter/inter-latin-400-normal.woff2": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc",
+  "core/runtime-assets/fonts/inter/inter-latin-500-normal.woff2": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",
+  "core/runtime-assets/fonts/inter/inter-latin-600-normal.woff2": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a",
+  "core/runtime-assets/fonts/space-grotesk/space-grotesk-latin-400-normal.woff2": "65fd17fcbd2e2f522940b5f67ead3d23329e02891aa5495e74d11a499c0b0673",
+  "core/runtime-assets/fonts/space-grotesk/space-grotesk-latin-500-normal.woff2": "1b1a8131d9edf975d9decee81e2f2bf504812f7a4f498e5500f28a613e22e64c",
+  "core/runtime-assets/fonts/space-grotesk/space-grotesk-latin-700-normal.woff2": "35f8aec56cfd5cbfdb03cc68733a54a0b05bb3617ffcd5fd332badc0b045ca55",
+  "core/runtime-assets/fonts/instrument-serif/instrument-serif-latin-400-normal.woff2": "5eb09b5ac0e28b67c2f041c8ba6d244604ca0c0980d65912ab2d47fed84ddc31",
+  "core/runtime-assets/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
+  "core/runtime-assets/fonts/jetbrains-mono/jetbrains-mono-latin-500-normal.woff2": "cb182feeed4d798ff6961d3c79f7026279448fca0676438aaecb21f3fc39553a",
+};
+for (const [file, expected] of Object.entries(runtimeAssetHashes)) {
+  if (!existsSync(path.join(root, file))) failures.push(`missing runtime asset ${file}`);
+  else {
+    const actual = createHash("sha256").update(readFileSync(path.join(root, file))).digest("hex");
+    if (actual !== expected) failures.push(`runtime asset hash changed: ${file}`);
+  }
+}
 const skillDirs = readdirSync(path.join(root, "skills"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
@@ -74,6 +94,8 @@ const comparisonSchema = readFileSync(path.join(root, "core/src/reference/compar
 const comparisonVersion = comparisonSchema.match(/COMPARISON_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const intakeSchema = readFileSync(path.join(root, "core/src/intake/schema.ts"), "utf8");
 const intakeVersion = intakeSchema.match(/INTAKE_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const memorySchema = readFileSync(path.join(root, "core/src/creative/memory.ts"), "utf8");
+const revisionMemoryVersion = memorySchema.match(/REVISION_MEMORY_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
 if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
@@ -89,6 +111,8 @@ if (!comparisonVersion || !currentState.includes(`**Comparison:** ${comparisonVe
   failures.push(`current-state Comparison version is not ${comparisonVersion ?? "discoverable"}`);
 if (!intakeVersion || !currentState.includes(`**Intake IR:** ${intakeVersion}`))
   failures.push(`current-state Intake IR version is not ${intakeVersion ?? "discoverable"}`);
+if (!revisionMemoryVersion || !currentState.includes(`**Revision Memory:** ${revisionMemoryVersion}`))
+  failures.push(`current-state Revision Memory version is not ${revisionMemoryVersion ?? "discoverable"}`);
 
 const cli = path.join(root, "core/dist/cli/index.js");
 if (existsSync(cli)) {

@@ -11,6 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../..");
 const core = path.join(root, "core");
 const check = process.argv.includes("--check");
+const printReport = process.argv.includes("--report");
 const work = mkdtempSync(path.join(os.tmpdir(), "chitra-cold-start-"));
 const prefix = path.join(work, "install");
 const browserCache = path.join(work, "browser-cache");
@@ -46,7 +47,12 @@ try {
   const installSeconds = (Date.now() - installStarted) / 1000;
   if (treeBytes(browserCache) !== 0) throw new Error("package install downloaded browser bytes");
   const installedMiB = treeBytes(prefix) / 1024 / 1024;
+  if (check && installedMiB > 65) throw new Error(`installed package ${installedMiB.toFixed(1)} MiB exceeds the 65 MiB regression ceiling`);
   const chitra = process.platform === "win32" ? path.join(prefix, "chitra.cmd") : path.join(prefix, "bin", "chitra");
+  const globalRoot = run(npm, ["root", "--global", "--prefix", prefix]);
+  const installedThree = path.join(globalRoot, "chitra-video", "runtime-assets", "three", "three.module.js");
+  if (!existsSync(installedThree) || statSync(installedThree).size < 1_000_000)
+    throw new Error("packed package is missing its licensed Three.js runtime asset");
   const version = run(chitra, ["--version"]);
   run(chitra, ["probe"]);
   const film = path.join(work, "film");
@@ -68,13 +74,14 @@ try {
   if (!existsSync(frame) || statSync(frame).size < 1000) throw new Error("installed package did not produce a valid frame PNG");
 
   const elapsedSeconds = (Date.now() - started) / 1000;
-  const report = `# Isolated install benchmark — 2026-07-17
+  const report = `# Isolated install benchmark — 2026-07-18
 
 ADR-0016 source-package verification in a fresh temporary install prefix.
 
 - Packed and globally installed: **chitra-video ${version}**
 - Install: **${installSeconds.toFixed(1)}s, ${installedMiB.toFixed(1)} MiB, zero browser-download bytes**
 - Runtime probe: **passed**
+- Licensed minimal Three/font runtime assets: **packed**
 - Installed-package Intake validation and source lock: **passed**
 - Starter initialization and static validation: **passed**
 - Installed-package browser frame: **${Math.round(statSync(frame).size / 1024)} KiB, passed**
@@ -84,6 +91,7 @@ This is a functional install check, not the M3 outside-user/network-cold timing 
 Reproduce: \`node benchmarks/cold-start/run.mjs\`.
 `;
   if (!check) writeFileSync(path.join(here, "results.md"), report);
+  if (printReport) process.stdout.write(report);
   console.log(`✔ isolated install ${version}: probe, intake lock, init, validate, and browser frame (${elapsedSeconds.toFixed(1)}s)`);
 } finally {
   rmSync(work, { recursive: true, force: true });

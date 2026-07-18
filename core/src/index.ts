@@ -15,3 +15,4 @@ export { INTAKE_VERSION, Intake, IntakeSource, validateIntake, type IntakeT, typ
 export { materializeIntake } from "./intake/materialize.js";
 export { CREATIVE_REVIEW_VERSION, CRAFT_PRINCIPLES, REVIEW_DOMAINS, CreativeReview, CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview, type CreativeReviewT, type CalibrationCaseLabelT, type CraftPrincipleId } from "./creative/review.js";
 export { INDEPENDENT_CALIBRATION_VERSION, IndependentCalibrationStudy, validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy, type IndependentCalibrationStudyT } from "./creative/calibration.js";
+export { REVISION_MEMORY_VERSION, REVISION_CONTEXT_VERSION, RevisionMemory, validateRevisionMemory, validateRevisionContextQuery, compileRevisionContext, type RevisionMemoryT, type RevisionEntryT, type RevisionContextQuery } from "./creative/memory.js";

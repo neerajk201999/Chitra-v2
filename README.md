@@ -21,7 +21,8 @@ prompt + optional sources → intake → direction → storyboard → motion →
 
 ## Status
 
-**v0.5.0 — Cursor-first performance and capability-honesty release candidate.**
+**v0.5.0 — Cursor-first performance, capability honesty, and revision-memory
+release candidate.**
 `chitra intake` preserves objectives, mixed-source provenance, preferences,
 anti-references, brand constraints, assumptions, and evidence as locked JSON;
 the [intake benchmark](benchmarks/intake/results.md) verifies deterministic local
@@ -42,13 +43,16 @@ reconstruction remain honestly open. ADR-0029 now makes multidisciplinary
 creative judgment typed and evidence-bound; its contract benchmark passes, but
 professional taste remains unproven pending independent calibration. The closed loop retains its **10/10
 measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects/results.md).
+ADR-0032 now retains explicit accepted/rejected/reverted revision outcomes at
+project or brand scope and compiles only relevant guidance under a hard context
+budget; its synthetic benchmark proves isolation and determinism, not taste lift.
 
 ## Use it from your coding agent
 
 Requirements: Node 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-npm install -g chitra-video@0.5.0
+npm install -g chitra-video
 npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
@@ -59,6 +63,10 @@ repository only for development/examples. See [Install and use Chitra](docs/INST
 for explicit Claude Code, Codex, Cursor, and Gemini CLI commands, or [run the
 friend test](docs/quickstarts/README.md) with two ready-to-use prompts and a
 compact feedback checklist.
+
+The public registry currently resolves `0.4.0`; `0.5.0` remains a release
+candidate until npm authentication, publication, and a fresh registry install
+pass. Do not interpret the command above as evidence that `0.5.0` is public.
 
 Then ask for the outcome in your own language. A plain direction prompt is
 enough; references, images, links, screenshots, footage, audio, brand material,
@@ -80,6 +88,8 @@ chitra render score.json -o draft.mp4 -q draft # sampled diagnostic preview; onl
 chitra review-validate creative-review.json   # validate isolated, evidence-bound judgment
 chitra review-score labels-v2.json creative-review.json --case uniform-monotony
 chitra review-calibrate study.json -o calibration-result.json # independent panel/candidate agreement
+chitra memory-validate revision-memory.json # validate accepted/rejected outcome history
+chitra memory-context revision-memory.json --brand acme --max-chars 6000 # bounded relevant memory
 chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
 chitra verify-release out/release.json         # reject changed inputs, assets, output, or evidence
 chitra clean                     # remove work artifacts

@@ -19,15 +19,20 @@ adds the production interpretation needed during Direction.
 | General character/physics simulation | no | pre-rendered still/video | External 3D/video production required. |
 | Music bed and sparse SFX | yes | yes | Limited automation; final loudness measured. |
 | Voiceover, word timing, clip audio | no | pre-mixed track | No typed narration/word timeline. |
+| Transcript-addressed footage EDL | no | external edit | No provider-neutral word timeline or phrase-addressed Score path. |
+| Seekable Lottie/Rive/glTF import | no | pre-rendered plate | No deterministic runtime adapter. |
 | Beat/onset choreography | yes | yes | Dense audio can over-count. |
 | Reference decomposition/comparison | yes | yes | No semantics, optical flow, or taste measurement. |
 | Website/image acquisition | yes | yes | Uses installed system browser; freeze assets locally. |
 | Image/video generation | no provider bundled | host tools | Record model, prompt, provenance, and rights. |
 | Structural/temporal QA | yes | — | Bounded sampling; green is a measurable floor, not taste. |
 | Professional taste guarantee | no | human panel | Independent calibration corpus is not collected. |
+| Accepted-revision memory | yes | — | Contract/compiler is measured; real taste lift is not. |
+| Directorial alternative search | no | manual concepts | No bounded blind probe comparison. |
+| Embeddable player/studio | no | external review tools | Chitra emits evidence and rendered files. |
+| Distributed/cloud render | no | external infrastructure | Single local worker only. |
 
 For every brief-critical requirement, Direction records the capability ID,
 registry support, approach, acceptance test, and planned project-local path for
 asset-assisted work. Unsupported must-haves block validation. Asset-assisted
 must-haves block creative conformance until that exact path reaches the Score.
-

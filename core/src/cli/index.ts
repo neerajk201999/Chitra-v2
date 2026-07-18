@@ -24,6 +24,7 @@ import { materializeIntake } from "../intake/materialize.js";
 import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyReleaseReceipt, type ReleaseArtifacts } from "../release/index.js";
 import { CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview } from "../creative/review.js";
 import { validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy } from "../creative/calibration.js";
+import { compileRevisionContext, validateRevisionContextQuery, validateRevisionMemory } from "../creative/memory.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -237,6 +238,59 @@ program
       if (opts.out) console.log(`  result: ${opts.out}`);
       if (!result.allReviewersConsentToPublicRelease) console.log("  private: at least one reviewer did not consent to public release");
     }
+  });
+
+program
+  .command("memory-validate")
+  .argument("<memory>", "accepted-revision memory JSON")
+  .option("--json", "print normalized memory")
+  .description("Validate scope-safe evidence-bound creative memory (ADR-0032)")
+  .action((file: string, opts: { json?: boolean }) => {
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(path.resolve(file), "utf8")); } catch (e) { fail(`Cannot read ${file}: ${(e as Error).message}`); }
+    const validation = validateRevisionMemory(raw);
+    if (!validation.ok) fail(`Invalid revision memory: ${validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+    if (opts.json) console.log(JSON.stringify(validation.memory, null, 2));
+    else {
+      const accepted = validation.memory.entries.filter((entry) => entry.decision.status === "accepted").length;
+      console.log(`✔ revision memory valid — ${validation.memory.entries.length} entries, ${accepted} accepted`);
+    }
+  });
+
+program
+  .command("memory-context")
+  .argument("<memory>", "accepted-revision memory JSON")
+  .option("--project <id>", "retrieve project-scoped revisions for this exact project")
+  .option("--brand <id>", "retrieve brand-scoped revisions for this exact brand")
+  .option("--register <register>", "filter by brand-film, product-demo, or social-short")
+  .option("--principle <id...>", "prioritize matching CR-* principle IDs")
+  .option("--max-chars <count>", "maximum serialized directive characters", "6000")
+  .option("-o, --out <file>", "write deterministic context packet")
+  .option("--json", "print the context packet")
+  .description("Compile relevant revision evidence into bounded agent context (ADR-0032)")
+  .action((file: string, opts: { project?: string; brand?: string; register?: string; principle?: string[]; maxChars: string; out?: string; json?: boolean }) => {
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(path.resolve(file), "utf8")); } catch (e) { fail(`Cannot read ${file}: ${(e as Error).message}`); }
+    const validation = validateRevisionMemory(raw);
+    if (!validation.ok) fail(`Invalid revision memory: ${validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+    const maxChars = Number(opts.maxChars);
+    if (!Number.isInteger(maxChars) || maxChars < 512 || maxChars > 50000) fail("--max-chars must be an integer from 512 to 50000");
+    const query = validateRevisionContextQuery({
+      projectId: opts.project,
+      brandId: opts.brand,
+      register: opts.register,
+      principleIds: opts.principle,
+      maxChars,
+    });
+    if (!query.ok) fail(`Invalid memory query: ${query.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+    const context = compileRevisionContext(validation.memory, query.query);
+    if (opts.out) {
+      const out = path.resolve(opts.out);
+      mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, `${JSON.stringify(context, null, 2)}\n`);
+    }
+    if (opts.json || !opts.out) console.log(JSON.stringify(context, null, 2));
+    else console.log(`✔ revision context compiled — ${context.selected}/${context.eligible} relevant entries (${context.omittedByBudget} omitted by budget)`);
   });
 
 program

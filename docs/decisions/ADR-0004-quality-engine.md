@@ -6,6 +6,13 @@
 
 This is Chitra's defining subsystem and primary moat. HyperFrames constrains generation with 372K words of prose but *nothing ever watches its rendered video*. Impeccable proves hybrid critique works for static UI but has no concept of time. Code2Video (ICML 2026) demonstrates VLM render-critique loops gain +40-50% on quality metrics. video-use proves the loop must be *bounded* and evidence-based.
 
+> **Current-source correction (2026-07-18):** HyperFrames now ships a structured
+> plan→sketch→build→final-preview human review loop plus compare/grade tooling.
+> The original sentence records the 2026-07-14 source state and must not be used
+> as a current competitive claim. Chitra's remaining hypothesis is calibrated,
+> evidence-bound semantic critique and accepted-revision outcomes—not the mere
+> existence of review.
+
 ## Decision
 
 Quality is enforced in three layers, ordered cheap → expensive, each with a distinct failure vocabulary:

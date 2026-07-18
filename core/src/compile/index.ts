@@ -16,6 +16,7 @@
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { AnimationT, SceneT, ScoreT, ElementT } from "../ir/schema.js";
 import { resolveProjectAsset } from "../assets/local.js";
 import {
@@ -30,6 +31,7 @@ import {
 } from "../motion/tokens.js";
 
 const require_ = createRequire(import.meta.url);
+const runtimeAssets = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../runtime-assets");
 
 // ── Assets inlined at compile time ─────────────────────────────────────────
 function gsapSource(): string {
@@ -40,10 +42,7 @@ function gsapSource(): string {
  *  its exported classes by bare name in one module scope. Only inlined when a
  *  scene3d element is present (1.2MB). */
 function threeSource(): string {
-  // three's exports map blocks subpath + package.json resolution; resolve the
-  // main entry (lands in build/) and read three.module.js from that same dir.
-  const buildDir = path.dirname(require_.resolve("three"));
-  return readFileSync(path.join(buildDir, "three.module.js"), "utf8");
+  return readFileSync(path.join(runtimeAssets, "three", "three.module.js"), "utf8");
 }
 
 function imageDataUrl(projectDir: string, source: string): string {
@@ -53,11 +52,11 @@ function imageDataUrl(projectDir: string, source: string): string {
   return `data:${mime};base64,${readFileSync(file).toString("base64")}`;
 }
 
-const FONT_FILES: Record<string, { pkg: string; file: string; weights: number[] }> = {
-  Inter: { pkg: "@fontsource/inter", file: "inter-latin-{w}-normal.woff2", weights: [400, 500, 600] },
-  "Space Grotesk": { pkg: "@fontsource/space-grotesk", file: "space-grotesk-latin-{w}-normal.woff2", weights: [400, 500, 700] },
-  "Instrument Serif": { pkg: "@fontsource/instrument-serif", file: "instrument-serif-latin-{w}-normal.woff2", weights: [400] },
-  "JetBrains Mono": { pkg: "@fontsource/jetbrains-mono", file: "jetbrains-mono-latin-{w}-normal.woff2", weights: [400, 500] },
+const FONT_FILES: Record<string, { dir: string; file: string; weights: number[] }> = {
+  Inter: { dir: "inter", file: "inter-latin-{w}-normal.woff2", weights: [400, 500, 600] },
+  "Space Grotesk": { dir: "space-grotesk", file: "space-grotesk-latin-{w}-normal.woff2", weights: [400, 500, 700] },
+  "Instrument Serif": { dir: "instrument-serif", file: "instrument-serif-latin-{w}-normal.woff2", weights: [400] },
+  "JetBrains Mono": { dir: "jetbrains-mono", file: "jetbrains-mono-latin-{w}-normal.woff2", weights: [400, 500] },
 };
 
 function fontFaces(families: string[]): string {
@@ -68,9 +67,8 @@ function fontFaces(families: string[]): string {
     seen.add(fam);
     const spec = FONT_FILES[fam];
     if (!spec) throw new Error(`No bundled font for family "${fam}"`);
-    const pkgDir = path.dirname(require_.resolve(`${spec.pkg}/package.json`));
     for (const w of spec.weights) {
-      const file = path.join(pkgDir, "files", spec.file.replace("{w}", String(w)));
+      const file = path.join(runtimeAssets, "fonts", spec.dir, spec.file.replace("{w}", String(w)));
       const b64 = readFileSync(file).toString("base64");
       css += `@font-face{font-family:'${fam}';font-style:normal;font-weight:${w};src:url(data:font/woff2;base64,${b64}) format('woff2');}\n`;
     }
