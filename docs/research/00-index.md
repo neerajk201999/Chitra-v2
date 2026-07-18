@@ -1,10 +1,14 @@
 # Research Index
 
-Immutable, dated snapshots (2026-07-14). Conclusions drawn from these live in ADRs and architecture docs.
+The original reports are dated snapshots. Current corrections and consolidated
+decisions live in the 2026-07-18 audit; do not treat old “current” claims as live.
+
+- [capability-audit-2026-07-18.md](capability-audit-2026-07-18.md) — source-verified current capability matrix and adopt/improve/replace/omit decisions.
+- [workflows-and-differentiation-2026-07-18.md](workflows-and-differentiation-2026-07-18.md) — real production effort, top-tier quality posture, and Chitra's product wedge.
 
 | Report | Subject | Role | One-line verdict |
 |---|---|---|---|
-| [hyperframes.md](hyperframes.md) | HyperFrames (HeyGen) | Primary competitor | Best agent-orchestration + encoded taste in any creative tool; **no output-side quality loop** — nothing ever watches the render |
+| [hyperframes.md](hyperframes.md) | HyperFrames (HeyGen) | Primary competitor | Strong agent orchestration and encoded taste; dated report—current plan/sketch/final-preview review correction is in the 2026-07-18 audit |
 | [remotion.md](remotion.md) | Remotion | Rendering benchmark | Brilliant frame-pure model; **do not build on it** (license + Chrome-screenshot substrate its own authors are leaving); clean-room its patterns |
 | [landscape.md](landscape.md) | EditFrame + wider SOTA | Market map | HTML/CSS + relational timing is the converged agent-native format; VLM-critic loops proven (Code2Video +40-50%); **the quality layer is unowned whitespace** |
 | [impeccable.md](impeccable.md) | Impeccable | Quality Engine seed | Hybrid deterministic-detector + isolated LLM critique, honest rubrics, closed fix loop; has **no concept of time** — everything temporal is ours to invent |

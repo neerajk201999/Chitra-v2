@@ -1,6 +1,18 @@
 # Roadmap — MVP to v1.0
 
-**Status (2026-07-17): M0 ✅ · M1 ✅ · M2 partial · M3 partial · M4 (Creative Intelligence) STARTED.** See [known-issues.md](known-issues.md) for the honest ledger.
+**Status (2026-07-18): M0 ✅ · M1 ✅ · M2 partial · M3 partial · M4 (Creative Intelligence) IN PROGRESS.** See [known-issues.md](known-issues.md) for the honest ledger.
+
+> **Capability-program rebaseline (2026-07-18).** Current-source verification
+> confirms Remotion leads renderer/ecosystem breadth, HyperFrames leads workflow/
+> media breadth and now includes plan→sketch→final-preview review, while
+> video-use leads compact transcript-addressed footage editing. ADR-0032 ships
+> scope-safe accepted-revision memory; transcript/clip-audio editing and
+> still-first directorial probes are next. See the
+> [current capability audit](../research/capability-audit-2026-07-18.md).
+> The 2026-07-16 “renderer feature-complete” sentence below is historical and
+> superseded: current Remotion/HyperFrames source proves important compositor,
+> imported-animation, media/audio, player, and distribution gaps. Renderer work
+> remains residual/user-job driven, but the renderer is not literally complete.
 
 > **Program rebaseline (2026-07-16).** The architecture remains aligned, but the
 > active queue had narrowed around one Card Vault reconstruction. Review 0003
@@ -126,8 +138,9 @@ Remaining (priority order):
 - **Creative QA data collection**: independently label ≥20 cases across brand film,
   product demo, and social short using video, motion clips, and audio; measure
   principle/severity/verdict agreement and false-positive rate.
-- **Accepted-revision memory**: learn explicit, reviewable deltas from accepted human
-  revisions so future films inherit taste without silent global mutation.
+- **Accepted-revision memory**: ADR-0032 ships the typed ledger and bounded,
+  scope-safe compiler; collect real accepted/rejected outcomes to test whether
+  retrieval improves future films without silent global mutation.
 - **Directorial search**: generate bounded narrative/storyboard alternatives,
   render probes, compare them blind, and retain the winner's reasoning.
 - Prove outside-user first use, then run neutral **ChitraBench** end-to-end.

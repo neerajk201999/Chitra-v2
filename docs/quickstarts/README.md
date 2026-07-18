@@ -10,7 +10,7 @@ evidence.
 Requirements: Node.js 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-npm install -g chitra-video@0.5.0
+npm install -g chitra-video
 npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```

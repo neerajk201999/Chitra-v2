@@ -54,6 +54,11 @@ approach. Lock source rights and user preferences. Present a compact Direction
 and shot list before motion authoring unless the user explicitly delegated that
 approval.
 
+If a revision ledger exists, load
+[references/revision-memory.md](references/revision-memory.md) and compile a
+bounded project/brand context packet before Direction. Never load the full
+ledger or promote one project's preference into universal taste.
+
 ### B. Design and author
 
 Load [references/score-authoring.md](references/score-authoring.md). Use real
@@ -71,6 +76,9 @@ Load [references/review-release.md](references/review-release.md) and the
 `critique-video` skill. First watch is isolated from intent and gate findings.
 Turn observed defects into local edits; never regenerate the whole film because
 one shot failed.
+
+After an explicit human accept/reject/revert decision, use the revision-memory
+reference to preserve the evidence and outcome at the narrowest valid scope.
 
 ## Stop conditions
 

@@ -6,6 +6,23 @@ versioned separately.
 
 ## [Unreleased]
 
+### Added
+
+- ADR-0032 Revision Memory 0.1 with strict project/brand/universal scope,
+  evidence-required accepted outcomes, independently calibrated universal
+  promotion, `memory-validate`, and deterministic budgeted `memory-context`.
+- A 200-entry benchmark proving exact-brand isolation, byte-identical complete-
+  context compilation, rejected-proposal retention, and a 6,000-character ceiling.
+- A current source-backed competitor capability matrix and workflow/product-
+  differentiation report with explicit adopt/improve/replace/omit decisions.
+
+### Changed
+
+- ADR-0033 replaces complete Three.js and four Fontsource runtime dependencies
+  with the exact licensed module/font bytes Chitra executes. The isolated
+  installed footprint falls from 93.7 MiB to 62.8 MiB with no browser download;
+  runtime assets carry versions, hashes, sources, and license texts.
+
 ## [0.5.0] — 2026-07-17
 
 ### Fixed

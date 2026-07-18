@@ -9,3 +9,6 @@ it without cloning the repository:
 
 ADR-0031 defines the approval and conformance behavior.
 
+The current cross-project audit, user jobs, gaps, priorities, and explicit
+adopt/improve/replace/omit decisions are in
+[Capability audit — 2026-07-18](../research/capability-audit-2026-07-18.md).

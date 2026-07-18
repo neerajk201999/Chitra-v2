@@ -1,10 +1,12 @@
-export const CAPABILITY_MATRIX_VERSION = "0.1.0";
+export const CAPABILITY_MATRIX_VERSION = "0.2.0";
 export type CapabilitySupport = "native" | "asset-assisted" | "unsupported";
 export const CAPABILITY_IDS = [
   "typography-layout", "image-ui", "video-plates", "transform-motion", "particles",
   "curated-3d", "arbitrary-3d", "environment-reflections-shadows",
   "masks-blends-deep-comps", "motion-blur-dof", "music-sfx",
   "voiceover-word-sync", "reference-analysis", "generated-media", "professional-taste",
+  "clip-audio", "transcript-edl", "imported-animation", "player-studio",
+  "distributed-render", "brand-system", "accepted-revision-memory", "directorial-search",
 ] as const;
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 
@@ -31,4 +33,12 @@ export const CAPABILITIES: Capability[] = [
   { id: "reference-analysis", support: "native", mechanism: "decompose and compare", boundary: "no semantic equivalence or optical flow" },
   { id: "generated-media", support: "asset-assisted", mechanism: "host-agent image/video tools with local provenance", boundary: "no provider bundled" },
   { id: "professional-taste", support: "unsupported", mechanism: "requires calibrated independent human evidence", boundary: "review contract exists; calibration corpus does not" },
+  { id: "clip-audio", support: "unsupported", mechanism: "no Score audio path for source video clips", boundary: "video visuals render, source clip audio does not" },
+  { id: "transcript-edl", support: "unsupported", mechanism: "no provider-neutral word timeline or phrase-addressed edit list", boundary: "external transcript work is not conformed to Score" },
+  { id: "imported-animation", support: "asset-assisted", mechanism: "owned/licensed pre-rendered still or video", boundary: "no seekable Lottie, Rive, or glTF adapter" },
+  { id: "player-studio", support: "unsupported", mechanism: "evidence and rendered files only", boundary: "no embeddable player or timeline editor" },
+  { id: "distributed-render", support: "unsupported", mechanism: "single local render worker", boundary: "no chunk plan, remote workers, or deterministic assembly" },
+  { id: "brand-system", support: "asset-assisted", mechanism: "locked brand sources and explicit Direction constraints", boundary: "no automated brand token, motif, or motion-personality IR" },
+  { id: "accepted-revision-memory", support: "native", mechanism: "typed scoped ledger and deterministic bounded context compiler", boundary: "no real outside-user taste-lift evidence yet" },
+  { id: "directorial-search", support: "unsupported", mechanism: "single authored Direction/Storyboard path", boundary: "no bounded blind concept-probe comparison" },
 ];

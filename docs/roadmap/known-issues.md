@@ -1,4 +1,4 @@
-# Known Issues (v0.5.0 release candidate — 2026-07-17)
+# Known Issues (v0.5.0 release candidate — 2026-07-18)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 
@@ -28,8 +28,10 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 7. **Outside-user cold starts are only partly measured.** The first Cursor run
    exposed sandbox clone retries, a 539 MB Puppeteer cache/corrupt extraction,
    non-executable CLI, false-green probe, five-minute draft, and disk exhaustion.
-   ADR-0031 fixes those paths in the 0.5.0 release candidate; local isolated
-   install is 3.2s/93.7 MiB with zero browser bytes and first frame is 8.8s.
+   ADR-0031 fixes those paths in the 0.5.0 release candidate; ADR-0033 then
+   reduces the local isolated install from 93.7 to 62.8 MiB. The current warm-
+   cache install is 1.4s with zero browser bytes and the complete first-frame
+   check is 6.5s.
    A cold public-registry retest and independent Claude/Codex runs remain.
    Public GitHub access, `chitra-video@0.4.0`, an unauthenticated clone,
    isolated registry install/probe, native Claude/Codex/Cursor manifests, and
@@ -64,6 +66,15 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     `reference-only`/`unknown` bytes, but it cannot verify whether a user's
     `owned` or `licensed` claim is legally correct or detect manually redrawn
     vector paths hidden in authored HTML. Human/legal review remains required.
+15. **Revision Memory has a proven contract, not proven taste lift.** ADR-0032
+    isolates project/brand scope, requires evidence for accepted revisions, and
+    compiles bounded deterministic context, but its benchmark is synthetic. No
+    outside-user corpus yet shows that retrieval improves watched work.
+16. **Major user-job parity gaps remain.** Chitra has no transcript-addressed
+    footage EDL, clip-audio pass-through, typed narration/word timeline, Lottie/
+    Rive import, masks/mattes/blend modes/deep local comps, mature player/studio,
+    or distributed renderer. The current capability audit prioritizes these by
+    blocked workflow; “all competitor capabilities” is not a current claim.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. ✅ Figure text gate bypass fixed 2026-07-16 (ADR-0024).** Rendered figure DOM text now enters size, bounded-sample pixel contrast, safe-zone, reading-time, and overlap gates. The browser benchmark triggers all five and leaves a compliant control green. Rasterized text and sub-interval defects remain item 6.
