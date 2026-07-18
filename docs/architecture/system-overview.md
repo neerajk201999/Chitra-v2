@@ -33,7 +33,8 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pixels)
   intake/    multimodal source/provenance contract and deterministic locking
   editing/   locked word transcripts → compact phrase context → typed EDL →
-             normalized audio-preserving footage plates + hash receipts
+             normalized audio-preserving plates + requested-range filmstrip/
+             waveform/cut evidence + hash receipts
   ir/        Direction, Storyboard, and Score schemas, validation, versioning
   motion/    token registry: easing families, duration scale, stagger patterns,
              transition types, register definitions (machine-readable mirror of docs/motion/)

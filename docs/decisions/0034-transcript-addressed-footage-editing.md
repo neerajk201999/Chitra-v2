@@ -70,3 +70,7 @@ compact agent surface. It does not yet transcribe, generate word-aligned visual
 timeline images, remove filler automatically, grade HDR footage, render
 subtitles, or evaluate cut-boundary pictures. Those are subsequent measured
 slices; the receipt and EDL provide their stable join points.
+
+**Subsequent status:** ADR-0035 now generates bounded EDL-selected filmstrips,
+waveforms, adjacent-cut strips, and neutral discontinuity facts. Transcription,
+grading, subtitles, and calibrated semantic cut judgment remain open.

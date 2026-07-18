@@ -25,7 +25,8 @@ import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyRel
 import { CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview } from "../creative/review.js";
 import { validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy } from "../creative/calibration.js";
 import { compileRevisionContext, validateRevisionContextQuery, validateRevisionMemory } from "../creative/memory.js";
-import { lockTranscript, packTranscript, renderEdit, resolveEdit, resolveEditArtifactTarget, validateEditDecisionList, validateTranscript, verifyTranscriptSources, type EditDecisionListT, type LockedTranscriptT } from "../editing/index.js";
+import { editDigest, lockTranscript, packTranscript, renderEdit, resolveEdit, resolveEditArtifactTarget, transcriptDigest, validateEditDecisionList, validateTranscript, verifyTranscriptSources, type EditDecisionListT, type LockedTranscriptT } from "../editing/index.js";
+import { FOOTAGE_EVIDENCE_VERSION, generateFootageEvidence } from "../editing/evidence.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -387,6 +388,48 @@ program
       const receipt = renderEdit(transcript, edit, projectDir, outputFile, opts.quality as "draft" | "high");
       writeFileSync(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
       console.log(`✔ edit rendered — ${receipt.segments.length} segments, ${(receipt.output.durationMs / 1000).toFixed(2)}s, ${opts.quality}\n  ${opts.out}\n  receipt: ${receiptFile}`);
+    } catch (e) { fail((e as Error).message); }
+  });
+
+program
+  .command("edit-evidence")
+  .argument("<transcript>", "locked Transcript IR JSON")
+  .argument("<edit>", "Edit Decision List JSON")
+  .requiredOption("-o, --out <dir>", "content-addressed evidence root")
+  .requiredOption("--segment <ids...>", "one to twelve EDL segment IDs to inspect")
+  .option("--project <dir>", "project root for source paths (default: transcript directory)")
+  .option("--reason <text>", "why these editorial ranges need visual evidence", "Inspect picture and sound around candidate edit ranges")
+  .option("--context-ms <count>", "source context before and after each segment", "500")
+  .option("--samples <count>", "filmstrip frames per segment (3-9)", "5")
+  .option("--thumbnail-width <pixels>", "filmstrip/cut frame width (240-640)", "400")
+  .option("--waveform-width <pixels>", "waveform width (600-1600)", "1000")
+  .option("--waveform-height <pixels>", "waveform height (80-300)", "160")
+  .option("--skip-adjacent-cuts", "omit adjacent EDL cut strips and metrics")
+  .description("Generate bounded word-aligned filmstrips, waveforms, and adjacent-cut evidence (ADR-0035)")
+  .action(async (transcriptFile: string, editFile: string, opts: { out: string; segment: string[]; project?: string; reason: string; contextMs: string; samples: string; thumbnailWidth: string; waveformWidth: string; waveformHeight: string; skipAdjacentCuts?: boolean }) => {
+    const transcript = loadLockedTranscript(transcriptFile), edit = loadEdit(editFile);
+    const integer = (name: string, value: string, min: number, max: number) => {
+      const parsed = Number(value);
+      if (!Number.isInteger(parsed) || parsed < min || parsed > max) fail(`${name} must be an integer from ${min} to ${max}`);
+      return parsed;
+    };
+    try {
+      const result = await generateFootageEvidence(transcript, edit, {
+        evidenceVersion: FOOTAGE_EVIDENCE_VERSION,
+        transcriptDigest: transcriptDigest(transcript),
+        editDigest: editDigest(edit),
+        segmentIds: opts.segment,
+        reason: opts.reason,
+        contextMs: integer("--context-ms", opts.contextMs, 0, 2_000),
+        samplesPerSegment: integer("--samples", opts.samples, 3, 9),
+        thumbnailWidth: integer("--thumbnail-width", opts.thumbnailWidth, 240, 640),
+        waveform: {
+          width: integer("--waveform-width", opts.waveformWidth, 600, 1_600),
+          height: integer("--waveform-height", opts.waveformHeight, 80, 300),
+        },
+        includeAdjacentCuts: !opts.skipAdjacentCuts,
+      }, path.resolve(opts.project ?? path.dirname(path.resolve(transcriptFile))), opts.out);
+      console.log(`✔ edit evidence ${result.cached ? "reused" : "generated"} — ${result.manifest.segments.length} ranges, ${result.manifest.cuts.length} adjacent cuts\n  ${result.manifestPath}`);
     } catch (e) { fail((e as Error).message); }
   });
 

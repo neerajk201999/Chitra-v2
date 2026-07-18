@@ -14,6 +14,7 @@ chitra transcript-lock transcript.json -o transcript.lock.json --project . # exa
 chitra transcript-pack transcript.lock.json -o transcript-pack.md --project . # compact phrase context
 chitra edit-check transcript.lock.json edit.json --project . # exact quote/word/source contract
 chitra edit-render transcript.lock.json edit.json --project . -o assets/edit.mp4 # clip audio + receipt
+chitra edit-evidence transcript.lock.json edit.json --project . -o edit-evidence --segment opening proof # bounded filmstrip/waveform/cut evidence
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # intent conformance
 chitra init --style night --title "My film"   # gate-passing starter score
 chitra decompose reference.mp4 -o style-dna.json # measured reference facts + shot evidence

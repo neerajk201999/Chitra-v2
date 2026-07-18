@@ -36,6 +36,7 @@ if (!quick) {
   run("Independent calibration contract benchmark", process.execPath, ["benchmarks/independent-calibration/run.mjs", "--check"]);
   run("Accepted-revision memory benchmark", process.execPath, ["benchmarks/revision-memory/run.mjs", "--check"]);
   run("Transcript-addressed edit benchmark", process.execPath, ["benchmarks/transcript-edit/run.mjs", "--check"]);
+  run("Requested-range footage evidence benchmark", process.execPath, ["benchmarks/footage-evidence/run.mjs", "--check"]);
   run("Source-assisted provenance benchmark", process.execPath, ["benchmarks/source-assisted/run.mjs", "--check"]);
   run("Rendered figure text gate benchmark", process.execPath, ["benchmarks/figure-text-gates/run.mjs", "--check"]);
   run("Release integrity benchmark", process.execPath, ["benchmarks/release-integrity/run.mjs", "--check"]);

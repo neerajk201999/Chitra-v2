@@ -54,11 +54,11 @@ about blocked user work, not competitor prestige.
 | Lottie/Rive/animation adapters | Reuse authored assets and designer workflows | Remotion, HyperFrames | asset-assisted video only | adopt seekable local adapters | P1 |
 | Player/Studio/timeline UI | Scrub, review, edit and embed without rerendering | Remotion, HyperFrames, EditFrame | evidence sheets and files only | adopt a viewer; omit full GUI editor before quality proof | P2 |
 | Cloud/distributed rendering | Scale long/high-res/batch jobs | Remotion Lambda/Cloud Run; HyperFrames cloud/Lambda/GCP | absent | adopt chunk plan/assemble after local throughput proof | P2 |
-| Media import and clip seeking | Use user footage, not only generated scenes | all | deterministic video frames, no clip audio | improve with clip audio and edit timeline | P0 |
+| Media import and clip seeking | Use user footage, not only generated scenes | all | deterministic visual plates plus ADR-0034 audio-preserving transcript edits; direct Score video remains visual-only | improve only where unified compositor/audio timelines unblock measured jobs | P0 partially closed |
 | Word-timed transcription | Edit speech by meaning rather than timecodes | video-use, HyperFrames | ADR-0034 accepts provider-neutral word/speaker/event IR; no bundled ASR provider | improve provider adapters without base-install coupling | P1 |
 | Transcript-addressed EDL | Remove filler/retakes and form a story with compact context | video-use | ADR-0034 locks source bytes, packs phrases, conforms exact quotes/word IDs, and renders audio-preserving plates | improve with Direction/Storyboard trace and visual-event addressing | P0 partially closed |
-| On-demand filmstrip/waveform | Give agents targeted visual evidence without dumping frames | video-use | contact sheets/cut strips, no word-aligned view | improve with requested ranges and saliency/cut candidates | P0 |
-| Cut-boundary self-evaluation | Catch jump cuts, pops, hidden captions | video-use | bounded whole-film release gates; no speech-cut specialization | adopt specialist gates, preserve ≤3-pass loop | P1 |
+| On-demand filmstrip/waveform | Give agents targeted visual evidence without dumping frames | video-use | ADR-0035 emits bounded EDL-selected word/source-time filmstrips and audio/explicit-silence waveforms | improve visual-event addressing only from measured workflows | P0 closed |
+| Cut-boundary self-evaluation | Catch jump cuts, pops, hidden captions | video-use | ADR-0035 emits adjacent four-frame strips and neutral RGB/luma/RMS facts for Creative Review | improve calibrated semantic judgment; never threshold pixel change as taste | P1 partially closed |
 | Music/SFX/beat grid | Rhythm, emotional arc, synchronization | HyperFrames, Remotion SFX, Chitra | native beds/SFX/onsets/loudness; sparse automation | improve typed mix automation and energy curves | P1 |
 | Voice/TTS/word sync | Narration-led explainers and accessibility | HyperFrames/video-use/provider ecosystems | supplied premix only | replace provider lock-in with typed narration + adapters | P0 |
 | Asset resolver/provider catalog | Remove manual searching and freeze rights/provenance | HyperFrames | fetch/snap/local provenance; no catalog/ranking | improve provider-neutral acquisition and rights-aware ranking | P1 |
@@ -79,10 +79,10 @@ about blocked user work, not competitor prestige.
 ## What parity means for Chitra
 
 Foundational parity is reached when a major user job is not blocked, not when
-every competitor API name exists. The P0 parity gaps are therefore: public
-first-use proof, requested-range transcript/visual evidence, narration
-generation/sync, brand ingestion, still-first approval, calibrated judgment, and
-neutral evaluation. Masks/deep comps and seekable imported animation are P1
+every competitor API name exists. The remaining P0 parity gaps are therefore:
+public first-use proof, narration generation/sync, brand ingestion, still-first
+approval, calibrated judgment, and neutral evaluation. Masks/deep comps and
+seekable imported animation are P1
 because they block important premium film grammars. A hosted editor, every
 codec, and every transition preset are not prerequisites for the product thesis.
 
@@ -94,8 +94,9 @@ codec, and every transition preset are not prerequisites for the product thesis.
   sophisticated plan→sketch→build→preview user review loop. The older statement
   “nothing reviews output” is obsolete; the remaining distinction is calibrated,
   evidence-bound aesthetic judgment and accepted-revision outcomes.
-- video-use currently has the best verified compact representation for raw
-  speech footage: ~12 KB transcript plus on-demand timeline images. ADR-0034
-  now implements Chitra's provider-neutral locked transcript/EDL/render half;
-  its word-aligned visual timeline remains ahead.
+- video-use established the best verified compact raw-speech representation in
+  this audit: ~12 KB transcript plus on-demand timeline images. ADR-0034/0035
+  now implement a provider-neutral locked transcript/EDL/render path plus
+  content-addressed requested filmstrips, waveforms, cut strips, and neutral
+  diagnostics. No neutral workflow benchmark yet establishes a winner.
 - EditFrame implementation details and “Replit Video” claims remain unverified.

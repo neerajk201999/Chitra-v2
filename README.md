@@ -46,6 +46,10 @@ measured catch rate** on the [seeded-defect benchmark](benchmarks/seeded-defects
 ADR-0032 now retains explicit accepted/rejected/reverted revision outcomes at
 project or brand scope and compiles only relevant guidance under a hard context
 budget; its synthetic benchmark proves isolation and determinism, not taste lift.
+ADR-0034/0035 add provider-neutral word-addressed footage editing and bounded
+requested-range filmstrips, waveforms, adjacent-cut strips, and neutral
+discontinuity facts. These make exact editorial decisions inspectable without
+loading whole videos; they do not prove semantic cut quality.
 
 ## Use it from your coding agent
 
@@ -79,6 +83,7 @@ chitra transcript-lock transcript.json -o transcript.lock.json --project . # bin
 chitra transcript-pack transcript.lock.json -o transcript-pack.md --project . # compact agent reading surface
 chitra edit-check transcript.lock.json edit.json --project . # quote/word/source conformance
 chitra edit-render transcript.lock.json edit.json --project . -o assets/edit.mp4 -q draft # preserve clip audio
+chitra edit-evidence transcript.lock.json edit.json --project . -o edit-evidence --segment opening proof # targeted picture/sound evidence
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # preserve intent across every tier
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence

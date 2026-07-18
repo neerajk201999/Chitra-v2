@@ -31,9 +31,20 @@ they carry character, timing, or meaning.
 
 ```bash
 chitra edit-check transcript.lock.json edit.json --project . --json
+chitra edit-evidence transcript.lock.json edit.json \
+  --project . -o edit-evidence --segment opening proof resolution \
+  --reason "Inspect gestures, UI states, and attention handoffs before rendering"
 chitra edit-render transcript.lock.json edit.json \
   --project . -o assets/edited-footage.mp4 -q draft
 ```
+
+Open only the generated filmstrips, waveforms, and adjacent-cut strips for the
+segments being decided. Do not load the whole footage. The manifest labels every
+sample with source time and nearest word ID, binds artifact hashes, and reports
+RGB/luma/RMS discontinuity facts. Those numbers are not quality scores: judge
+motivation, pose/gesture continuity, UI state, eye trace, rhythm, and sound using
+`CR-EDIT-1..3`, `CR-MOT-4`, and `CR-SOUND-1..3`. Revise the EDL and regenerate
+the content-addressed request when a boundary fails.
 
 Inspect the resulting receipt and edited plate. The renderer normalizes
 geometry/FPS, preserves source audio, inserts silence for silent sources in a
@@ -47,9 +58,8 @@ audio twice.
 
 ## Current stop condition
 
-Chitra does not yet produce a word-aligned filmstrip/waveform or automatically
-inspect every cut boundary. Generate targeted visual evidence with the host
-agent and treat cut-picture quality as a required manual/critic review. If an
-edit depends on untranscribed silent UI events, address those moments by source
-time and visual evidence outside the word EDL rather than fabricating words.
-
+Chitra produces requested word-aligned evidence but does not infer semantic cut
+quality deterministically or inspect unrequested ranges. Treat cut-picture
+quality as a required evidence-bound critic/human review. If an edit depends on
+untranscribed silent UI events, address those moments through an explicit event
+token or future visual-event IR rather than fabricating speech.

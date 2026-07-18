@@ -182,6 +182,10 @@ export function transcriptDigest(transcript: LockedTranscriptT) {
   return sha256(JSON.stringify(LockedTranscript.parse(transcript)));
 }
 
+export function editDigest(edit: EditDecisionListT) {
+  return sha256(JSON.stringify(EditDecisionList.parse(edit)));
+}
+
 const cleanText = (tokens: Array<{ text: string }>) => tokens.map((token) => token.text.trim()).join(" ")
   .replace(/\s+([,.!?;:])/g, "$1").replace(/\s+/g, " ").trim();
 const timecode = (ms: number) => `${String(Math.floor(ms / 60_000)).padStart(2, "0")}:${(ms % 60_000 / 1000).toFixed(3).padStart(6, "0")}`;
@@ -329,7 +333,7 @@ export function renderEdit(transcript: LockedTranscriptT, edit: EditDecisionList
   return {
     receiptVersion: EDIT_RECEIPT_VERSION,
     transcriptDigest: transcriptDigest(transcript),
-    editDigest: sha256(JSON.stringify(EditDecisionList.parse(edit))),
+    editDigest: editDigest(edit),
     quality,
     sources: transcript.sources.map((source) => ({ id: source.id, path: source.path, sha256: source.sha256 })),
     segments,

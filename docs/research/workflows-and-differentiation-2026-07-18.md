@@ -58,7 +58,7 @@ references as evidence for a problem—not a popularity vote—and maintains:
 
 | Finding | Implemented foundation | Next executable proof |
 |---|---|---|
-| Whole-video context is wasteful | progressive skills, sampled evidence, bounded release gates, ADR-0034 locked transcript/phrase pack/EDL | requested-range word-aligned filmstrips and waveform evidence |
+| Whole-video context is wasteful | progressive skills, sampled evidence, bounded release gates, ADR-0034/0035 locked transcript/EDL plus requested word filmstrips, waveforms, and cut strips | test outside-user decision speed and add visual-event addressing only if needed |
 | Motion cannot rescue bad direction | typed Direction and Storyboard conformance | directorial alternatives + still-first blind probe |
 | Rules do not equal taste | Creative Review and independent study contracts | collect ≥20 real cases with motion/audio |
 | Feedback is repeatedly lost | ADR-0032 accepted-revision memory | outside-user ledger entries and measured retrieval usefulness |
@@ -70,9 +70,8 @@ references as evidence for a problem—not a popularity vote—and maintains:
 
 1. Publish and externally verify lightweight `0.5.0`; instrument only explicit,
    consented first-use facts.
-2. Extend ADR-0034's provider-neutral transcript/clip-audio editing with
-   requested-range word/waveform evidence and cut-boundary evaluation; keep
-   transcription providers optional.
+2. Measure ADR-0034/0035's provider-neutral edit/evidence loop with outside
+   footage; keep transcription providers optional.
 3. Build hero-frame/directorial search before more renderer breadth.
 4. Collect independent reviews and real accepted-revision records.
 5. Add masks/compositions, Lottie/Rive, 3D, audio, or backend breadth only where
