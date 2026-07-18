@@ -6,7 +6,7 @@ Requires Node 22.12+, FFmpeg on `PATH`, and installed Chrome, Chromium, or Edge.
 Chitra uses `puppeteer-core` and does not download a browser during install.
 
 ```bash
-npm install -g chitra-video
+npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.1/chitra-video-0.5.0.tgz
 chitra probe
 chitra capabilities --json                     # native/assisted/unsupported truth
 chitra intake intake.json -o intake.lock.json # objective + mixed-source provenance
@@ -17,7 +17,7 @@ chitra edit-render transcript.lock.json edit.json --project . -o assets/edit.mp4
 chitra edit-evidence transcript.lock.json edit.json --project . -o edit-evidence --segment opening proof # bounded filmstrip/waveform/cut evidence
 chitra direction-search-lock intake.lock.json search.json --project . -o search.lock.json # lock comparable concepts
 chitra direction-probes intake.lock.json search.lock.json --project . -o direction-probes # blind still packet
-chitra direction-select direction-probes/manifest.json selection.json --evidence direction-probes -o selection-receipt.json
+chitra direction-select direction-probes/SEARCH_DIGEST/manifest.json selection.json -o selection-receipt.json
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # intent conformance
 chitra init --style night --title "My film"   # gate-passing starter score
 chitra decompose reference.mp4 -o style-dna.json # measured reference facts + shot evidence

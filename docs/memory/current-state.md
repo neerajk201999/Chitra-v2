@@ -61,6 +61,10 @@ and CHANGELOG.
   isolated registry installation, `chitra --version`, and `chitra probe` pass.
   The public repository, release tag, security-reporting path, and protected
   `main` branch are live.
+- ADR-0037 publishes the exact 0.5.0 package as an immutable GitHub prerelease
+  fallback while npm authentication is unavailable. The downloaded artifact is
+  SHA-256 pinned and passes a fresh-prefix version/probe/Intake/init/validate/
+  browser-frame transaction. This is public-preview proof, not stable npm proof.
 - Canonical skills are exposed through Claude Code, Codex, and Cursor manifests,
   `AGENTS.md`/`GEMINI.md`, and the cross-harness `npx skills` installer.
 - ADR-0029 Creative Review 0.1: 28 stable multidisciplinary `CR-*`
@@ -127,6 +131,11 @@ and CHANGELOG.
 - Public distribution: unauthenticated clone resolved protected `main` at
   `c2b666670d87294763ebedabdd0b7922fc140346`; isolated npm-prefix installation
   fetched `chitra-video@0.4.0`, reported CLI 0.4.0, and passed runtime probe.
+- Public-preview artifact: GitHub `v0.5.0-rc.1` pins protected-main commit
+  `90cd93ee2fc36ef6b1292bc07364c68c345edb40`; the downloaded 586.1 kB package
+  matches SHA-256 `d8bc89b419aa1bf6e53252067d2abcf5300315d94328547303c434bcfb670ba9`,
+  installs in 3.9s/62.9 MiB with zero browser bytes, and completes a real
+  first-frame transaction in 11.7s with warm npm dependencies.
 - Unit suite: 87 tests.
 - Still-first directorial-search benchmark: three materially different Aether
   concepts lock and render comparable identity-free hero probes; CLI/library
@@ -208,8 +217,9 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Publish and independently retest the 0.5.0 Cursor-first recovery on a cold
-   network/cache.
+1. Send the verified 0.5.0 GitHub preview to outside users and measure
+   network-cold install/first-frame across macOS, Windows, and Linux plus Cursor,
+   Claude Code, and Codex. Publish stable npm 0.5.0 when authentication returns.
 2. Run ADR-0036 with outside reviewers and real briefs; measure time/token cost,
    discarded-animation reduction, blind preference, and accepted revisions.
 3. Collect the pre-registered ≥20-case independent Creative Review study using
@@ -247,10 +257,9 @@ The evidence and reasoning for this rebaseline are in
   transition neighborhoods. This is bounded coverage, not every-frame proof;
   shorter between-sample defects, rasterized text, and token-only CSS
   enforcement remain open.
-- GitHub and `chitra-video@0.4.0` are public. The 0.5.0 recovery is a local
-  release candidate until npm publication and a fresh registry install pass.
-  PR #22 and its post-merge protected CI passed; three-harness outside-user
-  timing remains open.
+- GitHub, `chitra-video@0.4.0`, and the SHA-pinned `v0.5.0-rc.1` preview artifact
+  are public. The preview passed a fresh-prefix real-frame transaction; stable
+  npm 0.5.0 and three-harness outside-user timing remain open.
 - ADR-0033 vendors only the executed MIT Three.js module and nine OFL font
   files, removing five full runtime packages. With Transcript/Edit IR included,
   the npm artifact is 586.1 kB compressed/2.2 MB unpacked before dependencies;

@@ -43,6 +43,10 @@ versioned separately.
   with the exact licensed module/font bytes Chitra executes. The isolated
   installed footprint falls from 93.7 MiB to 62.8 MiB with no browser download;
   runtime assets carry versions, hashes, sources, and license texts.
+- ADR-0037 adds an immutable GitHub prerelease fallback while npm authentication
+  is unavailable. The exact public tarball is SHA-256 pinned and exercised in a
+  fresh prefix through probe, Intake, initialization, validation, and a real
+  browser frame; it does not claim stable npm 0.5.0 publication.
 
 ## [0.5.0] — 2026-07-17
 

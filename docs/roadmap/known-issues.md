@@ -35,13 +35,15 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    exposed sandbox clone retries, a 539 MB Puppeteer cache/corrupt extraction,
    non-executable CLI, false-green probe, five-minute draft, and disk exhaustion.
    ADR-0031 fixes those paths in the 0.5.0 release candidate; ADR-0033 then
-   reduces the local isolated install from 93.7 to 62.8 MiB. The current warm-
+   reduces the local isolated install from 93.7 to 62.8 MiB. The local warm-
    cache install is 1.4s with zero browser bytes and the complete first-frame
-   check is 6.5s.
-   A cold public-registry retest and independent Claude/Codex runs remain.
+   check is 6.5s. ADR-0037's public GitHub preview downloads, SHA-verifies, and
+   installs in 3.9s/62.9 MiB, then completes the real first-frame transaction in
+   11.7s on this machine with warm npm dependencies.
+   A cold public-registry retest and independent cross-OS/harness runs remain.
    Public GitHub access, `chitra-video@0.4.0`, an unauthenticated clone,
-   isolated registry install/probe, native Claude/Codex/Cursor manifests, and
-   `npx skills` are verified.
+   isolated registry install/probe, SHA-pinned 0.5.0 preview install, native
+   Claude/Codex/Cursor manifests, and `npx skills` are verified.
    Three independent users across three harnesses remain the M3 exit gate.
 8. **Distribution/parallel rendering unimplemented** (design in ADR-0002 consequences; M5).
 9. **Ctrl-C mid-render** may briefly orphan the launched system-browser process

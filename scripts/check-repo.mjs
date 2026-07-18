@@ -105,6 +105,18 @@ const searchSchema = readFileSync(path.join(root, "core/src/creative/search.ts")
 const directorialSearchVersion = searchSchema.match(/DIRECTORIAL_SEARCH_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const directionSelectionVersion = searchSchema.match(/DIRECTION_SELECTION_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
+const publicPreviewBenchmark = readFileSync(path.join(root, "benchmarks/public-preview-install/run.mjs"), "utf8");
+const publicPreviewUrl = publicPreviewBenchmark.match(/PUBLIC_PREVIEW_URL\s*=\s*"([^"]+)"/)?.[1];
+const publicPreviewSha256 = publicPreviewBenchmark.match(/PUBLIC_PREVIEW_SHA256\s*=\s*"([0-9a-f]{64})"/)?.[1];
+if (!publicPreviewUrl || !publicPreviewSha256) failures.push("public-preview benchmark URL/SHA-256 is not discoverable");
+for (const file of ["README.md", "core/README.md", "docs/INSTALL.md", "docs/quickstarts/README.md"]) {
+  const source = readFileSync(path.join(root, file), "utf8");
+  if (publicPreviewUrl && !source.includes(publicPreviewUrl)) failures.push(`${file} does not install the pinned public-preview URL`);
+}
+for (const file of ["docs/INSTALL.md", "benchmarks/public-preview-install/results.md"]) {
+  const source = readFileSync(path.join(root, file), "utf8");
+  if (publicPreviewSha256 && !source.includes(publicPreviewSha256)) failures.push(`${file} does not record the public-preview SHA-256`);
+}
 if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
 if (!irVersion || !currentState.includes(`**Motion IR:** ${irVersion}`))
