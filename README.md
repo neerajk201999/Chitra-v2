@@ -59,7 +59,7 @@ contract and integrity benchmark pass; its creative choices remain uncalibrated.
 Requirements: Node 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.3/chitra-video-0.5.0.tgz
+npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz
 npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
@@ -71,8 +71,8 @@ for explicit Claude Code, Codex, Cursor, and Gemini CLI commands, or [run the
 friend test](docs/quickstarts/README.md) with two ready-to-use prompts and a
 compact feedback checklist.
 
-The command above installs the public, SHA-256-verified `0.5.0` GitHub
-prerelease. The public registry still resolves `0.4.0`; stable npm `0.5.0`
+The command above installs the latest public `0.5.0` GitHub prerelease. The
+public registry still resolves `0.4.0`; stable npm `0.5.0`
 remains blocked until authentication, publication, and a fresh registry install
 pass. See [the public artifact benchmark](benchmarks/public-preview-install/results.md).
 

@@ -14,14 +14,14 @@ project in Cursor/Claude/Codex. This avoids agent-sandbox Git permissions and
 does not download a second browser:
 
 ```bash
-npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.3/chitra-video-0.5.0.tgz
+npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz
 npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
 
-This installs the verified 0.5.0 GitHub prerelease while public npm still serves
-0.4.0. The artifact SHA-256 is
-`f93a3a8ff43b456793396e1006e670d8a39ae803d6ad035dd2786afffced44c8`.
+This installs the latest 0.5.0 GitHub prerelease while public npm still serves
+0.4.0. The rc.4 artifact SHA-256 is
+`b1feb333f8c4cafa4852859e088dc9fa1162ffcfb7753c9f7bcff76123cdd79d`.
 After 0.5.0 is published and independently reinstalled from the registry, the
 short stable command returns to `npm install -g chitra-video`.
 
