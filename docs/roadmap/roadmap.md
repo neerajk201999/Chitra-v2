@@ -7,8 +7,10 @@
 > media breadth and now includes plan→sketch→final-preview review, while
 > video-use established compact transcript-addressed footage editing. ADR-0032
 > ships scope-safe accepted-revision memory; ADR-0034/0035 now close Chitra's
-> provider-neutral edit plus requested-range evidence slice. Still-first
-> directorial probes are next. See the
+> provider-neutral edit plus requested-range evidence slice. ADR-0036 now closes
+> the first still-first directorial-search contract: bounded candidate Directions,
+> comparable identity-free probes, and a blind selection receipt. Selection
+> quality remains uncalibrated. See the
 > [current capability audit](../research/capability-audit-2026-07-18.md).
 > The 2026-07-16 “renderer feature-complete” sentence below is historical and
 > superseded: current Remotion/HyperFrames source proves important compositor,
@@ -154,8 +156,9 @@ Remaining (priority order):
 - **Accepted-revision memory**: ADR-0032 ships the typed ledger and bounded,
   scope-safe compiler; collect real accepted/rejected outcomes to test whether
   retrieval improves future films without silent global mutation.
-- **Directorial search**: generate bounded narrative/storyboard alternatives,
-  render probes, compare them blind, and retain the winner's reasoning.
+- **Directorial search outcomes**: ADR-0036 ships the bounded still-probe and
+  blind-receipt contract; collect real searches and measure whether chosen
+  Directions reduce discarded animation and improve independent preference.
 - Prove outside-user first use, then run neutral **ChitraBench** end-to-end.
 - **Exit gate:** on a fixed brief + reference, blind evaluators cannot distinguish Chitra's creative *decisions* (storyboard, pacing, type, palette choices) from a professional's on ≥ the ChitraBench bar.
 

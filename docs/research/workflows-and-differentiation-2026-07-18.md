@@ -59,7 +59,7 @@ references as evidence for a problem—not a popularity vote—and maintains:
 | Finding | Implemented foundation | Next executable proof |
 |---|---|---|
 | Whole-video context is wasteful | progressive skills, sampled evidence, bounded release gates, ADR-0034/0035 locked transcript/EDL plus requested word filmstrips, waveforms, and cut strips | test outside-user decision speed and add visual-event addressing only if needed |
-| Motion cannot rescue bad direction | typed Direction and Storyboard conformance | directorial alternatives + still-first blind probe |
+| Motion cannot rescue bad direction | ADR-0036 bounded Directions, comparable identity-free still probes, and selection receipt | collect independently reviewed searches and accepted/rejected outcomes |
 | Rules do not equal taste | Creative Review and independent study contracts | collect ≥20 real cases with motion/audio |
 | Feedback is repeatedly lost | ADR-0032 accepted-revision memory | outside-user ledger entries and measured retrieval usefulness |
 | Brand choices leak into generic defaults | Intake provenance and scoped memory | BRAND IR from real site/assets with motion personality |
@@ -72,7 +72,8 @@ references as evidence for a problem—not a popularity vote—and maintains:
    consented first-use facts.
 2. Measure ADR-0034/0035's provider-neutral edit/evidence loop with outside
    footage; keep transcription providers optional.
-3. Build hero-frame/directorial search before more renderer breadth.
+3. Test ADR-0036 still-first search with outside users; measure whether it lowers
+   wasted full-timeline work and improves blind Direction preference.
 4. Collect independent reviews and real accepted-revision records.
 5. Add masks/compositions, Lottie/Rive, 3D, audio, or backend breadth only where
    a fixed film or outside workflow proves the missing substrate is causal.

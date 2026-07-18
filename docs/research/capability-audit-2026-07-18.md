@@ -1,6 +1,6 @@
 # Capability audit — current competitive surface and Chitra decisions
 
-**Evidence cut:** 2026-07-18. **Chitra:** `80c9932` plus ADR-0032 branch.
+**Evidence cut:** 2026-07-18. **Chitra:** 0.5.0 release candidate through ADR-0036.
 **Primary sources:** current repositories, package manifests, published npm
 metadata, official documentation, and executable Chitra registries. Product
 behavior that could not be inspected is labelled unverified.
@@ -71,7 +71,7 @@ about blocked user work, not competitor prestige.
 | Storyboard checkpoints/sketch approval | Find bad hierarchy before expensive animation | HyperFrames current review loop | typed Storyboard but no automated still-first board | improve: render/compare hero-frame probes before motion | P0 |
 | Aesthetic rendered-output critique | Judge watched result, not only source constraints | Chitra contract; no verified calibrated leader | evidence-bound review exists; independent corpus absent | differentiated only after ≥20-case calibration | P0 |
 | Accepted revision/style memory | Stop repeating rejected ideas and compound approved brand choices | HyperFrames recipes/preferences partially solve reuse | ADR-0032 ships typed, scope-safe, bounded retrieval | differentiated: gather real outcomes; no silent global learning | P0 |
-| Directorial search | Compare a few strong concepts before committing | no verified complete system | absent | differentiated: bounded alternatives + blind probe selection | P1 |
+| Directorial search | Compare a few strong concepts before committing | no verified complete competitor system | ADR-0036 locks 2–4 candidates, comparable identity-free still probes, private mapping, and blind selection receipt; creative quality uncalibrated | improve with independent outcomes; do not automate taste ranking | P0 contract closed |
 | Neutral quality benchmark | Make “better” falsifiable | none for motion-design agents | protocol direction exists; no real head-to-head | differentiated ChitraBench | P0 |
 | Captions/social templates | High-volume social production | HyperFrames/video-use/Remotion | possible manually, no dedicated workflow | adopt only if real users demand it; avoid slop defaults | P2 |
 | Hosted API/collaboration/publish URL | Operational convenience for teams/products | EditFrame, HyperFrames, Remotion cloud ecosystem | absent | omit until local product quality and demand are proven | P3 |
@@ -80,8 +80,9 @@ about blocked user work, not competitor prestige.
 
 Foundational parity is reached when a major user job is not blocked, not when
 every competitor API name exists. The remaining P0 parity gaps are therefore:
-public first-use proof, narration generation/sync, brand ingestion, still-first
-approval, calibrated judgment, and neutral evaluation. Masks/deep comps and
+public first-use proof, narration generation/sync, brand ingestion, calibrated
+judgment, and neutral evaluation. ADR-0036 closes the first still-first approval
+contract, not the quality of its choices. Masks/deep comps and
 seekable imported animation are P1
 because they block important premium film grammars. A hosted editor, every
 codec, and every transition preset are not prerequisites for the product thesis.
