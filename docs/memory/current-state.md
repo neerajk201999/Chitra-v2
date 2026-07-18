@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
+**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -94,6 +94,12 @@ and CHANGELOG.
   adjacent four-frame cut strips with neutral RGB/luma/RMS facts. Requests and
   artifacts are digest-bound and cached; semantic cut quality remains review,
   not a pixel threshold.
+- ADR-0036 Directorial Search/Direction Selection 0.1: two to four locked,
+  pairwise-distinct candidate Directions; one to three same-role/same-question
+  diagnostic stills; identity-free reviewer packet/contact sheet; private
+  digest-bound mapping; near-identical pixel detection; complete blind decision;
+  and evidence-rehashed winner receipt. It proves process integrity, not
+  originality, reviewer blindness, motion/audio quality, or professional taste.
 
 ## Evidence, not claims
 
@@ -121,7 +127,12 @@ and CHANGELOG.
 - Public distribution: unauthenticated clone resolved protected `main` at
   `c2b666670d87294763ebedabdd0b7922fc140346`; isolated npm-prefix installation
   fetched `chitra-video@0.4.0`, reported CLI 0.4.0, and passed runtime probe.
-- Unit suite: 84 tests.
+- Unit suite: 87 tests.
+- Still-first directorial-search benchmark: three materially different Aether
+  concepts lock and render comparable identity-free hero probes; CLI/library
+  artifacts agree; exact cache reuse holds; changed Direction, manifest, packet,
+  contact sheet, incomplete/foreign pair diagnostics, and duplicate evidence
+  are refused; a separate pixel-identical two-candidate search blocks selection.
 - Creative Review contract benchmark: valid typed review, hidden
   principle/severity/verdict matching, deterministic repeated scoring, the
   documented label-collection CLI flow, and rejection of detached evidence,
@@ -198,10 +209,9 @@ remains the center of gravity; renderer work requires a specific target-film gap
 Ordered next slices:
 
 1. Publish and independently retest the 0.5.0 Cursor-first recovery on a cold
-   network/cache, then use the same Aether brief to measure still-first
-   feasibility and preview quality.
-2. Run a still-first directorial-search slice on the fixed Aether brief: bounded
-   concepts, hero-frame probes, blind selection, and retained decision evidence.
+   network/cache.
+2. Run ADR-0036 with outside reviewers and real briefs; measure time/token cost,
+   discarded-animation reduction, blind preference, and accepted revisions.
 3. Collect the pre-registered ≥20-case independent Creative Review study using
    real motion clips/audio and populate ADR-0032 with actual accepted outcomes.
 4. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
@@ -243,7 +253,7 @@ The evidence and reasoning for this rebaseline are in
   timing remains open.
 - ADR-0033 vendors only the executed MIT Three.js module and nine OFL font
   files, removing five full runtime packages. With Transcript/Edit IR included,
-  the npm artifact is 574.7 kB compressed/2.1 MB unpacked before dependencies;
+  the npm artifact is 586.1 kB compressed/2.2 MB unpacked before dependencies;
   installed footprint falls
   33% from 93.7 to 62.8 MiB. GSAP remains a normal licensed dependency.
 - The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”

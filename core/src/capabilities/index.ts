@@ -1,4 +1,4 @@
-export const CAPABILITY_MATRIX_VERSION = "0.4.0";
+export const CAPABILITY_MATRIX_VERSION = "0.5.0";
 export type CapabilitySupport = "native" | "asset-assisted" | "unsupported";
 export const CAPABILITY_IDS = [
   "typography-layout", "image-ui", "video-plates", "transform-motion", "particles",
@@ -41,5 +41,5 @@ export const CAPABILITIES: Capability[] = [
   { id: "distributed-render", support: "unsupported", mechanism: "single local render worker", boundary: "no chunk plan, remote workers, or deterministic assembly" },
   { id: "brand-system", support: "asset-assisted", mechanism: "locked brand sources and explicit Direction constraints", boundary: "no automated brand token, motif, or motion-personality IR" },
   { id: "accepted-revision-memory", support: "native", mechanism: "typed scoped ledger and deterministic bounded context compiler", boundary: "no real outside-user taste-lift evidence yet" },
-  { id: "directorial-search", support: "unsupported", mechanism: "single authored Direction/Storyboard path", boundary: "no bounded blind concept-probe comparison" },
+  { id: "directorial-search", support: "native", mechanism: "locked 2–4 Direction search, comparable still probes, identity-free packet, blind selection receipt", boundary: "process and integrity are measured; selection quality and reviewer blindness are not independently proven" },
 ];

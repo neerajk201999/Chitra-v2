@@ -9,7 +9,7 @@ Install into your coding agent — Claude Code, Codex, Cursor, Gemini CLI — an
 Every existing tool solves *rendering*. Chitra solves **taste**:
 
 ```
-prompt + optional sources → intake → direction → storyboard → motion → render → critique → revision → video
+prompt + optional sources → intake → bounded direction search → storyboard → motion → render → critique → revision → video
 ```
 
 - A **four-tier creative ladder**: locked Intake → Direction → Storyboard → an
@@ -49,7 +49,10 @@ budget; its synthetic benchmark proves isolation and determinism, not taste lift
 ADR-0034/0035 add provider-neutral word-addressed footage editing and bounded
 requested-range filmstrips, waveforms, adjacent-cut strips, and neutral
 discontinuity facts. These make exact editorial decisions inspectable without
-loading whole videos; they do not prove semantic cut quality.
+loading whole videos; they do not prove semantic cut quality. ADR-0036 adds a
+still-first search transaction: compare two to four materially different
+Directions through identity-free probes before paying to animate one. Its
+contract and integrity benchmark pass; its creative choices remain uncalibrated.
 
 ## Use it from your coding agent
 
@@ -84,6 +87,9 @@ chitra transcript-pack transcript.lock.json -o transcript-pack.md --project . # 
 chitra edit-check transcript.lock.json edit.json --project . # quote/word/source conformance
 chitra edit-render transcript.lock.json edit.json --project . -o assets/edit.mp4 -q draft # preserve clip audio
 chitra edit-evidence transcript.lock.json edit.json --project . -o edit-evidence --segment opening proof # targeted picture/sound evidence
+chitra direction-search-lock intake.lock.json search.json --project . -o search.lock.json # bind 2–4 candidate Directions
+chitra direction-probes intake.lock.json search.lock.json --project . -o direction-probes # identity-free comparable stills
+chitra direction-select <probe-dir>/manifest.json selection.json -o selection-receipt.json # re-hash evidence and resolve exact winner
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # preserve intent across every tier
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence

@@ -83,6 +83,13 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     Lottie/Rive import, masks/mattes/blend modes/deep
     local comps, mature player/studio, or distributed renderer. “All competitor
     capabilities” is not a current claim.
+17. **Directorial search has integrity evidence, not taste evidence.** ADR-0036
+    enforces two to four distinct locked Directions, comparable probe roles,
+    identity-free packets, complete selection records, evidence re-hashing, and
+    duplicate detection. Questions can still be paraphrased to hide conceptual
+    sameness; RGB MAE only detects near-identical pixels; declarations cannot
+    prove a reviewer was blind; stills cannot prove motion or sound; and no
+    independent corpus shows that the selected Direction is professionally good.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. ✅ Figure text gate bypass fixed 2026-07-16 (ADR-0024).** Rendered figure DOM text now enters size, bounded-sample pixel contrast, safe-zone, reading-time, and overlap gates. The browser benchmark triggers all five and leaves a compliant control green. Rasterized text and sub-interval defects remain item 6.

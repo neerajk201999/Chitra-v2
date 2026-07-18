@@ -25,6 +25,7 @@ import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyRel
 import { CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview } from "../creative/review.js";
 import { validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy } from "../creative/calibration.js";
 import { compileRevisionContext, validateRevisionContextQuery, validateRevisionMemory } from "../creative/memory.js";
+import { DirectorialProbeManifest, LockedDirectorialSearch, generateDirectorialProbes, lockDirectorialSearch, makeDirectionSelectionReceipt } from "../creative/search.js";
 import { editDigest, lockTranscript, packTranscript, renderEdit, resolveEdit, resolveEditArtifactTarget, transcriptDigest, validateEditDecisionList, validateTranscript, verifyTranscriptSources, type EditDecisionListT, type LockedTranscriptT } from "../editing/index.js";
 import { FOOTAGE_EVIDENCE_VERSION, generateFootageEvidence } from "../editing/evidence.js";
 
@@ -176,6 +177,64 @@ program
   .action((file: string) => {
     const d = loadDirection(file);
     console.log(`✔ direction valid — "${d.title}" (${d.register}), ${d.scenes.length} beats\n  arc: ${d.narrativeArc}`);
+  });
+
+program
+  .command("direction-search-lock")
+  .argument("<intake>", "locked Intake IR JSON")
+  .argument("<search>", "Directorial Search draft JSON")
+  .requiredOption("-o, --out <file>", "locked search output")
+  .option("--project <dir>", "project root for candidate paths (default: search directory)")
+  .description("Lock 2-4 materially distinct Directions and comparable still-probe Scores to one Intake (ADR-0036)")
+  .action(async (intakeFile: string, searchFile: string, opts: { out: string; project?: string }) => {
+    const intake = await loadIntake(intakeFile);
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(path.resolve(searchFile), "utf8")); } catch (e) { fail(`Cannot read ${searchFile}: ${(e as Error).message}`); }
+    try {
+      const locked = lockDirectorialSearch(intake, raw, path.resolve(opts.project ?? path.dirname(path.resolve(searchFile))));
+      const out = path.resolve(opts.out); mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, `${JSON.stringify(locked, null, 2)}\n`);
+      console.log(`✔ directorial search locked — ${locked.candidates.length} candidates, ${locked.candidates[0].probes.length} comparable probe role${locked.candidates[0].probes.length === 1 ? "" : "s"}\n  ${out}`);
+    } catch (e) { fail((e as Error).message); }
+  });
+
+program
+  .command("direction-probes")
+  .argument("<intake>", "locked Intake IR JSON")
+  .argument("<search>", "locked Directorial Search JSON")
+  .requiredOption("-o, --out <dir>", "content-addressed probe evidence root")
+  .option("--project <dir>", "project root for candidate paths (default: search directory)")
+  .description("Render identity-blind comparable still probes and private mapping evidence (ADR-0036)")
+  .action(async (intakeFile: string, searchFile: string, opts: { out: string; project?: string }) => {
+    const intake = await loadIntake(intakeFile);
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(path.resolve(searchFile), "utf8")); } catch (e) { fail(`Cannot read ${searchFile}: ${(e as Error).message}`); }
+    const parsed = LockedDirectorialSearch.safeParse(raw);
+    if (!parsed.success) fail(`Invalid locked directorial search: ${parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
+    try {
+      const result = await generateDirectorialProbes(intake, parsed.data, path.resolve(opts.project ?? path.dirname(path.resolve(searchFile))), opts.out);
+      console.log(`✔ directorial probes ${result.cached ? "reused" : "generated"} — ${result.manifest.candidates.length} blind candidates, ${result.manifest.pairwise.length} role comparisons, ${result.manifest.nearDuplicatePairs.length} near-duplicate pair${result.manifest.nearDuplicatePairs.length === 1 ? "" : "s"}\n  private manifest: ${result.manifestPath}\n  reviewer packet: ${path.join(result.directory, result.manifest.blindPacket.path)}\n  contact sheet: ${path.join(result.directory, result.manifest.contactSheet.path)}`);
+    } catch (e) { fail((e as Error).message); }
+  });
+
+program
+  .command("direction-select")
+  .argument("<manifest>", "private Directorial Probe Manifest JSON")
+  .argument("<selection>", "blind Direction Selection JSON")
+  .requiredOption("-o, --out <file>", "selection receipt output")
+  .description("Resolve a complete blinded decision to the exact winning Direction (ADR-0036)")
+  .action((manifestFile: string, selectionFile: string, opts: { out: string }) => {
+    let manifestRaw: unknown, selectionRaw: unknown;
+    try { manifestRaw = JSON.parse(readFileSync(path.resolve(manifestFile), "utf8")); } catch (e) { fail(`Cannot read ${manifestFile}: ${(e as Error).message}`); }
+    try { selectionRaw = JSON.parse(readFileSync(path.resolve(selectionFile), "utf8")); } catch (e) { fail(`Cannot read ${selectionFile}: ${(e as Error).message}`); }
+    const manifest = DirectorialProbeManifest.safeParse(manifestRaw);
+    if (!manifest.success) fail(`Invalid Directorial Probe Manifest: ${manifest.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
+    try {
+      const receipt = makeDirectionSelectionReceipt(manifest.data, selectionRaw, path.dirname(path.resolve(manifestFile)));
+      const out = path.resolve(opts.out); mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, `${JSON.stringify(receipt, null, 2)}\n`);
+      console.log(`✔ Direction selected — ${receipt.selected.directionId} (${receipt.selected.candidateId})\n  ${receipt.selected.directionPath}\n  receipt: ${out}`);
+    } catch (e) { fail((e as Error).message); }
   });
 
 program

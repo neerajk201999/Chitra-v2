@@ -29,7 +29,7 @@ adds the production interpretation needed during Direction.
 | Structural/temporal QA | yes | — | Bounded sampling; green is a measurable floor, not taste. |
 | Professional taste guarantee | no | human panel | Independent calibration corpus is not collected. |
 | Accepted-revision memory | yes | — | Contract/compiler is measured; real taste lift is not. |
-| Directorial alternative search | no | manual concepts | No bounded blind probe comparison. |
+| Directorial alternative search | yes | — | Bounded still probes and receipt integrity are measured; reviewer blindness and selection quality are not independently proven. |
 | Embeddable player/studio | no | external review tools | Chitra emits evidence and rendered files. |
 | Distributed/cloud render | no | external infrastructure | Single local worker only. |
 

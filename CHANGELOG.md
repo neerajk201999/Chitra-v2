@@ -29,6 +29,13 @@ versioned separately.
 - A generated moving/silent footage benchmark proving bounded source-end-safe
   sampling, CLI/library equivalence, exact cache reuse, and rejection of stale
   edits, unknown segments, changed sources, and changed cached artifacts.
+- ADR-0036 Directorial Search/Direction Selection 0.1: two to four locked,
+  pairwise-distinct Directions; one to three comparable still probes; an
+  identity-free packet/contact sheet; a private digest-bound map; and a complete
+  blind selection receipt that authorizes the exact winning Direction.
+- A generated three-concept benchmark proving comparable identity-free probes,
+  exact cache reuse, CLI/library receipt agreement, rejection of changed
+  Direction/evidence, and blocking of pixel-near-identical rendered searches.
 
 ### Changed
 

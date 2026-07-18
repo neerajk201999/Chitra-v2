@@ -3,9 +3,9 @@
   "version": "0.5.0",
   "skills": {
     "create-video": {
-      "sha256": "162f57ef48cf0214a54049a07856c0b90da5a77cb609eea679ca7d4242f114db",
-      "bytes": 24107,
-      "files": 8
+      "sha256": "49f33c04fcd2cd504f8dcfc1fff1e195d2e664bb3fbe14445953c805c0dcdc20",
+      "bytes": 27696,
+      "files": 9
     },
     "critique-video": {
       "sha256": "de517bc1648fcd9f07d2ee9a91ba438eb1a7e1468868a99fa4623b4cb89ea442",

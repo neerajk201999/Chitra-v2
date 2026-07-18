@@ -160,9 +160,10 @@ it closes a real gap better than the existing stack.
    case; motion clips and audio, not contact sheets alone.
 3. **Accepted-revision memory:** store evidence → finding → accepted/rejected
    change → measured outcome; keep brand memory separate from universal craft.
-4. **Directorial search:** generate bounded narrative/storyboard alternatives,
-   render probes, compare without exposing labels, and preserve the winner’s
-   reasoning.
+4. **Directorial search (ADR-0036 contract shipped):** lock two to four complete
+   Directions, render only comparable diagnostic stills, compare through an
+   identity-free packet, and preserve the exact winner’s reasoning. Validate
+   selection quality through independent outcomes before claiming taste lift.
 5. **Neutral ChitraBench:** identical brief/assets/model/time budget, real
    HyperFrames/Remotion baselines, blind preference, failures published.
 6. **Residual-driven capability expansion:** compositor, audio, 3D, asset, and

@@ -28,21 +28,26 @@ speculative artifacts, and no expensive render that retires no uncertainty.
    `unsupported`. An unsupported hero blocks production until the user approves
    another approach. Never silently substitute the nearest primitive.
 3. State one governing idea and one emotional turn. Every shot must advance it.
-4. Produce Intake → Direction → Storyboard → Score as files. Do not paste whole
+4. For an open, ambiguous, or high-stakes brief, load
+   [references/directorial-search.md](references/directorial-search.md) and
+   resolve a bounded still-first search before Storyboard. Skip it with a stated
+   reason when the user supplied an exact approved direction or reconstruction
+   target. Do not manufacture alternatives after approval.
+5. Produce Intake → selected Direction → Storyboard → Score as files. Do not paste whole
    JSON files into conversation. Show only decisions, open risks, and paths.
-5. Do not read `core/src/ir/schema.ts` wholesale. Start from repository examples
+6. Do not read `core/src/ir/schema.ts` wholesale. Start from repository examples
    and use CLI validation to return narrow paths. Load only the reference below
    for the current stage.
-6. Before any motion render, run `chitra evidence score.json -o out/evidence`
+7. Before any motion render, run `chitra evidence score.json -o out/evidence`
    and inspect the hero frames/contact sheet. A weak hero still blocks preview.
-7. `chitra check` must be green before a preview shown to the user. Structural
+8. `chitra check` must be green before a preview shown to the user. Structural
    green proves correctness, not taste.
-8. Preview with `chitra render score.json -o out/preview.mp4 -q draft`. Draft is
+9. Preview with `chitra render score.json -o out/preview.mp4 -q draft`. Draft is
    sampled JPEG capture and is never a release claim.
-9. Watch the preview and evidence, patch only cited IR spans, and repeat at most
+10. Watch the preview and evidence, patch only cited IR spans, and repeat at most
    three evidence-bound passes. If the same defect persists, report a capability
    gap instead of rationalizing it.
-10. Deliver only through `chitra release` and `chitra verify-release`.
+11. Deliver only through `chitra release` and `chitra verify-release`.
 
 ## Progressive route
 

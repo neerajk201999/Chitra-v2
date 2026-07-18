@@ -106,6 +106,11 @@ sessions inherit the taste instead of relearning it.
   asset-assisted capability names a project-local path, and the Score must
   actually render that path. A nearby native primitive is not a substitute.
   *(schema + creative conformance)*
+- **CC-PROD-3 — Direction earns animation.** When a brief delegates a material
+  concept choice, two to four genuinely different Directions are tested through
+  comparable identity-free still probes before one advances. Exact approved
+  Directions and reconstruction jobs may skip with an explicit reason. Pixel
+  difference detects duplicates; it never chooses taste. *(ADR-0036 receipt)*
 
 Each principle above is a hypothesis about quality. The Chitra method: state it,
 find a deterministic or VLM-scored proxy, calibrate against labelled examples,

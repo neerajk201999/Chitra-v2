@@ -2,7 +2,7 @@
 
 Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 (Quality Engine), ADR-0005 (distribution), ADR-0017 (Intake), ADR-0018
-(creative ladder).
+(creative ladder), ADR-0036 (still-first Direction selection).
 
 ```
                         USER'S CODING AGENT (Claude Code / Codex / Cursor / Gemini CLI)
@@ -17,7 +17,7 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 │    ► Shot Planner ► Motion Director ► Sound Director                        │
 │                │                                          ▲                  │
 │                ▼                                          │ patches          │
-│    Intake ► Direction ► Storyboard ► Score          Editor (surgical)        │
+│    Intake ► 2–4 Directions ► blind still selection ► Storyboard ► Score      │
 │                │                                          ▲                  │
 │                ▼                                          │ findings         │
 │         ┌── deterministic core ──┐              Critics (isolated VLM        │
@@ -32,6 +32,8 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 
 DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pixels)
   intake/    multimodal source/provenance contract and deterministic locking
+  creative/  bounded Direction search, identity-free still evidence, blind
+             selection receipts, review/calibration, and scoped revision memory
   editing/   locked word transcripts → compact phrase context → typed EDL →
              normalized audio-preserving plates + requested-range filmstrip/
              waveform/cut evidence + hash receipts
@@ -54,7 +56,9 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
 1. Everything between stages is a **diffable text artifact** (IR JSON + markdown direction). No stage communicates through prose-only handoffs.
 2. The render is a **pure function** of (IR, assets, seeds). Same input → identical frames.
 3. Critics see **rendered evidence**, never only the spec; the Editor patches **IR spans**, never regenerates whole artifacts; only **dirty scenes** re-render.
-4. Taste lives in **one place** (`docs/motion/` + its machine-readable mirror) and is *referenced by name* everywhere else — skills cite rules, never restate them.
+4. Creative hypotheses live in the constitution/craft/motion systems and remain
+   distinct from calibrated evidence. Skills cite stable rules; they do not
+   turn unvalidated taste opinions into automatic scores.
 
 ## Repository layout (target)
 

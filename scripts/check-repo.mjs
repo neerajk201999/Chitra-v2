@@ -101,6 +101,9 @@ const transcriptVersion = editingSchema.match(/TRANSCRIPT_VERSION\s*=\s*"([^"]+)
 const editVersion = editingSchema.match(/EDIT_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const footageEvidenceSchema = readFileSync(path.join(root, "core/src/editing/evidence.ts"), "utf8");
 const footageEvidenceVersion = footageEvidenceSchema.match(/FOOTAGE_EVIDENCE_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const searchSchema = readFileSync(path.join(root, "core/src/creative/search.ts"), "utf8");
+const directorialSearchVersion = searchSchema.match(/DIRECTORIAL_SEARCH_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const directionSelectionVersion = searchSchema.match(/DIRECTION_SELECTION_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
 if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
@@ -124,6 +127,10 @@ if (!editVersion || !currentState.includes(`**Edit IR:** ${editVersion}`))
   failures.push(`current-state Edit IR version is not ${editVersion ?? "discoverable"}`);
 if (!footageEvidenceVersion || !currentState.includes(`**Footage Evidence:** ${footageEvidenceVersion}`))
   failures.push(`current-state Footage Evidence version is not ${footageEvidenceVersion ?? "discoverable"}`);
+if (!directorialSearchVersion || !currentState.includes(`**Directorial Search:** ${directorialSearchVersion}`))
+  failures.push(`current-state Directorial Search version is not ${directorialSearchVersion ?? "discoverable"}`);
+if (!directionSelectionVersion || !currentState.includes(`**Direction Selection:** ${directionSelectionVersion}`))
+  failures.push(`current-state Direction Selection version is not ${directionSelectionVersion ?? "discoverable"}`);
 
 const cli = path.join(root, "core/dist/cli/index.js");
 if (existsSync(cli)) {
