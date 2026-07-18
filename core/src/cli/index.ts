@@ -29,6 +29,7 @@ import { compileRevisionContext, validateRevisionContextQuery, validateRevisionM
 import { DirectorialProbeManifest, LockedDirectorialSearch, generateDirectorialProbes, lockDirectorialSearch, makeDirectionSelectionReceipt } from "../creative/search.js";
 import { editDigest, lockTranscript, packTranscript, renderEdit, resolveEdit, resolveEditArtifactTarget, transcriptDigest, validateEditDecisionList, validateTranscript, verifyTranscriptSources, type EditDecisionListT, type LockedTranscriptT } from "../editing/index.js";
 import { FOOTAGE_EVIDENCE_VERSION, generateFootageEvidence } from "../editing/evidence.js";
+import { IR_VERSION } from "../motion/tokens.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -1156,7 +1157,7 @@ function starterScore(title: string, register: string, style: unknown, portrait:
     override: { reason: "ambient field travels the full scene length", durationMs: ms },
   });
   return {
-    irVersion: "0.1.0",
+    irVersion: IR_VERSION,
     tier: "score",
     meta: { title, register, ...dims, fps: 30, seed: 1, safeZone: portrait ? "9x16-social" : "16x9-standard" },
     style,

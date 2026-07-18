@@ -66,6 +66,9 @@ and CHANGELOG.
   isolated registry installation, `chitra --version`, and `chitra probe` pass.
   The public repository, release tag, security-reporting path, and protected
   `main` branch are live.
+- The 0.5.0 candidate's isolated packed-package check now exercises library ESM
+  import and CommonJS require in addition to the CLI. This closes a reproduced
+  `ERR_PACKAGE_PATH_NOT_EXPORTED` defect; public rc.4 predates that fix.
 - ADR-0037 publishes the exact 0.5.0 package as an immutable GitHub prerelease
   fallback while npm authentication is unavailable. The downloaded artifact is
   SHA-256 pinned and passes a fresh-prefix version/probe/Intake/init/validate/

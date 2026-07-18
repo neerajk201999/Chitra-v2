@@ -171,6 +171,11 @@ localizes the next largest appearance residual to the final mark. ADR-0025 adds
 bounded heterogeneous particle size/opacity/glow for that measured gap; exact
 reconstruction remains open.
 Remaining (priority order):
+
+- **Production-readiness rebaseline:** complete ADR-0041's adversarial two-tier
+  gate migration before adding renderer features. Then close rendered-pixel,
+  transient-frame, packed-library, interrupt/concurrency, and multi-OS evidence
+  gaps recorded in `AUDIT_PHASE0.md`.
 - **Creative QA data collection**: independently label ≥20 cases across brand film,
   product demo, and social short using video, motion clips, and audio; measure
   principle/severity/verdict agreement and false-positive rate.

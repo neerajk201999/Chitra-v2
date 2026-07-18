@@ -8,6 +8,12 @@ versioned separately.
 
 ### Added
 
+- Phase 0 production-readiness audit with explicit first-party evidence limits,
+  reproduced gate-policy/package defects, edge-case ledger, and Definition-of-
+  Done status instead of a rounded-up production claim.
+- Packed-package library boundary verification for both ESM `import` and
+  CommonJS `require` on the declared Node runtime.
+
 - ADR-0040 Brand System 0.1 with deterministic source/font locking,
   `brand-lock`/`brand-conform`, CC-BRAND-3..6 exact rule/palette/type survival,
   project-local WOFF2 rendering, provenance, cache/release identity, and a real-
@@ -45,6 +51,10 @@ versioned separately.
   Direction/evidence, and blocking of pixel-near-identical rendered searches.
 
 ### Changed
+
+- CLI starter Scores now import the authoritative Motion IR version instead of
+  repeating it, and architecture docs scope determinism/cache claims to measured
+  behavior.
 
 - ADR-0039 keeps all 12fps draft motion samples while capturing at half spatial
   resolution. The fixed 9.6s fixture improves from 8.76s to 6.02s local p50 and

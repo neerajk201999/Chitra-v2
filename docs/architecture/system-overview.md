@@ -27,7 +27,7 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 │         └─────────────────────── ┘                                           │
 │                │                                                             │
 │                ▼                                                             │
-│        Release gate (0 P0/P1 + gates green) ──► export + delivery report     │
+│        Release gate (0 P1 under current policy) ──► export + receipt         │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pixels)
@@ -43,8 +43,8 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
              transition types, register definitions (machine-readable mirror of docs/motion/)
   compile/   IR → HTML/CSS/GSAP page (stable IDs, one paused master timeline,
              seeded randomness, font pinning) — determinism is a compiler obligation
-  render/    backend interface; v0: headless Chrome CDP BeginFrame seek → PNG frames
-             → FFmpeg encode; per-scene content-hash cache → incremental & parallel
+  render/    backend interface; v0: system Chrome seek/capture → frame cache →
+             FFmpeg encode; content hashes make sequential dirty-scene reuse possible
   gates/     Quality Engine layers 1–2 (ID-tagged rules, thresholds from motion/)
   evidence/  contact sheets: filmstrip @ cut boundaries + waveform + timing labels;
              per-scene hero frames (input for VLM critics)
@@ -55,8 +55,11 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
 ## Data flow invariants
 
 1. Everything between stages is a **diffable text artifact** (IR JSON + markdown direction). No stage communicates through prose-only handoffs.
-2. The render is a **pure function** of (IR, assets, seeds). Same input → identical frames.
-3. Critics see **rendered evidence**, never only the spec; the Editor patches **IR spans**, never regenerates whole artifacts; only **dirty scenes** re-render.
+2. The renderer is designed as a function of IR, assets, seeds, compiler, browser,
+   FFmpeg, and platform state. Same-machine repeated-frame identity is measured;
+   cross-machine, interruption, and browser-version equivalence remain open.
+3. Critics see **rendered evidence**, never only the spec; the Editor patches **IR spans**;
+   content-addressed scene caches avoid recapturing unchanged scenes.
 4. Creative hypotheses live in the constitution/craft/motion systems and remain
    distinct from calibrated evidence. Skills cite stable rules; they do not
    turn unvalidated taste opinions into automatic scores.
