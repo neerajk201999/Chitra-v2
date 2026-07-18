@@ -1,4 +1,4 @@
-export const CAPABILITY_MATRIX_VERSION = "0.2.0";
+export const CAPABILITY_MATRIX_VERSION = "0.3.0";
 export type CapabilitySupport = "native" | "asset-assisted" | "unsupported";
 export const CAPABILITY_IDS = [
   "typography-layout", "image-ui", "video-plates", "transform-motion", "particles",
@@ -20,7 +20,7 @@ export interface Capability {
 export const CAPABILITIES: Capability[] = [
   { id: "typography-layout", support: "native", mechanism: "text, shapes, figures, browser layout", boundary: "no calibrated professional optical-spacing guarantee" },
   { id: "image-ui", support: "native", mechanism: "local image and sanitized figure elements", boundary: "rasterized text has reduced structural inspection" },
-  { id: "video-plates", support: "native", mechanism: "deterministic frame extraction", boundary: "clip audio does not pass through" },
+  { id: "video-plates", support: "native", mechanism: "deterministic frame extraction plus transcript-addressed edit plates", boundary: "Score video elements remain visual-only; use edit-render to preserve clip audio" },
   { id: "transform-motion", support: "native", mechanism: "presets, typed tracks, one-level groups", boundary: "no deep local-coordinate compositions" },
   { id: "particles", support: "native", mechanism: "typed formations, custom points, morphs", boundary: "no general physics simulation" },
   { id: "curated-3d", support: "native", mechanism: "card, coin, slab with typed camera/light tracks", boundary: "curated geometry and synthetic lights only" },
@@ -33,8 +33,8 @@ export const CAPABILITIES: Capability[] = [
   { id: "reference-analysis", support: "native", mechanism: "decompose and compare", boundary: "no semantic equivalence or optical flow" },
   { id: "generated-media", support: "asset-assisted", mechanism: "host-agent image/video tools with local provenance", boundary: "no provider bundled" },
   { id: "professional-taste", support: "unsupported", mechanism: "requires calibrated independent human evidence", boundary: "review contract exists; calibration corpus does not" },
-  { id: "clip-audio", support: "unsupported", mechanism: "no Score audio path for source video clips", boundary: "video visuals render, source clip audio does not" },
-  { id: "transcript-edl", support: "unsupported", mechanism: "no provider-neutral word timeline or phrase-addressed edit list", boundary: "external transcript work is not conformed to Score" },
+  { id: "clip-audio", support: "native", mechanism: "edit-render preserves source audio, synthesizes mixed-source silence, fades cuts, and normalizes the bus", boundary: "Score video elements remain visual-only; edited footage enters as a rendered plate" },
+  { id: "transcript-edl", support: "native", mechanism: "locked provider-neutral word timeline, compact phrase pack, typed quote-conformed EDL", boundary: "no bundled transcription provider or word-aligned visual timeline yet" },
   { id: "imported-animation", support: "asset-assisted", mechanism: "owned/licensed pre-rendered still or video", boundary: "no seekable Lottie, Rive, or glTF adapter" },
   { id: "player-studio", support: "unsupported", mechanism: "evidence and rendered files only", boundary: "no embeddable player or timeline editor" },
   { id: "distributed-render", support: "unsupported", mechanism: "single local render worker", boundary: "no chunk plan, remote workers, or deterministic assembly" },

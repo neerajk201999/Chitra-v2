@@ -70,6 +70,11 @@ If reproducing or borrowing grammar from a reference, additionally load
 [references/reference-reconstruction.md](references/reference-reconstruction.md).
 Do not load it for prompt-only work.
 
+If supplied footage contains speech or must preserve clip audio, additionally
+load [references/footage-editing.md](references/footage-editing.md). Compile the
+compact transcript surface before editorial planning; do not load raw word JSON
+or frame-dump the source.
+
 ### C. Watch, revise, and release
 
 Load [references/review-release.md](references/review-release.md) and the

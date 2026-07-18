@@ -13,6 +13,12 @@
 > superseded: current Remotion/HyperFrames source proves important compositor,
 > imported-animation, media/audio, player, and distribution gaps. Renderer work
 > remains residual/user-job driven, but the renderer is not literally complete.
+>
+> **P0 footage slice (2026-07-18, ADR-0034).** Provider-neutral word transcripts
+> now lock to exact local footage, pack into bounded phrase context, conform an
+> explainable word-addressed EDL, and render normalized source-audio-preserving
+> plates with cut fades and receipts. Requested-range word/waveform evidence and
+> cut-picture critique remain next; no transcription provider is bundled.
 
 > **Program rebaseline (2026-07-16).** The architecture remains aligned, but the
 > active queue had narrowed around one Card Vault reconstruction. Review 0003
@@ -43,7 +49,10 @@ Remaining:
 - ADR-0030 makes blind independent panel collection and separate agreement
   metrics operational; collect ≥20 real cases and human annotations before
   publishing critic-reliability statistics.
-- Narration/voiceover (word timestamps), energy-envelope tracks, and clip-audio pass-through. SFX hooks + deterministic beat detection + `at.onBeat` are built (ADR-0007/0011).
+- Narration/TTS generation, energy-envelope tracks, and automatic word-aligned
+  overlay sync. ADR-0034 now provides word timestamps, explainable EDLs, and
+  source-audio-preserving edit plates; SFX hooks, beat detection, and `at.onBeat`
+  remain built (ADR-0007/0011).
 - **Exit gate:** deterministic layer ≥80% on seeded defects (✅ 100%) AND critic layer measured against the calibration set with published agreement stats.
 
 > **Priority lens (2026-07-15):** [docs/research/moats.md](../research/moats.md) ranks the five-year moats: calibration data → ChitraBench → motion-language spec → creative ladder (ADR-0006 candidate). M3 remains necessary execution, but feature polish beyond it is explicitly deprioritized; CLI is declared done.
@@ -76,8 +85,9 @@ mesh, camera, key/fill light, and exposure states. The browser benchmark lands
 3/3 states under backward seeks and repeats a PNG byte-identically.
 Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes,
 local-coordinate/deeper compositions, blend modes, motion blur, back/side
-textures and custom 3D geometry/materials, clip audio pass-through, and
-narration/TTS timeline. Automated exhaustive reference comparison and named ROI
+textures and custom 3D geometry/materials, and narration/TTS generation. Clip
+audio is native through ADR-0034 edit plates but not direct Score-video mixing.
+Automated exhaustive reference comparison and named ROI
 diagnostics are built (ADR-0019/0022).
 
 ## M4 — Creative Intelligence (the missing brain) — STARTED 2026-07-16

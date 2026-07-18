@@ -6,7 +6,7 @@ Chitra creates cinematic motion-design videos: you direct through four JSON arti
 
 **To critique a render:** follow [skills/critique-video/SKILL.md](skills/critique-video/SKILL.md) — watch before reading intent or gates; emit an evidence-bound Creative Review 0.1 with `CR-*` principles, fixes, expected effects, and uncertainty.
 
-**Toolchain:** use installed `chitra <capabilities|intake|decompose|compare|plan|board|conform|creative-check|review-validate|review-score|review-calibrate|memory-validate|memory-context|validate|check|render|evidence|release|verify-release|probe>`. Repository development may use `node core/dist/cli/index.js`. Requires FFmpeg and a system Chromium-family browser.
+**Toolchain:** use installed `chitra <capabilities|intake|transcript-lock|transcript-pack|edit-check|edit-render|decompose|compare|plan|board|conform|creative-check|review-validate|review-score|review-calibrate|memory-validate|memory-context|validate|check|render|evidence|release|verify-release|probe>`. Repository development may use `node core/dist/cli/index.js`. Requires FFmpeg and a system Chromium-family browser.
 
 **The law:** [docs/motion/motion-language.md](docs/motion/motion-language.md) — tokens and MO-rules cited by ID. IR reference: [core/src/ir/schema.ts](core/src/ir/schema.ts) (zod, authoritative). Working example: [examples/launch-film/score.json](examples/launch-film/score.json).
 

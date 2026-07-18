@@ -3,9 +3,9 @@
   "version": "0.5.0",
   "skills": {
     "create-video": {
-      "sha256": "8c193c1bac619d9645399a3e5bc61ac4fb2bb4e678fbc449b72d1da812fd3708",
-      "bytes": 20366,
-      "files": 7
+      "sha256": "249567695cbaa06056f37a6ea9d745ff1585f62c89aa55c39494617604f116b3",
+      "bytes": 23223,
+      "files": 8
     },
     "critique-video": {
       "sha256": "de517bc1648fcd9f07d2ee9a91ba438eb1a7e1468868a99fa4623b4cb89ea442",
@@ -13,8 +13,8 @@
       "files": 1
     },
     "video-workflows": {
-      "sha256": "cd01ed11768d82df9af93852f1a0544c7b6cd0bd5613fb9101709d099379660c",
-      "bytes": 1686,
+      "sha256": "8c44d94462251bcc5ea109c977820c37f2613b8dc9d879c4e537b70d1c595f20",
+      "bytes": 1892,
       "files": 1
     }
   }

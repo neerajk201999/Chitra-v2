@@ -75,6 +75,10 @@ preferences, and anti-references are optional inputs—not mandatory ceremony.
 ```bash
 # what the agent runs under the hood
 chitra intake intake.json -o intake.lock.json # validate + fingerprint supplied sources and evidence
+chitra transcript-lock transcript.json -o transcript.lock.json --project . # bind word timing to exact footage
+chitra transcript-pack transcript.lock.json -o transcript-pack.md --project . # compact agent reading surface
+chitra edit-check transcript.lock.json edit.json --project . # quote/word/source conformance
+chitra edit-render transcript.lock.json edit.json --project . -o assets/edit.mp4 -q draft # preserve clip audio
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # preserve intent across every tier
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
