@@ -8,6 +8,7 @@ import sharp from "sharp";
 import { readFileSync } from "node:fs";
 import type { SceneT, ScoreT, DirectionT, StoryboardT } from "../ir/schema.js";
 import type { IntakeT } from "../intake/schema.js";
+import { brandSystemDigest, type BrandSystemT } from "../brand/index.js";
 import { resolveProjectAsset } from "../assets/local.js";
 import { resolveSceneTimeline, totalDurationMs } from "../compile/index.js";
 import {
@@ -906,6 +907,8 @@ type RenderedAsset = { path: string; assetUse?: AssetUse; irPath: string; sceneI
 
 function renderedAssets(score: ScoreT): RenderedAsset[] {
   const assets: RenderedAsset[] = [];
+  score.style.fontAssets.forEach((font, index) =>
+    assets.push({ path: font.src, assetUse: font.assetUse, irPath: `score.style.fontAssets[${index}].src` }));
   score.scenes.forEach((scene, sceneIndex) => {
     if (scene.background === "image" && scene.backgroundImage)
       assets.push({ path: scene.backgroundImage, assetUse: scene.backgroundAssetUse, irPath: `score.scenes[${sceneIndex}].backgroundImage`, sceneId: scene.id });
@@ -1002,6 +1005,57 @@ export function runAssetProvenanceConformance(intake: IntakeT, direction: Direct
   }
   if (reconstruction?.mode === "source-assisted" && !renderedReference)
     findings.push({ ruleId: "CC-ASSET-3", severity: "P1", path: "score.meta.reconstruction", message: "Source-assisted reconstruction must trace at least one rendered asset to a named reference source" });
+  return findings;
+}
+
+/** ADR-0040: brand evidence and executable style must survive without semantic pretending. */
+export function runBrandConformance(brand: BrandSystemT, intake: IntakeT, direction: DirectionT, score: ScoreT): Finding[] {
+  const findings: Finding[] = [];
+  if (!score.meta.brand || score.meta.brand.brandId !== brand.brandId || score.meta.brand.brandSystemDigest !== brandSystemDigest(brand))
+    findings.push({ ruleId: "CC-BRAND-3", severity: "P1", path: "score.meta.brand", message: `Score does not bind locked Brand System ${brand.brandId} at digest ${brandSystemDigest(brand)}` });
+  if (intake.brand.profileId !== brand.brandId)
+    findings.push({ ruleId: "CC-BRAND-3", severity: "P1", path: "intake.brand.profileId", message: `Intake Brand profile "${intake.brand.profileId ?? "<unset>"}" does not match locked Brand System "${brand.brandId}"` });
+  if (intake.brand.name !== brand.name)
+    findings.push({ ruleId: "CC-BRAND-3", severity: "P1", path: "intake.brand.name", message: `Intake brand "${intake.brand.name ?? "<unset>"}" does not match locked Brand System "${brand.name}"` });
+  const sources = new Map(intake.sources.map((source) => [source.id, source]));
+  brand.sourceIds.forEach((sourceId, index) => {
+    const source = sources.get(sourceId);
+    if (!source) findings.push({ ruleId: "CC-BRAND-3", severity: "P1", path: `brand.sourceIds[${index}]`, message: `Brand System cites unknown Intake source "${sourceId}"` });
+    else if (!source.roles.includes("brand")) findings.push({ ruleId: "CC-BRAND-3", severity: "P1", path: `intake.sources[${intake.sources.indexOf(source)}].roles`, message: `Brand source "${sourceId}" is not declared with the brand role` });
+  });
+  const constraints = new Map(intake.brand.constraints.map((constraint) => [constraint.id, constraint]));
+  for (const rule of brand.rules) {
+    const constraint = constraints.get(rule.id);
+    if (!constraint || constraint.statement !== rule.statement || constraint.priority !== rule.priority ||
+      [...constraint.sourceIds].sort().join("|") !== [...rule.sourceIds].sort().join("|"))
+      findings.push({ ruleId: "CC-BRAND-4", severity: "P1", path: `brand.rules.${rule.id}`, message: `Brand rule "${rule.id}" is not preserved verbatim as an Intake brand constraint` });
+    if (rule.priority === "must" && !direction.trace.brandConstraintIds.includes(rule.id))
+      findings.push({ ruleId: "CC-BRAND-4", severity: "P1", path: "direction.trace.brandConstraintIds", message: `Must-level Brand rule "${rule.id}" was dropped by Direction` });
+  }
+  if (score.style.name !== brand.styleName)
+    findings.push({ ruleId: "CC-BRAND-5", severity: "P1", path: "score.style.name", message: `Score style "${score.style.name}" does not match Brand style "${brand.styleName}"` });
+  for (const key of ["bg", "surface", "primary", "accent", "text", "textDim", "onMedia"] as const) {
+    if (score.style.palette[key].toLowerCase() !== brand.palette[key].toLowerCase())
+      findings.push({ ruleId: "CC-BRAND-5", severity: "P1", path: `score.style.palette.${key}`, message: `Score ${key} ${score.style.palette[key]} does not match Brand ${brand.palette[key]}` });
+  }
+  for (const [role, expected, family, weight] of [
+    ["display", brand.typography.display, score.style.fonts.display, score.style.displayWeight],
+    ["text", brand.typography.text, score.style.fonts.text, score.style.textWeight],
+    ["mono", brand.typography.mono, score.style.fonts.mono, 400],
+  ] as const) {
+    if (family !== expected.family || weight !== expected.weight)
+      findings.push({ ruleId: "CC-BRAND-6", severity: "P1", path: `score.style.fonts.${role}`, message: `Score ${role} face ${family}:${weight} does not match Brand ${expected.family}:${expected.weight}` });
+  }
+  if (score.style.trackingDisplay !== brand.typography.trackingDisplay)
+    findings.push({ ruleId: "CC-BRAND-6", severity: "P1", path: "score.style.trackingDisplay", message: `Score display tracking ${score.style.trackingDisplay} does not match Brand ${brand.typography.trackingDisplay}` });
+  const scoreFaces = new Map(score.style.fontAssets.map((face) => [`${face.family}:${face.weight}`, face]));
+  for (const face of brand.fontAssets) {
+    const scoreFace = scoreFaces.get(`${face.family}:${face.weight}`);
+    if (!scoreFace || scoreFace.src !== face.src || scoreFace.assetUse?.sourceId !== face.sourceId)
+      findings.push({ ruleId: "CC-BRAND-6", severity: "P1", path: "score.style.fontAssets", message: `Brand font ${face.family}:${face.weight} at ${face.src} is not rendered with source ${face.sourceId}` });
+  }
+  if (score.style.fontAssets.length !== brand.fontAssets.length)
+    findings.push({ ruleId: "CC-BRAND-6", severity: "P1", path: "score.style.fontAssets", message: "Score custom-font set differs from the locked Brand System" });
   return findings;
 }
 

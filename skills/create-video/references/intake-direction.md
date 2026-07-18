@@ -31,6 +31,24 @@ chitra intake intake.json -o intake.lock.json
 Resolve `blocksDirection` questions before planning. Never invent hashes or
 rights. URLs that matter visually must be captured locally and relocked.
 
+## Brand System
+
+When brand fidelity materially affects the film, do not stop at a name or a
+website screenshot. Author `brand.json` from observed/user-approved evidence:
+resolved palette roles, display/text/mono typography, owned/licensed local WOFF2
+faces, and explicit motion/voice/composition/logo/avoid rules. Preserve each
+rule verbatim as an Intake brand constraint with the same ID and source IDs;
+set `intake.brand.profileId` to the locked Brand `brandId`.
+
+```bash
+chitra brand-lock brand.json --project . -o brand.lock.json
+chitra conform intake.lock.json direction.json
+```
+
+The host agent decides semantic roles; the core only locks them. Never infer
+font rights, download remote webfonts into a render, or convert “looks similar”
+into an approved brand rule. Must-level brand rule IDs must survive Direction.
+
 ## Production approach gate
 
 Run `chitra capabilities --json` and read `capability-matrix.md` beside this

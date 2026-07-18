@@ -31,6 +31,7 @@ if (!quick) {
   run("Isolated package install", process.execPath, ["benchmarks/cold-start/run.mjs", "--check"]);
   run("Draft preview profile", process.execPath, ["benchmarks/draft-preview/run.mjs", "--check"]);
   run("Multimodal Intake benchmark", process.execPath, ["benchmarks/intake/run.mjs", "--check"]);
+  run("Brand System benchmark", process.execPath, ["benchmarks/brand-system/run.mjs", "--check"]);
   run("Creative ladder benchmark", process.execPath, ["benchmarks/creative-ladder/run.mjs", "--check"]);
   run("Creative Review contract benchmark", process.execPath, ["benchmarks/creative-review-contract/run.mjs", "--check"]);
   run("Independent calibration contract benchmark", process.execPath, ["benchmarks/independent-calibration/run.mjs", "--check"]);

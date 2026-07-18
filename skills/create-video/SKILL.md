@@ -43,7 +43,7 @@ speculative artifacts, and no expensive render that retires no uncertainty.
 8. `chitra check` must be green before a preview shown to the user. Structural
    green proves correctness, not taste.
 9. Preview with `chitra render score.json -o out/preview.mp4 -q draft`. Draft is
-   sampled JPEG capture and is never a release claim.
+   a 12fps half-resolution diagnostic and is never a release/type-quality claim.
 10. Watch the preview and evidence, patch only cited IR spans, and repeat at most
    three evidence-bound passes. If the same defect persists, report a capability
    gap instead of rationalizing it.

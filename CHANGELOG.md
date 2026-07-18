@@ -8,6 +8,10 @@ versioned separately.
 
 ### Added
 
+- ADR-0040 Brand System 0.1 with deterministic source/font locking,
+  `brand-lock`/`brand-conform`, CC-BRAND-3..6 exact rule/palette/type survival,
+  project-local WOFF2 rendering, provenance, cache/release identity, and a real-
+  browser benchmark covering six brand drifts and six trust-boundary defects.
 - ADR-0038 complete render-transaction telemetry for setup, capture, encode,
   finalization, and browser shutdown, plus repeatable p50/p95 preview benchmarks.
 

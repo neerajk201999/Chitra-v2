@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { Command } from "commander";
 import { validateScore, validateDirection, validateStoryboard, type ScoreT, type DirectionT, type StoryboardT } from "../ir/schema.js";
-import { FRAME_GATE_INTERVAL_MS, frameGateSampleTimes, runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runCreativeConformance, summarize, type Finding } from "../gates/index.js";
+import { FRAME_GATE_INTERVAL_MS, frameGateSampleTimes, runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runBrandConformance, runCreativeConformance, summarize, type Finding } from "../gates/index.js";
 import { COMPILER_CACHE_VERSION, openSession, renderScore, type Quality } from "../render/index.js";
 import { launchBrowser, resolveBrowserExecutable } from "../browser/index.js";
 import { CAPABILITIES, CAPABILITY_MATRIX_VERSION } from "../capabilities/index.js";
@@ -21,6 +21,7 @@ import { decomposeReference } from "../reference/decompose.js";
 import { compareReference, type CompareMode, type CompareRegion } from "../reference/compare.js";
 import { validateIntake, type IntakeT } from "../intake/schema.js";
 import { materializeIntake } from "../intake/materialize.js";
+import { brandSystemDigest, materializeBrandSystem, validateBrandSystem, type BrandSystemT } from "../brand/index.js";
 import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyReleaseReceipt, type ReleaseArtifacts } from "../release/index.js";
 import { CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview } from "../creative/review.js";
 import { validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy } from "../creative/calibration.js";
@@ -140,6 +141,49 @@ async function loadIntake(file: string): Promise<IntakeT> {
     fail((e as Error).message);
   }
 }
+
+async function loadBrand(file: string, projectDir = path.dirname(path.resolve(file))): Promise<BrandSystemT> {
+  const abs = path.resolve(file);
+  if (!existsSync(abs)) fail(`No such file: ${abs}`);
+  let data: unknown;
+  try { data = JSON.parse(readFileSync(abs, "utf8")); } catch (e) { fail(`Invalid JSON in ${file}: ${(e as Error).message}`); }
+  const validation = validateBrandSystem(data);
+  if (!validation.ok) fail(`Brand System schema failed: ${validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+  try { return await materializeBrandSystem(validation.brand, projectDir); } catch (e) { fail((e as Error).message); }
+}
+
+program
+  .command("brand-lock")
+  .argument("<brand>", "Brand System IR JSON file")
+  .requiredOption("-o, --out <file>", "write the deterministic locked Brand System")
+  .option("--project <dir>", "project root for local brand fonts (default: Brand file directory)")
+  .option("--json", "print the locked Brand System as JSON")
+  .description("Validate and fingerprint reusable brand palette, typography, rules, and local fonts (ADR-0040)")
+  .action(async (file: string, opts: { out: string; project?: string; json?: boolean }) => {
+    const brand = await loadBrand(file, path.resolve(opts.project ?? path.dirname(path.resolve(file))));
+    const out = path.resolve(opts.out);
+    mkdirSync(path.dirname(out), { recursive: true });
+    writeFileSync(out, `${JSON.stringify(brand, null, 2)}\n`);
+    if (opts.json) console.log(JSON.stringify(brand, null, 2));
+    else console.log(`✔ brand locked — ${brand.name}, ${brand.rules.length} rules, ${brand.fontAssets.length} custom font face${brand.fontAssets.length === 1 ? "" : "s"}\n  digest: ${brandSystemDigest(brand)}\n  ${out}`);
+  });
+
+program
+  .command("brand-conform")
+  .argument("<brand>", "locked Brand System JSON")
+  .argument("<intake>", "locked Intake JSON")
+  .argument("<direction>", "Direction JSON")
+  .argument("<score>", "Score JSON")
+  .option("--project <dir>", "project root for locked Brand assets (default: Score directory)")
+  .option("--json", "machine-readable findings")
+  .description("Prove Brand evidence/rules/palette/typography survive Intake→Direction→Score (ADR-0040)")
+  .action(async (brandFile: string, intakeFile: string, directionFile: string, scoreFile: string, opts: { project?: string; json?: boolean }) => {
+    const loaded = loadScore(scoreFile);
+    const brand = await loadBrand(brandFile, path.resolve(opts.project ?? loaded.projectDir));
+    const findings = runBrandConformance(brand, await loadIntake(intakeFile), loadDirection(directionFile), loaded.score);
+    const summary = printFindings(findings, !!opts.json);
+    process.exit(summary.releasable ? 0 : 1);
+  });
 
 program
   .command("intake")
@@ -524,17 +568,21 @@ program
   .argument("<direction>", "Direction JSON")
   .argument("<storyboard>", "Storyboard JSON")
   .argument("<score>", "Score JSON")
+  .option("--brand <file>", "locked Brand System required when score.meta.brand is present")
   .option("--json", "machine-readable output")
   .description("Validate the complete Intake→Direction→Storyboard→Score intent chain (ADR-0018)")
-  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { json?: boolean }) => {
+  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { brand?: string; json?: boolean }) => {
     const loaded = loadScore(scoreFile);
+    const intake = await loadIntake(intakeFile), direction = loadDirection(directionFile), storyboard = loadStoryboard(storyboardFile);
     const findings = runCreativeConformance(
-      await loadIntake(intakeFile),
-      loadDirection(directionFile),
-      loadStoryboard(storyboardFile),
+      intake,
+      direction,
+      storyboard,
       loaded.score,
       loaded.projectDir
     );
+    if (loaded.score.meta.brand && !opts.brand) fail("score.meta.brand requires --brand <locked Brand System>");
+    if (opts.brand) findings.push(...runBrandConformance(await loadBrand(opts.brand, loaded.projectDir), intake, direction, loaded.score));
     const summary = printFindings(findings, !!opts.json);
     process.exit(summary.releasable ? 0 : 1);
   });
@@ -618,20 +666,25 @@ program
   .option("-e, --evidence <dir>", "final evidence directory", "out/evidence")
   .option("-r, --receipt <file>", "release receipt JSON", "out/release.json")
   .option("-q, --quality <q>", "standard | high", "high")
+  .option("--brand <file>", "locked Brand System required when score.meta.brand is present")
   .option("--json", "machine-readable output")
   .description("Verified release transaction: creative/static/rendered gates → final render/audio → evidence → hash-bound receipt (ADR-0027)")
-  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { out: string; evidence: string; receipt: string; quality: string; json?: boolean }) => {
+  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { out: string; evidence: string; receipt: string; quality: string; brand?: string; json?: boolean }) => {
     if (!['standard', 'high'].includes(opts.quality)) fail("release quality must be standard|high");
-    const artifacts: ReleaseArtifacts = { intake: intakeFile, direction: directionFile, storyboard: storyboardFile, score: scoreFile };
+    const artifacts: ReleaseArtifacts = { intake: intakeFile, direction: directionFile, storyboard: storyboardFile, score: scoreFile, ...(opts.brand ? { brand: opts.brand } : {}) };
     const intake = await loadIntake(intakeFile);
     const direction = loadDirection(directionFile);
     const storyboard = loadStoryboard(storyboardFile);
     const { score, projectDir } = loadScore(scoreFile);
+    if (score.meta.brand && !opts.brand) fail("score.meta.brand requires --brand <locked Brand System> for release");
+    const brand = opts.brand ? await loadBrand(opts.brand, projectDir) : undefined;
+    const lockedBrandDigest = brand ? brandSystemDigest(brand) : undefined;
     const tool = { packageVersion, compilerCacheVersion: COMPILER_CACHE_VERSION };
     const before = releaseFingerprint(artifacts, score, projectDir, tool);
     assertReleaseTargets(artifacts, score, projectDir, opts);
     const findings = [
       ...runCreativeConformance(intake, direction, storyboard, score, projectDir),
+      ...(brand ? runBrandConformance(brand, intake, direction, score) : []),
       ...runStaticGates(score),
     ];
     if (findings.some((finding) => finding.severity === "P1")) {
@@ -667,6 +720,8 @@ program
       if (!opts.json) process.stdout.write("\n");
       const after = releaseFingerprint(artifacts, score, projectDir, tool);
       if (after.inputHash !== before.inputHash) throw new Error("release inputs changed while gates/render/evidence were running; no receipt written");
+      if (opts.brand && brandSystemDigest(await loadBrand(opts.brand, projectDir)) !== lockedBrandDigest)
+        throw new Error("Brand System changed while gates/render/evidence were running; no receipt written");
 
       mkdirSync(path.dirname(finalOut), { recursive: true });
       mkdirSync(path.dirname(finalEvidence), { recursive: true });

@@ -10,6 +10,7 @@ import { frameGateSampleTimes, runFrameGates, runStaticGates, runConformance } f
 import { pruneLegacyFrameCaches, renderStorageEstimate, sceneHash, type RenderSession } from "../src/render/index.js";
 import { browserCandidates } from "../src/browser/index.js";
 import { CAPABILITIES } from "../src/capabilities/index.js";
+import { validateBrandSystem } from "../src/brand/index.js";
 import { assertReleaseTargets } from "../src/release/index.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -87,6 +88,7 @@ describe("first-use runtime profile", () => {
   it("does not claim arbitrary product CGI or professional taste as native", () => {
     expect(CAPABILITIES.find((item) => item.id === "arbitrary-3d")?.support).toBe("asset-assisted");
     expect(CAPABILITIES.find((item) => item.id === "professional-taste")?.support).toBe("unsupported");
+    expect(CAPABILITIES.find((item) => item.id === "brand-system")?.support).toBe("native");
   });
   it("removes only pre-profile frame caches before disk preflight", () => {
     const cache = mkdtempSync(path.join(os.tmpdir(), "chitra-legacy-cache-"));
@@ -104,6 +106,29 @@ describe("first-use runtime profile", () => {
     } finally {
       rmSync(cache, { recursive: true, force: true });
     }
+  });
+});
+
+describe("Brand System and custom typography", () => {
+  it("requires an exact declared weight for every custom Score font role", () => {
+    const score = validFixture();
+    score.style.fonts.display = "Acme Sans";
+    score.style.fontAssets = [{ family: "Acme Sans", src: "assets/acme.woff2", weight: score.style.displayWeight }];
+    expect(validateScore(score).ok).toBe(true);
+    score.style.fontAssets[0].weight = 400;
+    expect(validateScore(score).ok).toBe(false);
+  });
+
+  it("rejects Brand rules that cite evidence outside the locked source set", () => {
+    const brand = {
+      brandVersion: "0.1.0", tier: "brand-system", brandId: "acme", name: "Acme", styleName: "acme-motion",
+      sourceIds: ["brand-guide"],
+      palette: { bg: "#000000", surface: "#111111", primary: "#222222", accent: "#333333", text: "#ffffff", textDim: "#aaaaaa", onMedia: "#ffffff" },
+      typography: { display: { family: "Inter", weight: 500 }, text: { family: "Inter", weight: 400 }, mono: { family: "JetBrains Mono", weight: 400 }, trackingDisplay: -0.02 },
+      fontAssets: [],
+      rules: [{ id: "precise-motion", statement: "Use precise restrained motion", priority: "must", domain: "motion", sourceIds: ["unknown-guide"] }],
+    };
+    expect(validateBrandSystem(brand).ok).toBe(false);
   });
 });
 
@@ -303,10 +328,12 @@ describe("ADR-0027 release target safety", () => {
       });
       const artifacts = { intake: path.join(project, "intake.json"), direction: path.join(project, "direction.json"), storyboard: path.join(project, "storyboard.json"), score: path.join(project, "score.json") };
       for (const file of Object.values(artifacts)) writeFileSync(file, "{}");
+      const brand = path.join(project, "brand.lock.json"); writeFileSync(brand, "{}");
       const safe = { out: path.join(project, "out/final.mp4"), evidence: path.join(project, "out/evidence"), receipt: path.join(project, "out/release.json") };
       expect(() => assertReleaseTargets(artifacts, score, project, safe)).not.toThrow();
       expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, out: artifacts.score })).toThrow(/overwrite an input/);
       expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, out: asset })).toThrow(/overwrite an input/);
+      expect(() => assertReleaseTargets({ ...artifacts, brand }, score, project, { ...safe, out: brand })).toThrow(/overwrite an input/);
       expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, evidence: project })).toThrow(/contains an input/);
       expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, out: path.join(safe.evidence, "final.mp4") })).toThrow(/not nested/);
       expect(() => assertReleaseTargets(artifacts, score, project, { ...safe, receipt: path.join(safe.evidence, "release.json") })).toThrow(/not nested/);

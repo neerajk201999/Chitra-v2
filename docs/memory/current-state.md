@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
+**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Brand System:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -13,6 +13,11 @@ and CHANGELOG.
   deliverable, mixed-source roles/rights, preferences and anti-references, brand
   constraints, assumptions, open questions, evidence links, and deterministic
   local/inline content fingerprints. Uncaptured URLs stay explicitly unlocked.
+- ADR-0040 Brand System 0.1 and `brand-lock`/`brand-conform`: reusable locked
+  brand sources, authored creative rules, resolved palette roles, typography,
+  project-local WOFF2 faces, exact Brand→Intake→Direction→Score survival, and
+  font-byte render/cache/release identity. It proves trace and executable facts,
+  not automatic brand interpretation or professional expression.
 - ADR-0018/0031 Direction 0.3 + Storyboard 0.1 creative ladder: governing concept,
   source/preference/brand/assumption trace, shot composition/camera/type/copy/
   colour/timing/audio intent, and deterministic conformance across all four
@@ -147,12 +152,19 @@ and CHANGELOG.
   package matches SHA-256 `f93a3a8ff43b456793396e1006e670d8a39ae803d6ad035dd2786afffced44c8`,
   installs in 4.8s/62.9 MiB with zero browser bytes, and completes a real
   first-frame transaction in 12.4s with warm npm dependencies.
-- Unit suite: 87 tests.
+- Unit suite: 89 tests.
 - Still-first directorial-search benchmark: three materially different Aether
   concepts lock and render comparable identity-free hero probes; CLI/library
   artifacts agree; exact cache reuse holds; changed Direction, manifest, packet,
   contact sheet, incomplete/foreign pair diagnostics, and duplicate evidence
   are refused; a separate pixel-identical two-candidate search blocks selection.
+- Brand System benchmark: three source artifacts, three cross-domain rules,
+  seven palette roles, and two local WOFF2 faces lock and conform exactly;
+  custom-font browser frames repeat byte-identically, changed font bytes
+  invalidate scene identity, six brand drifts and invalid-font/traversal/symlink/
+  stale-hash/stale-digest/missing-weight defects are rejected, CLI/library
+  findings agree, and a Brand-bound receipt detects artifact drift and protects
+  the locked Brand file from target overwrite.
 - Creative Review contract benchmark: valid typed review, hidden
   principle/severity/verdict matching, deterministic repeated scoring, the
   documented label-collection CLI flow, and rejection of detached evidence,
@@ -264,6 +276,9 @@ The evidence and reasoning for this rebaseline are in
   author-labelled cases cannot prove professional taste. ADR-0030 makes an
   independent study operational but does not supply its human labels.
   Calibration data, real accepted-revision outcomes, and blind preference remain open.
+- Brand conformance proves exact evidence/rule/palette/type survival. It does
+  not infer semantic palette roles, font rights, motif quality, or whether the
+  watched film expresses the brand with professional judgment.
 - Release gates sample output frames at ≤250ms intervals plus choreography and
   transition neighborhoods. This is bounded coverage, not every-frame proof;
   shorter between-sample defects, rasterized text, and token-only CSS

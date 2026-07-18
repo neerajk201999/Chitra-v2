@@ -95,6 +95,22 @@ sessions inherit the taste instead of relearning it.
 - **CC-BRAND-2 — Consistency across a body of work.** Style Memory keeps a brand's
   choices stable across films (ADR-0012). The second video for a client looks
   like the first on purpose.
+- **CC-BRAND-3 — Brand evidence is named and locked.** A Brand System cites only
+  Intake sources explicitly assigned the brand role; a logo, font, or guideline
+  cannot enter as unattributed “inspiration.” The Score binds the exact locked
+  Brand digest. *(schema + conformance, ADR-0040)*
+- **CC-BRAND-4 — Brand rules survive verbatim before interpretation.** Each
+  locked rule exists as the same Intake constraint, and must-level rules reach
+  Direction by ID. Structural survival is not proof of beautiful expression.
+  *(conformance, ADR-0040)*
+- **CC-BRAND-5 — Palette roles reach executable Style.** Background, surface,
+  primary, accent, text, dim text, and on-media values match the locked Brand
+  System exactly; the agent cannot quietly substitute a house palette.
+  *(conformance, ADR-0040)*
+- **CC-BRAND-6 — Typography reaches pixels without substitution.** Families,
+  weights, tracking, local font paths, and source provenance match the locked
+  Brand System. Final optical quality still requires full-resolution review.
+  *(schema + compiler + conformance, ADR-0040)*
 
 ## 8. How this becomes measurable (the path from taste to gate)
 

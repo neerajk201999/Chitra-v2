@@ -62,7 +62,7 @@ references as evidence for a problem—not a popularity vote—and maintains:
 | Motion cannot rescue bad direction | ADR-0036 bounded Directions, comparable identity-free still probes, and selection receipt | collect independently reviewed searches and accepted/rejected outcomes |
 | Rules do not equal taste | Creative Review and independent study contracts | collect ≥20 real cases with motion/audio |
 | Feedback is repeatedly lost | ADR-0032 accepted-revision memory | outside-user ledger entries and measured retrieval usefulness |
-| Brand choices leak into generic defaults | Intake provenance and scoped memory | BRAND IR from real site/assets with motion personality |
+| Brand choices leak into generic defaults | ADR-0040 Brand System locks evidence/rules/palette/type and renders local WOFF2 without substitution | test outside site/assets research and watched brand expression; semantic motion personality remains host/review work |
 | Feature breadth can hide false delivery | machine-readable capability support | acceptance probes per important capability |
 | “Better” invites self-deception | reference metrics and study protocol | preregister and run ChitraBench against real baselines |
 

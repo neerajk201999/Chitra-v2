@@ -16,6 +16,7 @@ import {
   TYPE_SCALE,
 } from "../motion/tokens.js";
 import { CAPABILITIES, CAPABILITY_IDS } from "../capabilities/index.js";
+import { BUNDLED_FONT_FAMILIES, FontFamily, FontWeight } from "../brand/index.js";
 
 const id = z
   .string()
@@ -615,6 +616,13 @@ export const Scene = z.object({
 export type SceneT = z.infer<typeof Scene>;
 
 // ── Style (resolved house style; styles/ presets produce this) ────────────
+const StyleFontAsset = z.object({
+  family: FontFamily,
+  src: projectAssetPath.refine((value) => value.toLowerCase().endsWith(".woff2"), "custom font must be a local .woff2 file"),
+  weight: FontWeight,
+  assetUse: AssetUse.optional(),
+});
+
 export const Style = z.object({
   name: z.string(),
   palette: z.object({
@@ -627,14 +635,35 @@ export const Style = z.object({
     onMedia: hex.default("#ffffff"),
   }),
   fonts: z.object({
-    display: z.enum(["Space Grotesk", "Instrument Serif", "Inter"]),
-    text: z.enum(["Inter", "Space Grotesk"]),
-    mono: z.enum(["JetBrains Mono"]).default("JetBrains Mono"),
+    display: FontFamily,
+    text: FontFamily,
+    mono: FontFamily.default("JetBrains Mono"),
   }),
+  fontAssets: z.array(StyleFontAsset).max(18).default([]),
   displayWeight: z.number().int().min(300).max(700).default(500),
   textWeight: z.number().int().min(300).max(600).default(400),
   trackingDisplay: z.number().min(-0.05).max(0.02).default(-0.02), // em
   grain: z.number().min(0).max(0.12).default(0), // film-grain opacity
+}).superRefine((value, ctx) => {
+  const faces = new Set<string>();
+  const usedFamilies = new Set([value.fonts.display, value.fonts.text, value.fonts.mono]);
+  value.fontAssets.forEach((face, index) => {
+    const key = `${face.family}:${face.weight}`;
+    if (faces.has(key)) ctx.addIssue({ code: "custom", path: ["fontAssets", index], message: `duplicate custom font face ${key}` });
+    faces.add(key);
+    if ((BUNDLED_FONT_FAMILIES as readonly string[]).includes(face.family))
+      ctx.addIssue({ code: "custom", path: ["fontAssets", index, "family"], message: `bundled family ${face.family} cannot be overridden` });
+    if (!usedFamilies.has(face.family))
+      ctx.addIssue({ code: "custom", path: ["fontAssets", index, "family"], message: `custom family ${face.family} is not assigned to a typography role` });
+  });
+  for (const [role, family, weight] of [
+    ["display", value.fonts.display, value.displayWeight],
+    ["text", value.fonts.text, value.textWeight],
+    ["mono", value.fonts.mono, 400],
+  ] as const) {
+    if (!(BUNDLED_FONT_FAMILIES as readonly string[]).includes(family) && !faces.has(`${family}:${weight}`))
+      ctx.addIssue({ code: "custom", path: ["fonts", role], message: `custom family ${family} requires declared weight ${weight}` });
+  }
 });
 export type StyleT = z.infer<typeof Style>;
 
@@ -654,6 +683,10 @@ export const Score = z.object({
       mode: z.enum(["clean-room", "source-assisted"]),
       referenceSourceIds: z.array(id).min(1).refine((ids) => new Set(ids).size === ids.length, "reference source IDs must be unique"),
       reason,
+    }).optional(),
+    brand: z.object({
+      brandId: id,
+      brandSystemDigest: z.string().regex(/^[0-9a-f]{64}$/, "Brand System digest is 64 lowercase hex characters"),
     }).optional(),
   }),
   style: Style,

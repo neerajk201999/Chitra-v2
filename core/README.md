@@ -13,6 +13,8 @@ chitra capabilities --json                     # native/assisted/unsupported tru
 chitra intake intake.json -o intake.lock.json # objective + mixed-source provenance
 chitra transcript-lock transcript.json -o transcript.lock.json --project . # exact footage + word timing
 chitra transcript-pack transcript.lock.json -o transcript-pack.md --project . # compact phrase context
+chitra brand-lock brand.json --project . -o brand.lock.json # lock reusable brand evidence and local fonts
+chitra brand-conform brand.lock.json intake.lock.json direction.json score.json # exact brand survival
 chitra edit-check transcript.lock.json edit.json --project . # exact quote/word/source contract
 chitra edit-render transcript.lock.json edit.json --project . -o assets/edit.mp4 # clip audio + receipt
 chitra edit-evidence transcript.lock.json edit.json --project . -o edit-evidence --segment opening proof # bounded filmstrip/waveform/cut evidence
@@ -29,7 +31,7 @@ chitra evidence score.json -o evidence/        # inspect hero stills before moti
 chitra render score.json -o draft.mp4 -q draft # 12fps half-resolution diagnostic; never release
 chitra memory-validate revision-memory.json     # scope-safe accepted/rejected outcomes
 chitra memory-context revision-memory.json --brand acme --max-chars 6000
-chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
+chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json # add --brand for brand-bound Scores
 chitra verify-release out/release.json          # verify the bound release artifacts
 ```
 

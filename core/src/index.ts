@@ -3,7 +3,7 @@ export * from "./motion/tokens.js";
 export * from "./capabilities/index.js";
 export { compile, resolveSceneTimeline, totalDurationMs, type CompileResult } from "./compile/index.js";
 export { openSession, renderScore, renderInputFiles, sceneHash, scoreHash, type RenderSession, type RenderResult, type TextRegion, type Quality } from "./render/index.js";
-export { runStaticGates, runFrameGates, frameGateSampleTimes, FRAME_GATE_INTERVAL_MS, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runAssetProvenanceConformance, runCreativeConformance, summarize, type Finding } from "./gates/index.js";
+export { runStaticGates, runFrameGates, frameGateSampleTimes, FRAME_GATE_INTERVAL_MS, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runAssetProvenanceConformance, runBrandConformance, runCreativeConformance, summarize, type Finding } from "./gates/index.js";
 export { generateEvidence, type EvidenceResult } from "./evidence/index.js";
 export { measureAudio, audioInvariantIssues, type AudioMeasurement } from "./audio/measure.js";
 export { assertReleaseTargets, releaseFingerprint, makeReleaseReceipt, verifyReleaseReceipt, ReleaseReceiptSchema, sha256File, type ReleaseArtifacts, type ReleaseFingerprint, type ReleaseReceipt } from "./release/index.js";
@@ -13,6 +13,7 @@ export { COMPARISON_VERSION, ReferenceComparison, type ReferenceComparisonT } fr
 export { compareReference, type CompareMode, type CompareOptions, type CompareRegion } from "./reference/compare.js";
 export { INTAKE_VERSION, Intake, IntakeSource, validateIntake, type IntakeT, type IntakeSourceT } from "./intake/schema.js";
 export { materializeIntake } from "./intake/materialize.js";
+export { BRAND_SYSTEM_VERSION, BUNDLED_FONT_FAMILIES, BrandSystem, validateBrandSystem, materializeBrandSystem, brandSystemDigest, type BrandSystemT } from "./brand/index.js";
 export { CREATIVE_REVIEW_VERSION, CRAFT_PRINCIPLES, REVIEW_DOMAINS, CreativeReview, CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview, type CreativeReviewT, type CalibrationCaseLabelT, type CraftPrincipleId } from "./creative/review.js";
 export { INDEPENDENT_CALIBRATION_VERSION, IndependentCalibrationStudy, validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy, type IndependentCalibrationStudyT } from "./creative/calibration.js";
 export { REVISION_MEMORY_VERSION, REVISION_CONTEXT_VERSION, RevisionMemory, validateRevisionMemory, validateRevisionContextQuery, compileRevisionContext, type RevisionMemoryT, type RevisionEntryT, type RevisionContextQuery } from "./creative/memory.js";

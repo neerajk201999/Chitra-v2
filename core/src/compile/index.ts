@@ -17,7 +17,7 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AnimationT, SceneT, ScoreT, ElementT } from "../ir/schema.js";
+import type { AnimationT, SceneT, ScoreT, ElementT, StyleT } from "../ir/schema.js";
 import { resolveProjectAsset } from "../assets/local.js";
 import {
   CHOREOGRAPHY,
@@ -59,18 +59,29 @@ const FONT_FILES: Record<string, { dir: string; file: string; weights: number[] 
   "JetBrains Mono": { dir: "jetbrains-mono", file: "jetbrains-mono-latin-{w}-normal.woff2", weights: [400, 500] },
 };
 
-function fontFaces(families: string[]): string {
+function fontFaces(style: StyleT, projectDir: string): string {
+  const families = [style.fonts.display, style.fonts.text, style.fonts.mono];
   const seen = new Set<string>();
   let css = "";
   for (const fam of families) {
     if (seen.has(fam)) continue;
     seen.add(fam);
-    const spec = FONT_FILES[fam];
-    if (!spec) throw new Error(`No bundled font for family "${fam}"`);
-    for (const w of spec.weights) {
-      const file = path.join(runtimeAssets, "fonts", spec.dir, spec.file.replace("{w}", String(w)));
-      const b64 = readFileSync(file).toString("base64");
-      css += `@font-face{font-family:'${fam}';font-style:normal;font-weight:${w};src:url(data:font/woff2;base64,${b64}) format('woff2');}\n`;
+    const bundled = FONT_FILES[fam];
+    if (bundled) {
+      for (const weight of bundled.weights) {
+        const file = path.join(runtimeAssets, "fonts", bundled.dir, bundled.file.replace("{w}", String(weight)));
+        const b64 = readFileSync(file).toString("base64");
+        css += `@font-face{font-family:'${fam}';font-style:normal;font-weight:${weight};src:url(data:font/woff2;base64,${b64}) format('woff2');}\n`;
+      }
+      continue;
+    }
+    const faces = style.fontAssets.filter((face) => face.family === fam).sort((a, b) => a.weight - b.weight);
+    if (!faces.length) throw new Error(`No declared font asset for family "${fam}"`);
+    for (const face of faces) {
+      const file = resolveProjectAsset(projectDir, face.src);
+      const bytes = readFileSync(file);
+      if (bytes.subarray(0, 4).toString("ascii") !== "wOF2") throw new Error(`Custom font is not WOFF2 data: ${face.src}`);
+      css += `@font-face{font-family:'${fam}';font-style:normal;font-weight:${face.weight};src:url(data:font/woff2;base64,${bytes.toString("base64")}) format('woff2');}\n`;
     }
   }
   return css;
@@ -783,11 +794,7 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
       ? `<svg class="grain" width="100%" height="100%"><filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="${score.meta.seed}" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#g)" opacity="${score.style.grain}"/></svg>`
       : "";
 
-  const fonts = fontFaces([
-    score.style.fonts.display,
-    score.style.fonts.text,
-    score.style.fonts.mono,
-  ]);
+  const fonts = fontFaces(score.style, projectDir);
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>${esc(score.meta.title)}</title>
@@ -949,7 +956,11 @@ window.__chitra = {
     return waits.length ? Promise.all(waits).then(function () { return true; }) : true;
   },
   ready: function () {
-    var families = ${JSON.stringify([score.style.fonts.display, score.style.fonts.text])};
+    var faces = ${JSON.stringify([
+      { family: score.style.fonts.display, weight: score.style.displayWeight },
+      { family: score.style.fonts.text, weight: score.style.textWeight },
+      { family: score.style.fonts.mono, weight: 400 },
+    ])};
     var need3d = ${hasScene3d};
     var wait3d = need3d
       ? new Promise(function (res) {
@@ -961,7 +972,7 @@ window.__chitra = {
         })
       : Promise.resolve();
     return wait3d.then(function () { return Promise.all(
-      families.map(function (f) { return document.fonts.load("16px '" + f + "'"); })
+      faces.map(function (f) { return document.fonts.load(f.weight + " 16px '" + f.family + "'"); })
     ); }).then(function () {
       return document.fonts.ready;
     }).then(function () {
@@ -971,7 +982,7 @@ window.__chitra = {
         return img.decode ? img.decode().catch(function () {}) : Promise.resolve();
       }));
     }).then(function () {
-      var ok = families.every(function (f) { return document.fonts.check("16px '" + f + "'"); });
+      var ok = faces.every(function (f) { return document.fonts.check(f.weight + " 16px '" + f.family + "'"); });
       var badImages = Array.prototype.filter.call(document.images, function (img) {
         // chitra-vid frames get src injected by the renderer post-load
         return img.getAttribute("src") && !(img.complete && img.naturalWidth > 0);

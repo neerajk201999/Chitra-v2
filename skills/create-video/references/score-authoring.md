@@ -72,7 +72,8 @@ asset. Source-assisted reconstruction declares asset lineage; clean-room scores
 cannot render reference bytes. Run the complete boundary check:
 
 ```bash
-chitra creative-check intake.lock.json direction.json storyboard.json score.json
+chitra brand-conform brand.lock.json intake.lock.json direction.json score.json # when Brand System is in scope
+chitra creative-check intake.lock.json direction.json storyboard.json score.json --brand brand.lock.json
 chitra validate score.json
 chitra evidence score.json -o out/evidence
 ```
@@ -80,3 +81,12 @@ chitra evidence score.json -o out/evidence
 Open the contact sheet and hero frames. Do not proceed because the commands are
 green; proceed only when the stills carry the intended hierarchy and feeling.
 
+Custom brand fonts must be project-local WOFF2 files declared in
+`style.fontAssets` with exact family/weight and `assetUse` provenance. They are
+embedded offline and cache-hashed. A brand-conformance pass proves type/palette
+survival, not optical spacing or professional brand expression; inspect the
+full-resolution hero evidence for those judgments.
+
+Copy `brand.lock.json`'s `brandId` and `digest` into
+`score.meta.brand.brandId`/`brandSystemDigest`. This binding makes omission of
+`--brand brand.lock.json` fail both `creative-check` and `release`.

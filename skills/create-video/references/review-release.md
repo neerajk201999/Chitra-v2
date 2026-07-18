@@ -11,8 +11,9 @@ Load after the hero still passes and a motion preview exists.
 5. Watch the preview with sound from start to finish.
 6. Patch only evidence-cited IR spans; repeat at most three times.
 
-Draft uses sampled JPEG capture for direction/motion review. It is not suitable
-for compression, fine texture, or final frame-fidelity decisions.
+Draft uses 12fps half-resolution JPEG capture for direction/motion review. It
+is not suitable for small-copy, compression, fine texture, or final
+frame-fidelity decisions.
 
 ## Isolated first watch
 
@@ -38,7 +39,8 @@ Only after preview revisions and full-resolution evidence:
 
 ```bash
 chitra release intake.lock.json direction.json storyboard.json score.json \
-  -o out/final.mp4 -e out/evidence -r out/release.json -q high
+  -o out/final.mp4 -e out/evidence -r out/release.json -q high \
+  --brand brand.lock.json # required only when score.meta.brand is present
 chitra verify-release out/release.json
 ```
 

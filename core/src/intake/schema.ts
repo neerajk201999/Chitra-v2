@@ -142,6 +142,7 @@ export const Intake = z.object({
   sources: z.array(IntakeSource).min(1),
   preferences: z.array(Preference).default([]),
   brand: z.object({
+    profileId: id.optional(),
     name: z.string().min(1).optional(),
     constraints: z.array(BrandConstraint).default([]),
   }).default({ constraints: [] }),

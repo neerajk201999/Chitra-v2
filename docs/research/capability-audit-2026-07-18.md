@@ -67,7 +67,7 @@ about blocked user work, not competitor prestige.
 | Music/SFX/beat grid | Rhythm, emotional arc, synchronization | HyperFrames, Remotion SFX, Chitra | native beds/SFX/onsets/loudness; sparse automation | improve typed mix automation and energy curves | P1 |
 | Voice/TTS/word sync | Narration-led explainers and accessibility | HyperFrames/video-use/provider ecosystems | supplied premix only | replace provider lock-in with typed narration + adapters | P0 |
 | Asset resolver/provider catalog | Remove manual searching and freeze rights/provenance | HyperFrames | fetch/snap/local provenance; no catalog/ranking | improve provider-neutral acquisition and rights-aware ranking | P1 |
-| Website capture and brand extraction | Turn existing product truth into usable visual input | HyperFrames | screenshot capture, typed Intake; shallow brand extraction | improve into brand system and evidence inventory | P0 |
+| Website capture and brand extraction | Turn existing product truth into usable visual input | HyperFrames | screenshot capture plus Brand System 0.1: locked sources/rules/palette/type, local WOFF2 rendering, exact conformance; semantic extraction remains host work | improve outside brand-research workflow and evidence inventory | P0 partially closed |
 | Figma import | Preserve designed source rather than redraw badly | HyperFrames/Remotion integrations | absent | adopt assets/tokens/states through a narrow adapter | P1 |
 | Reference decomposition | Learn timing/palette/energy from examples | Chitra | native low-level Style DNA; no semantic shots/optical flow | improve targeted evidence, never copy blindly | P1 |
 | Exact reference comparison | Diagnose residuals frame by frame | Chitra/Remotion regression tooling | exhaustive MAE/PSNR/global SSIM/ROI/audio envelope | improve local perceptual/flow metrics, keep pixels authoritative | P1 |
@@ -85,7 +85,7 @@ about blocked user work, not competitor prestige.
 
 Foundational parity is reached when a major user job is not blocked, not when
 every competitor API name exists. The remaining P0 parity gaps are therefore:
-public first-use proof, narration generation/sync, brand ingestion, calibrated
+public first-use proof, narration generation/sync, semantic brand research, calibrated
 judgment, and neutral evaluation. ADR-0036 closes the first still-first approval
 contract, not the quality of its choices. Masks/deep comps and
 seekable imported animation are P1

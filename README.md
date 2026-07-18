@@ -83,6 +83,8 @@ preferences, and anti-references are optional inputs—not mandatory ceremony.
 ```bash
 # what the agent runs under the hood
 chitra intake intake.json -o intake.lock.json # validate + fingerprint supplied sources and evidence
+chitra brand-lock brand.json --project . -o brand.lock.json # lock brand rules/palette/type/font bytes
+chitra brand-conform brand.lock.json intake.lock.json direction.json score.json # prove brand facts reach Score
 chitra transcript-lock transcript.json -o transcript.lock.json --project . # bind word timing to exact footage
 chitra transcript-pack transcript.lock.json -o transcript-pack.md --project . # compact agent reading surface
 chitra edit-check transcript.lock.json edit.json --project . # quote/word/source conformance
@@ -106,13 +108,15 @@ chitra review-score labels-v2.json creative-review.json --case uniform-monotony
 chitra review-calibrate study.json -o calibration-result.json # independent panel/candidate agreement
 chitra memory-validate revision-memory.json # validate accepted/rejected outcome history
 chitra memory-context revision-memory.json --brand acme --max-chars 6000 # bounded relevant memory
-chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
+chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json # add --brand brand.lock.json for brand-bound Scores
 chitra verify-release out/release.json         # reject changed inputs, assets, output, or evidence
 chitra clean                     # remove work artifacts
 ```
 
 Start from [examples/intake/intake.json](examples/intake/intake.json) when an
-agent needs the complete Intake shape.
+agent needs the complete Intake shape, and
+[examples/brand-system/brand.json](examples/brand-system/brand.json) when brand
+rules, palette, or typography must remain reusable and enforceable.
 
 ## Repository memory
 
