@@ -38,8 +38,8 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    reduces the local isolated install from 93.7 to 62.8 MiB. The local warm-
    cache install is 1.4s with zero browser bytes and the complete first-frame
    check is 6.5s. ADR-0037's public GitHub preview downloads, SHA-verifies, and
-   installs in 3.9s/62.9 MiB, then completes the real first-frame transaction in
-   11.7s on this machine with warm npm dependencies.
+   installs in 2.5s/62.9 MiB, then completes the real first-frame transaction in
+   9.3s on this machine with warm npm dependencies.
    A cold public-registry retest and independent cross-OS/harness runs remain.
    Public GitHub access, `chitra-video@0.4.0`, an unauthenticated clone,
    isolated registry install/probe, SHA-pinned 0.5.0 preview install, native

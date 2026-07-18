@@ -6,7 +6,8 @@ Requires Node 22.12+, FFmpeg on `PATH`, and installed Chrome, Chromium, or Edge.
 Chitra uses `puppeteer-core` and does not download a browser during install.
 
 ```bash
-npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.1/chitra-video-0.5.0.tgz
+# Stable registry command (public registry currently serves 0.4.0):
+npm install -g chitra-video
 chitra probe
 chitra capabilities --json                     # native/assisted/unsupported truth
 chitra intake intake.json -o intake.lock.json # objective + mixed-source provenance
@@ -31,6 +32,11 @@ chitra memory-context revision-memory.json --brand acme --max-chars 6000
 chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json
 chitra verify-release out/release.json          # verify the bound release artifacts
 ```
+
+For the current SHA-pinned 0.5.0 prerelease command, use the public repository's
+[install guide](https://github.com/neerajk201999/Chitra-v2/blob/main/docs/INSTALL.md).
+The package README deliberately does not embed a candidate's own immutable URL;
+doing so would change the candidate bytes after its URL and digest are assigned.
 
 The npm package is the deterministic CLI. For the complete agent workflow,
 clone and open the public repository in Claude Code, Codex, Cursor, or Gemini:
