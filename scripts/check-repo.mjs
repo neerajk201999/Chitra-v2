@@ -74,7 +74,7 @@ const changelog = readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
 if (!changelog.includes(`## [${pkg.version}]`))
   failures.push(`CHANGELOG.md has no ${pkg.version} release section`);
 
-for (const entry of [pkg.main, pkg.types, pkg.exports?.["."]?.import, pkg.exports?.["."]?.types]) {
+for (const entry of [pkg.main, pkg.types, pkg.exports?.["."]?.import, pkg.exports?.["."]?.require, pkg.exports?.["."]?.types]) {
   if (!entry || !existsSync(path.resolve(root, "core", entry)))
     failures.push(`package entry point is missing after build: ${entry ?? "<unset>"}`);
 }

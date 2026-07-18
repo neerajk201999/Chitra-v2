@@ -82,6 +82,10 @@ try {
   const installedThree = path.join(globalRoot, "chitra-video", "runtime-assets", "three", "three.module.js");
   if (!existsSync(installedThree) || statSync(installedThree).size < 1_000_000)
     throw new Error("packed package is missing its licensed Three.js runtime asset");
+  const consumerCwd = path.dirname(globalRoot);
+  const importResult = run(process.execPath, ["--input-type=module", "-e", "import('chitra-video').then((m) => { if (typeof m.validateScore !== 'function' || typeof m.renderScore !== 'function') process.exit(2); })"], consumerCwd);
+  const requireResult = run(process.execPath, ["-e", "const m = require('chitra-video'); if (typeof m.validateScore !== 'function' || typeof m.renderScore !== 'function') process.exit(2);"], consumerCwd);
+  if (importResult || requireResult) throw new Error("packed library entry checks must be silent");
   const version = run(chitra, ["--version"]);
   run(chitra, ["probe"]);
   const film = path.join(work, "film");
@@ -112,6 +116,7 @@ ADR-0016 source-package verification in a fresh temporary install prefix.
 - Artifact SHA-256: **${artifactSha256}${expectedSha256 ? ", matched expected digest" : ""}**
 - Install: **${installSeconds.toFixed(1)}s, ${installedMiB.toFixed(1)} MiB, zero browser-download bytes**
 - Runtime probe: **passed**
+- Installed-package ESM import and CommonJS require: **passed**
 - Licensed minimal Three/font runtime assets: **packed**
 - Installed-package Intake validation and source lock: **passed**
 - Starter initialization and static validation: **passed**
