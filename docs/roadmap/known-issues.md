@@ -38,8 +38,8 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    reduces the local isolated install from 93.7 to 62.8 MiB. The local warm-
    cache install is 1.4s with zero browser bytes and the complete first-frame
    check is 6.5s. ADR-0037's public GitHub preview downloads, SHA-verifies, and
-   installs in 2.5s/62.9 MiB, then completes the real first-frame transaction in
-   9.3s on this machine with warm npm dependencies.
+   installs in 4.8s/62.9 MiB, then completes the real first-frame transaction in
+   12.4s on this machine with warm npm dependencies.
    A cold public-registry retest and independent cross-OS/harness runs remain.
    Public GitHub access, `chitra-video@0.4.0`, an unauthenticated clone,
    isolated registry install/probe, SHA-pinned 0.5.0 preview install, native
@@ -92,6 +92,12 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     sameness; RGB MAE only detects near-identical pixels; declarations cannot
     prove a reviewer was blind; stills cannot prove motion or sound; and no
     independent corpus shows that the selected Direction is professionally good.
+18. **Draft preview latency is bounded in work, not yet stable in wall time.**
+    The 9.6s fixture always captures 115 JPEG frames at 12fps and uses about
+    3.0 MiB cache, but local full-verifier runs have ranged from 8.1–8.8s to
+    20.7s under load. There is no cross-machine p50/p95 sample or CI regression
+    ceiling. Collect repeated cold/warm timings and isolate browser startup,
+    capture, and encode phases before claiming consistently real-time preview.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. ✅ Figure text gate bypass fixed 2026-07-16 (ADR-0024).** Rendered figure DOM text now enters size, bounded-sample pixel contrast, safe-zone, reading-time, and overlap gates. The browser benchmark triggers all five and leaves a compliant control green. Rasterized text and sub-interval defects remain item 6.

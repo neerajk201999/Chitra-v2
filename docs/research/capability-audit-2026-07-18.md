@@ -12,10 +12,10 @@ is not yet proven because authentication expired, but the SHA-pinned public
 GitHub prerelease now passes the same functional install transaction. The local package installs
 in 1.4 seconds with a warm cache, occupies 62.8 MiB, downloads no browser,
 launches a real system-browser frame within a 6.5-second end-to-end install
-check. The public-URL path installs in 3.9 seconds/62.9 MiB and reaches a real
-frame in 11.7 seconds with warm dependencies. Chitra renders a 9.6-second
-1080×1920 12fps preview
-in 8.1 seconds. Those are measured local facts, not a universal cold-network
+check. The current public-URL path installs in 4.8 seconds/62.9 MiB and reaches
+a real frame in 12.4 seconds with warm dependencies. The 9.6-second 1080×1920
+12fps preview has taken 8.1–8.8 seconds normally and 20.7 seconds during one
+loaded full-verifier run. Those are measured local facts, not universal latency or cold-network
 claim. Public npm remains `0.4.0`.
 
 Chitra does not have every capability of Remotion, HyperFrames, EditFrame, or
