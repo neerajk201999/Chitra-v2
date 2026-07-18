@@ -131,11 +131,11 @@ and CHANGELOG.
 - Public distribution: unauthenticated clone resolved protected `main` at
   `c2b666670d87294763ebedabdd0b7922fc140346`; isolated npm-prefix installation
   fetched `chitra-video@0.4.0`, reported CLI 0.4.0, and passed runtime probe.
-- Public-preview artifact: GitHub `v0.5.0-rc.1` pins protected-main commit
-  `90cd93ee2fc36ef6b1292bc07364c68c345edb40`; the downloaded 586.1 kB package
-  matches SHA-256 `d8bc89b419aa1bf6e53252067d2abcf5300315d94328547303c434bcfb670ba9`,
-  installs in 3.9s/62.9 MiB with zero browser bytes, and completes a real
-  first-frame transaction in 11.7s with warm npm dependencies.
+- Public-preview artifact: GitHub `v0.5.0-rc.2` pins protected-main commit
+  `ddbb839b1d1bd9aeb17f3fa8205a69a0aba75521`; the downloaded 586,114-byte
+  package matches SHA-256 `b0c50dce7a50708931bfc23a2b425b8bb8673436288f46501bb8ed735dda7587`,
+  installs in 2.5s/62.9 MiB with zero browser bytes, and completes a real
+  first-frame transaction in 9.3s with warm npm dependencies.
 - Unit suite: 87 tests.
 - Still-first directorial-search benchmark: three materially different Aether
   concepts lock and render comparable identity-free hero probes; CLI/library
@@ -257,7 +257,7 @@ The evidence and reasoning for this rebaseline are in
   transition neighborhoods. This is bounded coverage, not every-frame proof;
   shorter between-sample defects, rasterized text, and token-only CSS
   enforcement remain open.
-- GitHub, `chitra-video@0.4.0`, and the SHA-pinned `v0.5.0-rc.1` preview artifact
+- GitHub, `chitra-video@0.4.0`, and the SHA-pinned `v0.5.0-rc.2` preview artifact
   are public. The preview passed a fresh-prefix real-frame transaction; stable
   npm 0.5.0 and three-harness outside-user timing remain open.
 - ADR-0033 vendors only the executed MIT Three.js module and nine OFL font

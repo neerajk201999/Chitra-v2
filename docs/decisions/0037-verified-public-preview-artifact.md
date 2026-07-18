@@ -37,6 +37,11 @@ separate canonical-skills installer.
 6. Stable documentation returns to `npm install -g chitra-video` only after the
    intended version is published and a fresh registry install passes. The
    GitHub candidate remains a historical reproducibility artifact.
+7. The package's own README links to the repository install guide instead of
+   embedding its candidate URL or checksum. An immutable artifact cannot contain
+   a digest of itself, and patching a candidate URL after packing creates an
+   endless byte-changing release loop. Repository install surfaces carry the
+   current pinned candidate; packaged documentation remains channel-neutral.
 
 ## Consequences
 

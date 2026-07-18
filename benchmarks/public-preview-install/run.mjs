@@ -4,8 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-export const PUBLIC_PREVIEW_URL = "https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.1/chitra-video-0.5.0.tgz";
-export const PUBLIC_PREVIEW_SHA256 = "d8bc89b419aa1bf6e53252067d2abcf5300315d94328547303c434bcfb670ba9";
+export const PUBLIC_PREVIEW_URL = "https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.2/chitra-video-0.5.0.tgz";
+export const PUBLIC_PREVIEW_SHA256 = "b0c50dce7a50708931bfc23a2b425b8bb8673436288f46501bb8ed735dda7587";
 
 const result = spawnSync(process.execPath, [
   "benchmarks/cold-start/run.mjs", "--check", "--report",
