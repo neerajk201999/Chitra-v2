@@ -675,7 +675,7 @@ export function runConformance(direction: DirectionT, score: ScoreT): Finding[] 
   });
 
   // CC-CONF-4: a declared hero moment must be executed as a hero-role element.
-  direction.scenes.forEach((ds, i) => {
+  direction.scenes.forEach((ds) => {
     if (!ds.heroMoment) return;
     const scene = score.scenes.find((s) => s.id === ds.id);
     if (scene && !scene.elements.some((e) => (e as { role?: string }).role === "hero"))

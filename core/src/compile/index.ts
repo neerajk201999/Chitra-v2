@@ -20,7 +20,6 @@ import { fileURLToPath } from "node:url";
 import type { AnimationT, SceneT, ScoreT, ElementT, StyleT } from "../ir/schema.js";
 import { resolveProjectAsset } from "../assets/local.js";
 import {
-  CHOREOGRAPHY,
   DURATIONS,
   EASINGS,
   PRESETS,

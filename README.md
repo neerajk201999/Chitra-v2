@@ -83,8 +83,9 @@ preferences, and anti-references are optional inputs—not mandatory ceremony.
 ```bash
 # what the agent runs under the hood
 chitra intake intake.json -o intake.lock.json # validate + fingerprint supplied sources and evidence
-chitra brand-lock brand.json --project . -o brand.lock.json # lock brand rules/palette/type/font bytes
-chitra brand-conform brand.lock.json intake.lock.json direction.json score.json # prove brand facts reach Score
+# optional, only when the user wants reusable evidence-backed brand constraints:
+chitra brand-lock brand.json --project . -o brand.lock.json # lock only the supplied/approved rules, palette, type, and font bytes
+chitra brand-conform brand.lock.json intake.lock.json direction.json score.json # prove those chosen brand facts reach Score
 chitra transcript-lock transcript.json -o transcript.lock.json --project . # bind word timing to exact footage
 chitra transcript-pack transcript.lock.json -o transcript-pack.md --project . # compact agent reading surface
 chitra edit-check transcript.lock.json edit.json --project . # quote/word/source conformance
