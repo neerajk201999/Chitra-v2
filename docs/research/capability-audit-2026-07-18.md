@@ -14,8 +14,10 @@ in 1.4 seconds with a warm cache, occupies 62.8 MiB, downloads no browser,
 launches a real system-browser frame within a 6.5-second end-to-end install
 check. The current public-URL path installs in 4.8 seconds/62.9 MiB and reaches
 a real frame in 12.4 seconds with warm dependencies. The 9.6-second 1080×1920
-12fps preview has taken 8.1–8.8 seconds normally and 20.7 seconds during one
-loaded full-verifier run. Those are measured local facts, not universal latency or cold-network
+12fps full-resolution preview measured 8.76s p50/10.71s nearest-rank p95 across
+five fresh-cache samples and 20.7 seconds during one earlier loaded verifier
+run. ADR-0039's declared half-resolution diagnostic retains all 115 samples at
+6.02s p50/6.07s p95 and 1.3 MiB cache. Those are measured local facts, not universal latency or cold-network
 claim. Public npm remains `0.4.0`.
 
 Chitra does not have every capability of Remotion, HyperFrames, EditFrame, or
@@ -44,7 +46,7 @@ about blocked user work, not competitor prestige.
 |---|---|---|---|---|---:|
 | Frame-pure deterministic animation | Random seek, repeatable renders, safe parallelization; derive state from a clock/frame | Remotion, HyperFrames | Typed tracks and seek clock; same-machine evidence only | improve cross-machine/interruption proof | P0 |
 | Fast browser-free installation | Users abandon large downloads and brittle setup | System browser or WebCodecs; lazy optional packs | 0.5 local after ADR-0033: 1.4s warm/62.8 MiB/no browser download; public proof pending | improve and measure network-cold installs | P0 |
-| Diagnostic preview | Creative iteration cannot wait for release encoding | sampled frames/player/studio | ≤12fps JPEG preview is 8.1s for 9.6s fixture; no live player | improve streaming/player only after outside-user evidence | P0 |
+| Diagnostic preview | Creative iteration cannot wait for release encoding | sampled frames/player/studio | 12fps 540×960 diagnostic is 6.02s p50 for 9.6s fixture; explicit full-resolution final-type boundary; no live player | improve streaming/player only after outside-user evidence | P0 |
 | Full release rendering/codecs | Deliver MP4/WebM/GIF/audio with production controls | Remotion/HyperFrames/EditFrame | H.264 MP4 + FFmpeg; narrow format surface and ~2fps release capture | adopt backend adapters, preserve Score | P1 |
 | Timeline/sequences/tracks | Place and overlap media predictably | all | Scenes, transitions, choreography, one-level groups | improve local/deeper compositions from measured residual | P1 |
 | General property keyframes | Precise motion without preset coercion | Remotion/HyperFrames | Typed DOM and selected 3D tracks | improve property surface only with gates | P1 |

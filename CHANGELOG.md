@@ -8,6 +8,9 @@ versioned separately.
 
 ### Added
 
+- ADR-0038 complete render-transaction telemetry for setup, capture, encode,
+  finalization, and browser shutdown, plus repeatable p50/p95 preview benchmarks.
+
 - ADR-0032 Revision Memory 0.1 with strict project/brand/universal scope,
   evidence-required accepted outcomes, independently calibrated universal
   promotion, `memory-validate`, and deterministic budgeted `memory-context`.
@@ -38,6 +41,12 @@ versioned separately.
   Direction/evidence, and blocking of pixel-near-identical rendered searches.
 
 ### Changed
+
+- ADR-0039 keeps all 12fps draft motion samples while capturing at half spatial
+  resolution. The fixed 9.6s fixture improves from 8.76s to 6.02s local p50 and
+  from 3.0 to 1.3 MiB cache; CLI/library results expose actual output geometry,
+  odd H.264 dimensions are safely padded, and a generated compact-UI comparison
+  preserves the explicit diagnostic-not-release quality boundary.
 
 - ADR-0033 replaces complete Three.js and four Fontsource runtime dependencies
   with the exact licensed module/font bytes Chitra executes. The isolated

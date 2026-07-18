@@ -23,6 +23,13 @@
 > version/probe/Intake/init/validate/real-frame in 12.4s on this machine. This
 > unblocks friend tests; it is not stable npm or outside-user/cross-OS proof.
 >
+> **Measured preview optimization (2026-07-18, ADR-0038/0039).** Phase telemetry
+> isolates browser capture as the dominant draft cost. Preserving all 115
+> temporal samples while reducing only diagnostic spatial capture moves the
+> fixed fixture from 8.76s to 6.02s p50 and from 3.0 to 1.3 MiB cache. Output
+> dimensions and the final-typography boundary are explicit; release/evidence
+> pixels remain full resolution. Cross-machine measurements remain the M3 gate.
+>
 > **P0 footage slice (2026-07-18, ADR-0034/0035).** Provider-neutral word transcripts
 > now lock to exact local footage, pack into bounded phrase context, conform an
 > explainable word-addressed EDL, and render normalized source-audio-preserving
@@ -79,6 +86,10 @@ Code/Codex/Cursor manifests, `AGENTS.md`/`GEMINI.md`, `npx skills` portability,
 hash manifest, and stale-version CI checks (ADR-0016) · isolated tarball install
 benchmark through a real browser frame · MO-EDIT-5 no-dead-air gate · render-
 cache auto-pruning.
+Landed 2026-07-18: ADR-0038/0039 complete-transaction phase telemetry and a
+declared half-resolution 12fps draft profile. Five fresh-cache samples improve
+p50 by about 31% on the fixed fixture while retaining all motion samples; a
+generated compact-UI probe and odd-size H.264 case guard the spatial tradeoff.
 Remaining:
 - Ship and independently re-run the 0.5.0 Cursor recovery: zero browser download,
   real browser probe, executable CLI, sampled preview, disk preflight, and typed

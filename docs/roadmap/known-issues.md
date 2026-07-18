@@ -4,8 +4,11 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 
 1. **Release render speed remains ~2 fps/worker** (screenshot mode, single
    browser, PNG disk round-trip). ADR-0031 makes diagnostic preview a separate
-   ≤12fps JPEG profile: the 9.6s fixture renders 115 frames in 8.1s with 3.0 MiB
-   cache. Full-fps release still needs streaming/chunking or a new backend (M5).
+   12fps JPEG profile. ADR-0038/0039 measure capture as the bottleneck and emit a
+   declared 540×960 diagnostic for a 1080×1920 Score: the 9.6s fixture retains
+   115 frames at 6.02s p50/6.07s local p95 with 1.3 MiB cache. Release/evidence
+   remain full resolution. Full-fps release still needs streaming/chunking or a
+   new backend (M5).
 2. **No paint-settle guarantee** between `seek()` and screenshot beyond empirical determinism on macOS; Linux/CI golden-frame verification pending (M5). Determinism claims are same-machine only.
 3. **Audio covers music + SFX + detected beat timing and transcript-edited clip
    audio** (ADR-0007/0011/0027/0034). `edit-render` preserves source audio,
@@ -92,12 +95,14 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     sameness; RGB MAE only detects near-identical pixels; declarations cannot
     prove a reviewer was blind; stills cannot prove motion or sound; and no
     independent corpus shows that the selected Direction is professionally good.
-18. **Draft preview latency is bounded in work, not yet stable in wall time.**
-    The 9.6s fixture always captures 115 JPEG frames at 12fps and uses about
-    3.0 MiB cache, but local full-verifier runs have ranged from 8.1–8.8s to
-    20.7s under load. There is no cross-machine p50/p95 sample or CI regression
-    ceiling. Collect repeated cold/warm timings and isolate browser startup,
-    capture, and encode phases before claiming consistently real-time preview.
+18. **Draft preview latency is phase-measured locally, not stable cross-machine.**
+    ADR-0038 shows capture dominates five full-resolution samples; ADR-0039's
+    half-resolution diagnostic keeps 115 JPEG frames at 12fps and measures
+    6.02s p50/6.07s nearest-rank p95 locally. The compact-UI probe remains
+    visually useful and records regional SSIM/MAE, but does not prove small-copy
+    OCR or final typography. One earlier loaded run reached 20.7s. Outside
+    macOS/Windows/Linux and harness samples remain required before a service-
+    level claim or CI ceiling.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. ✅ Figure text gate bypass fixed 2026-07-16 (ADR-0024).** Rendered figure DOM text now enters size, bounded-sample pixel contrast, safe-zone, reading-time, and overlap gates. The browser benchmark triggers all five and leaves a compliant control green. Rasterized text and sub-interval defects remain item 6.

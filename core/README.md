@@ -26,7 +26,7 @@ chitra compare reference.mp4 out.mp4 -o comparison.json # aligned pixel/audio-en
 chitra check score.json                        # schema + static + rendered-frame gates
 chitra frame score.json -t 1800 -o peek.png    # one-frame preview
 chitra evidence score.json -o evidence/        # inspect hero stills before motion
-chitra render score.json -o draft.mp4 -q draft # sampled diagnostic preview; never release
+chitra render score.json -o draft.mp4 -q draft # 12fps half-resolution diagnostic; never release
 chitra memory-validate revision-memory.json     # scope-safe accepted/rejected outcomes
 chitra memory-context revision-memory.json --brand acme --max-chars 6000
 chitra release intake.lock.json direction.json storyboard.json score.json -o out/final.mp4 -e out/evidence -r out/release.json

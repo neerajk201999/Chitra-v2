@@ -79,6 +79,10 @@ describe("first-use runtime profile", () => {
     expect(browserCandidates({ CHITRA_BROWSER_PATH: "/chosen/chrome" }, "darwin")[0]).toBe("/chosen/chrome");
     const score = validFixture();
     expect(renderStorageEstimate(score, "draft")).toBeLessThan(renderStorageEstimate(score, "standard") / 3);
+    const doubled = structuredClone(score);
+    doubled.meta.width *= 2;
+    doubled.meta.height *= 2;
+    expect(renderStorageEstimate(doubled, "draft")).toBe(renderStorageEstimate(score, "draft") * 4);
   });
   it("does not claim arbitrary product CGI or professional taste as native", () => {
     expect(CAPABILITIES.find((item) => item.id === "arbitrary-3d")?.support).toBe("asset-assisted");
@@ -87,13 +91,15 @@ describe("first-use runtime profile", () => {
   it("removes only pre-profile frame caches before disk preflight", () => {
     const cache = mkdtempSync(path.join(os.tmpdir(), "chitra-legacy-cache-"));
     try {
-      for (const name of ["0123456789abcdef", "fedcba9876543210", "draft-jpeg-12fps", "full-png", "media"])
+      for (const name of ["0123456789abcdef", "fedcba9876543210", "draft-jpeg-12fps", "draft-jpeg-12fps-s50-v3", "full-png", "media"])
         mkdirSync(path.join(cache, name));
       writeFileSync(path.join(cache, "0123456789abcdef", "f000000.png"), "frame");
       writeFileSync(path.join(cache, "fedcba9876543210", "keep.txt"), "not a Chitra frame cache");
-      expect(pruneLegacyFrameCaches(cache)).toBe(1);
+      expect(pruneLegacyFrameCaches(cache)).toBe(3);
       expect(existsSync(path.join(cache, "0123456789abcdef"))).toBe(false);
-      for (const name of ["fedcba9876543210", "draft-jpeg-12fps", "full-png", "media"])
+      for (const name of ["draft-jpeg-12fps", "draft-jpeg-12fps-s50-v3"])
+        expect(existsSync(path.join(cache, name))).toBe(false);
+      for (const name of ["fedcba9876543210", "full-png", "media"])
         expect(existsSync(path.join(cache, name))).toBe(true);
     } finally {
       rmSync(cache, { recursive: true, force: true });
