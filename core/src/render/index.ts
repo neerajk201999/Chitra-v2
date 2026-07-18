@@ -44,9 +44,9 @@ const DETERMINISTIC_FLAGS = [
 
 export type Quality = "draft" | "standard" | "high";
 const ENCODE = {
-  draft: { preset: "ultrafast", crf: 28, maxFps: 12, extension: "jpg", capture: { type: "jpeg" as const, quality: 82 }, bytesPerPixel: 0.18 },
-  standard: { preset: "medium", crf: 18, maxFps: null, extension: "png", capture: { type: "png" as const }, bytesPerPixel: 1.5 },
-  high: { preset: "slow", crf: 15, maxFps: null, extension: "png", capture: { type: "png" as const }, bytesPerPixel: 1.5 },
+  draft: { preset: "ultrafast", crf: 28, maxFps: 12, extension: "jpg", capture: { type: "jpeg" as const, quality: 82, scale: 0.5 }, bytesPerPixel: 0.18, scale: 0.5 },
+  standard: { preset: "medium", crf: 18, maxFps: null, extension: "png", capture: { type: "png" as const }, bytesPerPixel: 1.5, scale: 1 },
+  high: { preset: "slow", crf: 15, maxFps: null, extension: "png", capture: { type: "png" as const }, bytesPerPixel: 1.5, scale: 1 },
 } as const;
 
 /**
@@ -150,7 +150,7 @@ export interface RenderSession {
   compiled: CompileResult;
   pageFile: string;
   close(): Promise<void>;
-  seekAndCapture(ms: number, capture?: { type: "png" } | { type: "jpeg"; quality: number }): Promise<Buffer>;
+  seekAndCapture(ms: number, capture?: { type: "png"; scale?: number } | { type: "jpeg"; quality: number; scale?: number }): Promise<Buffer>;
   contrastCapture(ms: number): Promise<Buffer>;
   textRegions(ms: number): Promise<TextRegion[]>;
 }
@@ -256,6 +256,8 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
 
   const stage = await page.$("#stage");
   if (!stage) throw new Error("No #stage in compiled page");
+  const stageBox = await stage.boundingBox();
+  if (!stageBox) throw new Error("#stage has no capturable bounding box");
 
   return {
     browser,
@@ -267,6 +269,10 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
     },
     async seekAndCapture(ms: number, capture = { type: "png" }) {
       await page.evaluate(`window.__chitra.seek(${ms})`);
+      if ("scale" in capture && capture.scale && capture.scale !== 1) {
+        const { scale, ...options } = capture;
+        return Buffer.from(await page.screenshot({ ...options, clip: { ...stageBox, scale } }));
+      }
       return Buffer.from(await stage.screenshot(capture));
     },
     async contrastCapture(ms: number) {
@@ -289,11 +295,20 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
 
 export interface RenderResult {
   outFile: string;
+  outputWidth: number;
+  outputHeight: number;
   totalFrames: number;
   renderedFrames: number;
   cachedFrames: number;
   durationMs: number;
   wallMs: number;
+  phaseMs: {
+    setup: number;
+    capture: number;
+    encode: number;
+    finalize: number;
+    close: number;
+  };
   captureFps: number;
   cacheBytes: number;
   audio: AudioMeasurement;
@@ -313,7 +328,7 @@ export function renderStorageEstimate(score: ScoreT, quality: Quality): number {
   const fps = Math.min(score.meta.fps, profile.maxFps ?? score.meta.fps);
   const durationMs = score.scenes.reduce((sum, scene) => sum + scene.durationMs, 0);
   const frames = Math.ceil((durationMs / 1000) * fps);
-  return Math.ceil(frames * score.meta.width * score.meta.height * profile.bytesPerPixel);
+  return Math.ceil(frames * score.meta.width * score.meta.height * profile.scale * profile.scale * profile.bytesPerPixel);
 }
 
 function assertRenderStorage(score: ScoreT, projectDir: string, quality: Quality): void {
@@ -333,6 +348,12 @@ function assertRenderStorage(score: ScoreT, projectDir: string, quality: Quality
 export function pruneLegacyFrameCaches(cacheDir: string): number {
   if (!existsSync(cacheDir)) return 0;
   let removed = 0;
+  for (const profile of ["draft-jpeg-12fps", "draft-jpeg-12fps-s50-v3"]) {
+    const dir = path.join(cacheDir, profile);
+    if (!existsSync(dir)) continue;
+    rmSync(dir, { recursive: true, force: true });
+    removed++;
+  }
   for (const entry of readdirSync(cacheDir, { withFileTypes: true })) {
     if (!entry.isDirectory() || !/^[0-9a-f]{16}$/.test(entry.name)) continue;
     const dir = path.join(cacheDir, entry.name);
@@ -357,13 +378,17 @@ export async function renderScore(
   pruneLegacyFrameCaches(cacheDir);
   assertRenderStorage(score, cacheDir, quality);
   const session = await openSession(score, projectDir, cacheDir);
+  const setupMs = Date.now() - t0;
   const { compiled } = session;
   const profile = ENCODE[quality];
   const fps = Math.min(compiled.fps, profile.maxFps ?? compiled.fps);
   const frameMs = 1000 / fps;
-  const frameCacheDir = path.join(cacheDir, quality === "draft" ? "draft-jpeg-12fps" : "full-png");
+  const frameCacheDir = path.join(cacheDir, quality === "draft" ? "draft-jpeg-12fps-s50" : "full-png");
 
+  let result: RenderResult | undefined;
+  let closeMs = 0;
   try {
+    const captureStarted = Date.now();
     // Per-scene frame plan
     let rendered = 0;
     let cached = 0;
@@ -396,8 +421,10 @@ export async function renderScore(
       }
       if (!complete) writeFileSync(path.join(dir, "done"), hash);
     }
+    const captureMs = Date.now() - captureStarted;
 
     // Encode: pipe PNGs in order (stack-validation §4)
+    const encodeStarted = Date.now();
     const enc = profile;
     mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
     const music = score.audio?.music;
@@ -418,6 +445,7 @@ export async function renderScore(
     } else {
       await pipeEncode(framePaths, fps, outFile, enc.preset, enc.crf);
     }
+    const encodeMs = Date.now() - encodeStarted;
 
     // Prune cache entries no longer referenced by this score — frame caches are
     // hundreds of full-HD PNGs per scene and grow without bound otherwise
@@ -433,20 +461,31 @@ export async function renderScore(
         if (d.isDirectory() && !mediaKeep.has(d.name)) rmSync(path.join(mediaDir, d.name), { recursive: true, force: true });
     }
 
-    return {
+    const dimensions = probeEncodedDimensions(outFile);
+    result = {
       outFile,
+      outputWidth: dimensions.width,
+      outputHeight: dimensions.height,
       totalFrames: framePaths.length,
       renderedFrames: rendered,
       cachedFrames: cached,
       durationMs: compiled.durationMs,
-      wallMs: Date.now() - t0,
+      wallMs: 0,
+      phaseMs: { setup: setupMs, capture: captureMs, encode: encodeMs, finalize: 0, close: 0 },
       captureFps: fps,
       cacheBytes: framePaths.reduce((sum, file) => sum + statSync(file).size, 0),
       audio,
     };
   } finally {
+    const closeStarted = Date.now();
     await session.close();
+    closeMs = Date.now() - closeStarted;
   }
+  if (!result) throw new Error("render completed without a result");
+  result.wallMs = Date.now() - t0;
+  result.phaseMs.close = closeMs;
+  result.phaseMs.finalize = Math.max(0, result.wallMs - setupMs - result.phaseMs.capture - result.phaseMs.encode - closeMs);
+  return result;
 }
 
 export interface SfxEvent {
@@ -545,6 +584,22 @@ function runFfmpeg(args: string[]): Promise<void> {
   });
 }
 
+function probeEncodedDimensions(file: string): { width: number; height: number } {
+  const probe = spawnSync("ffprobe", [
+    "-v", "error",
+    "-select_streams", "v:0",
+    "-show_entries", "stream=width,height",
+    "-of", "json",
+    file,
+  ], { encoding: "utf8" });
+  let stream: { width?: unknown; height?: unknown } | undefined;
+  try { stream = probe.status === 0 ? JSON.parse(probe.stdout).streams?.[0] : undefined; } catch { stream = undefined; }
+  const width = stream?.width, height = stream?.height;
+  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height))
+    throw new Error(`ffprobe output-dimension inspection failed: ${(probe.stderr || probe.stdout).slice(-500)}`);
+  return { width: width as number, height: height as number };
+}
+
 function pipeEncode(frames: string[], fps: number, outFile: string, preset: string, crf: number): Promise<void> {
   return new Promise((resolve, reject) => {
     const args = [
@@ -557,7 +612,7 @@ function pipeEncode(frames: string[], fps: number, outFile: string, preset: stri
       "-crf", String(crf),
       "-pix_fmt", "yuv420p",
       // BT.709 tagging; Chrome screenshots are sRGB (stack-validation §4)
-      "-vf", "scale=in_range=full:out_range=limited,format=yuv420p",
+      "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2,scale=in_range=full:out_range=limited,format=yuv420p",
       "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
       "-movflags", "+faststart",
       outFile,

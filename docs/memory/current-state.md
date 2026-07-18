@@ -104,16 +104,26 @@ and CHANGELOG.
   digest-bound mapping; near-identical pixel detection; complete blind decision;
   and evidence-rehashed winner receipt. It proves process integrity, not
   originality, reviewer blindness, motion/audio quality, or professional taste.
+- ADR-0038/0039 phase-measured draft rendering: complete-transaction setup,
+  capture, encode, finalize, and shutdown telemetry; five-sample p50/p95
+  reporting; and a 12fps half-resolution diagnostic profile with explicit output
+  geometry, even-dimension H.264 safety, scaled storage preflight, and an
+  adversarial compact-UI comparison. Standard/high and evidence stills remain
+  full resolution.
 
 ## Evidence, not claims
 
 - Cursor-derived recovery benchmarks after ADR-0033: isolated local tarball
   installation takes 1.4s with a warm dependency cache, occupies 62.8 MiB, and
   writes zero browser-cache bytes; install through a real browser frame completes
-  in 6.5s. The preceding 0.5 candidate measured 3.2s/93.7 MiB/8.8s. A 9.6s
-  full-HD/vertical preview captures 115 JPEG frames at 12fps using 3.0 MiB
-  cache. Wall time has varied from 8.1–8.8s to 20.7s in a loaded full-verifier
-  run; frame/cache bounds are proven, but preview-latency p95 is not. The failed
+  in 6.5s. The preceding 0.5 candidate measured 3.2s/93.7 MiB/8.8s. ADR-0038's
+  five fresh-cache full-resolution draft samples measured 8.76s p50/10.71s
+  nearest-rank p95, with capture consuming 7.66s median. ADR-0039 retains all
+  115 temporal samples at 12fps but emits a declared 540×960 diagnostic: five
+  fresh-cache samples now measure 6.02s p50/6.07s p95, 5.03s capture, and a
+  1.3 MiB cache. Its compact-UI probe measures 0.8657 regional SSIM/0.0120 MAE
+  after upscaling; small-copy OCR and final typography remain unproven. A prior
+  loaded run took 20.7s, so cross-machine stable latency is still open. The failed
   pre-fix Cursor run took 301.5s for 510 PNG frames and exhausted disk.
 - Revision-memory benchmark: 200 records across two brands yield 100 eligible
   exact-brand entries, select 23 within a 5,913-character complete context,

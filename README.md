@@ -100,7 +100,7 @@ chitra capabilities --json      # feasibility truth before Direction
 chitra check score.json         # + rendered-frame gates: contrast, safe zones, overlap, blanks
 chitra frame score.json -t 1800 -o peek.png   # one-frame preview in seconds
 chitra evidence score.json -o evidence/       # contact sheet + hero frames + cut strips
-chitra render score.json -o draft.mp4 -q draft # sampled diagnostic preview; only dirty scenes re-render
+chitra render score.json -o draft.mp4 -q draft # 12fps half-resolution diagnostic; only dirty scenes re-render
 chitra review-validate creative-review.json   # validate isolated, evidence-bound judgment
 chitra review-score labels-v2.json creative-review.json --case uniform-monotony
 chitra review-calibrate study.json -o calibration-result.json # independent panel/candidate agreement

@@ -597,11 +597,15 @@ program
       rendered: r.renderedFrames,
       fromCache: r.cachedFrames,
       wallSeconds: +(r.wallMs / 1000).toFixed(1),
+      phaseSeconds: Object.fromEntries(Object.entries(r.phaseMs).map(([name, ms]) => [name, +(ms / 1000).toFixed(2)])),
+      width: r.outputWidth,
+      height: r.outputHeight,
       captureFps: r.captureFps,
       cacheMiB: +(r.cacheBytes / 1024 / 1024).toFixed(1),
       audio: r.audio,
     };
-    console.log(opts.json ? JSON.stringify(out, null, 2) : `✔ ${out.out} — ${out.frames} frames @ ${out.captureFps}fps (${out.fromCache} cached, ${out.cacheMiB} MiB) in ${out.wallSeconds}s`);
+    const phases = Object.entries(out.phaseSeconds).map(([name, seconds]) => `${name} ${seconds}s`).join(" · ");
+    console.log(opts.json ? JSON.stringify(out, null, 2) : `✔ ${out.out} — ${out.width}×${out.height}, ${out.frames} frames @ ${out.captureFps}fps (${out.fromCache} cached, ${out.cacheMiB} MiB) in ${out.wallSeconds}s\n  ${phases}`);
   });
 
 program
