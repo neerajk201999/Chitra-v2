@@ -14,14 +14,14 @@ project in Cursor/Claude/Codex. This avoids agent-sandbox Git permissions and
 does not download a second browser:
 
 ```bash
-npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.2/chitra-video-0.5.0.tgz
+npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.3/chitra-video-0.5.0.tgz
 npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
 chitra probe
 ```
 
 This installs the verified 0.5.0 GitHub prerelease while public npm still serves
 0.4.0. The artifact SHA-256 is
-`b0c50dce7a50708931bfc23a2b425b8bb8673436288f46501bb8ed735dda7587`.
+`f93a3a8ff43b456793396e1006e670d8a39ae803d6ad035dd2786afffced44c8`.
 After 0.5.0 is published and independently reinstalled from the registry, the
 short stable command returns to `npm install -g chitra-video`.
 
@@ -105,9 +105,9 @@ preferences, brand constraints, or approval.
 - Public GitHub clone and isolated `chitra-video@0.4.0` registry install/probe:
   verified.
 - 0.5.0 GitHub prerelease after ADR-0037: exact public bytes verify by SHA-256;
-  a fresh-prefix download/install takes 2.5s and 62.9 MiB with zero browser
+  a fresh-prefix download/install takes 4.8s and 62.9 MiB with zero browser
   bytes; the complete probe/Intake/init/validate/first-frame check finishes in
-  9.3s on this machine with warm npm dependencies. npm still resolves 0.4.0.
+  12.4s on this machine with warm npm dependencies. npm still resolves 0.4.0.
 - Claude Code and Codex marketplace installation: exercised in isolated homes.
 - Claude Code, Codex, and Cursor manifests: validated/version-checked.
 - Canonical skills: installed locally for Claude Code, Codex, Cursor, and

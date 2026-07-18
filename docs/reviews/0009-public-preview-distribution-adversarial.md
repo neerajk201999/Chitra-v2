@@ -15,7 +15,7 @@ the stable annotated release transaction.
 | Severity | Finding | Disposition |
 |---|---|---|
 | P1 | Upload success did not prove the asset could be installed from its public URL. | The source-parameterized cold-start harness downloads the public URL into a fresh prefix, verifies SHA-256, installs, launches the real browser/FFmpeg probe, locks Intake, initializes, validates, and captures a frame. |
-| P1 | A release asset can be replaced under the same filename by a privileged maintainer. | The release, docs, and benchmark pin SHA-256 `b0c50d…7587`; changed bytes fail before installation. GitHub's asset metadata reports the same digest. |
+| P1 | A release asset can be replaced under the same filename by a privileged maintainer. | The release, docs, and benchmark pin SHA-256 `f93a3a…44c8`; changed bytes fail before installation. GitHub's asset metadata reports the same digest. |
 | P1 | Documentation could silently drift to another URL or checksum. | Repository consistency extracts the benchmark constants and requires the install surfaces to carry the URL and the integrity surfaces to carry the digest. |
 | P2 | A remote source could hang, redirect to an unbounded body, or consume excessive memory. | The harness requires HTTPS, follows bounded redirects through `fetch`, applies a 30-second abort, and refuses declared or received bodies over 10 MiB. |
 | P2 | The existing executable-mode check inspected local `dist` even for a remote artifact. | Remote verification now relies on the installed binary actually executing; the source-mode prepack bit check only runs for local packages. |
@@ -27,13 +27,13 @@ the stable annotated release transaction.
 
 ## Evidence
 
-- GitHub release `v0.5.0-rc.2` is marked prerelease and targets protected-main
-  commit `ddbb839b1d1bd9aeb17f3fa8205a69a0aba75521` after PR #26 and post-merge CI.
-- GitHub reports asset size 586,114 bytes and the pinned SHA-256.
-- Corrected public run: 2.5s install, 62.9 MiB, zero browser bytes, 9.3s through
+- GitHub release `v0.5.0-rc.3` is marked prerelease and targets protected-main
+  commit `2b847f33ce7af49546f6675b27de6055a347f852` after PR #27 and post-merge CI.
+- GitHub reports asset size 586,285 bytes and the pinned SHA-256.
+- Self-consistent public run: 4.8s install, 62.9 MiB, zero browser bytes, 12.4s through
   a 1,709 KiB browser frame with warm dependencies.
-- Historical rc.1 first run took 3.9s/11.7s; rc.2 exists because the merged
-  package corrected its embedded README and immutable assets are never replaced.
+- Historical rc.1/rc.2 remain immutable. Rc.3 makes packaged documentation
+  channel-neutral, eliminating the candidate-URL/self-reference release loop.
 - A deliberately wrong expected SHA-256 is rejected before npm installation.
 
 ## Merge boundary
