@@ -7,6 +7,7 @@ import {
   transcriptDigest,
   type LockedTranscriptT,
 } from "../src/editing/index.js";
+import { FootageEvidenceRequest } from "../src/editing/evidence.js";
 
 const sha = (char: string) => char.repeat(64);
 
@@ -69,5 +70,18 @@ describe("transcript-addressed footage editing (ADR-0034)", () => {
     const overlapping = structuredClone(transcript()); overlapping.tokens[1].startMs = 800;
     expect(LockedTranscript.safeParse(overlapping).success).toBe(false);
     expect(() => packTranscript(transcript(), { maxChars: 1000, sourceIds: ["missing"] })).toThrow(/unknown transcript source/);
+  });
+
+  it("bounds requested visual evidence and requires unique edit addresses", () => {
+    const request = {
+      evidenceVersion: "0.1.0", transcriptDigest: transcriptDigest(transcript()), editDigest: sha("b"),
+      segmentIds: ["solution"], reason: "Inspect the candidate picture edit.",
+      contextMs: 500, samplesPerSegment: 5, thumbnailWidth: 400,
+      waveform: { width: 1000, height: 160 }, includeAdjacentCuts: true,
+    };
+    expect(FootageEvidenceRequest.parse(request).segmentIds).toEqual(["solution"]);
+    expect(FootageEvidenceRequest.safeParse({ ...request, segmentIds: ["solution", "solution"] }).success).toBe(false);
+    expect(FootageEvidenceRequest.safeParse({ ...request, samplesPerSegment: 10 }).success).toBe(false);
+    expect(FootageEvidenceRequest.safeParse({ ...request, contextMs: 2001 }).success).toBe(false);
   });
 });

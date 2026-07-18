@@ -20,6 +20,7 @@ adds the production interpretation needed during Direction.
 | Music bed and sparse SFX | yes | yes | Limited automation; final loudness measured. |
 | Voiceover generation/sync | no provider | supplied recording | Transcript IR has word timing; no TTS or narration-generation adapter. |
 | Transcript-addressed footage EDL | yes | transcription provider | Locked word timeline, compact pack, quote-conformed EDL, rendered audio-preserving plate. |
+| Requested footage/cut evidence | yes | — | EDL-selected filmstrips, waveforms, cut strips, and neutral diagnostics; semantic quality still needs review. |
 | Seekable Lottie/Rive/glTF import | no | pre-rendered plate | No deterministic runtime adapter. |
 | Beat/onset choreography | yes | yes | Dense audio can over-count. |
 | Reference decomposition/comparison | yes | yes | No semantics, optical flow, or taste measurement. |

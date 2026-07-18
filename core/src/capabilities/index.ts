@@ -1,11 +1,11 @@
-export const CAPABILITY_MATRIX_VERSION = "0.3.0";
+export const CAPABILITY_MATRIX_VERSION = "0.4.0";
 export type CapabilitySupport = "native" | "asset-assisted" | "unsupported";
 export const CAPABILITY_IDS = [
   "typography-layout", "image-ui", "video-plates", "transform-motion", "particles",
   "curated-3d", "arbitrary-3d", "environment-reflections-shadows",
   "masks-blends-deep-comps", "motion-blur-dof", "music-sfx",
   "voiceover-word-sync", "reference-analysis", "generated-media", "professional-taste",
-  "clip-audio", "transcript-edl", "imported-animation", "player-studio",
+  "clip-audio", "transcript-edl", "footage-evidence", "imported-animation", "player-studio",
   "distributed-render", "brand-system", "accepted-revision-memory", "directorial-search",
 ] as const;
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];
@@ -29,12 +29,13 @@ export const CAPABILITIES: Capability[] = [
   { id: "masks-blends-deep-comps", support: "asset-assisted", mechanism: "owned/licensed pre-composited plate", boundary: "not first-class in Score" },
   { id: "motion-blur-dof", support: "asset-assisted", mechanism: "owned/licensed pre-rendered plate", boundary: "browser screenshot backend has no temporal blur" },
   { id: "music-sfx", support: "native", mechanism: "music bus, choreography SFX, beat landmarks", boundary: "sparse mix automation" },
-  { id: "voiceover-word-sync", support: "asset-assisted", mechanism: "pre-mixed supplied track", boundary: "no typed narration or word timeline" },
+  { id: "voiceover-word-sync", support: "asset-assisted", mechanism: "pre-mixed supplied track plus provider-neutral source-footage word timeline", boundary: "no generated narration contract or automatic overlay synchronization" },
   { id: "reference-analysis", support: "native", mechanism: "decompose and compare", boundary: "no semantic equivalence or optical flow" },
   { id: "generated-media", support: "asset-assisted", mechanism: "host-agent image/video tools with local provenance", boundary: "no provider bundled" },
   { id: "professional-taste", support: "unsupported", mechanism: "requires calibrated independent human evidence", boundary: "review contract exists; calibration corpus does not" },
   { id: "clip-audio", support: "native", mechanism: "edit-render preserves source audio, synthesizes mixed-source silence, fades cuts, and normalizes the bus", boundary: "Score video elements remain visual-only; edited footage enters as a rendered plate" },
-  { id: "transcript-edl", support: "native", mechanism: "locked provider-neutral word timeline, compact phrase pack, typed quote-conformed EDL", boundary: "no bundled transcription provider or word-aligned visual timeline yet" },
+  { id: "transcript-edl", support: "native", mechanism: "locked provider-neutral word timeline, compact phrase pack, typed quote-conformed EDL", boundary: "no bundled transcription provider or visual-event addressing outside transcript tokens" },
+  { id: "footage-evidence", support: "native", mechanism: "bounded EDL-selected filmstrips, waveforms, adjacent-cut strips, neutral discontinuity metrics, hash cache", boundary: "semantic cut quality still requires evidence-bound review and calibration" },
   { id: "imported-animation", support: "asset-assisted", mechanism: "owned/licensed pre-rendered still or video", boundary: "no seekable Lottie, Rive, or glTF adapter" },
   { id: "player-studio", support: "unsupported", mechanism: "evidence and rendered files only", boundary: "no embeddable player or timeline editor" },
   { id: "distributed-render", support: "unsupported", mechanism: "single local render worker", boundary: "no chunk plan, remote workers, or deterministic assembly" },

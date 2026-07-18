@@ -76,10 +76,11 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     isolates project/brand scope, requires evidence for accepted revisions, and
     compiles bounded deterministic context, but its benchmark is synthetic. No
     outside-user corpus yet shows that retrieval improves watched work.
-16. **Major user-job parity gaps remain.** ADR-0034 closes the first transcript/
-    clip-audio EDL slice, but Chitra has no bundled transcription, requested-
-    range word-aligned filmstrip/waveform, automated cut-picture evaluation,
-    TTS/narration generation, Lottie/Rive import, masks/mattes/blend modes/deep
+16. **Major user-job parity gaps remain.** ADR-0034/0035 close the first
+    transcript/clip-audio EDL and requested visual/audio evidence slices, but
+    Chitra has no bundled transcription, deterministic semantic cut judgment,
+    visual-event addressing outside transcript tokens, TTS/narration generation,
+    Lottie/Rive import, masks/mattes/blend modes/deep
     local comps, mature player/studio, or distributed renderer. “All competitor
     capabilities” is not a current claim.
 

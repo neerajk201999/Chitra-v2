@@ -99,6 +99,8 @@ const revisionMemoryVersion = memorySchema.match(/REVISION_MEMORY_VERSION\s*=\s*
 const editingSchema = readFileSync(path.join(root, "core/src/editing/index.ts"), "utf8");
 const transcriptVersion = editingSchema.match(/TRANSCRIPT_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const editVersion = editingSchema.match(/EDIT_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const footageEvidenceSchema = readFileSync(path.join(root, "core/src/editing/evidence.ts"), "utf8");
+const footageEvidenceVersion = footageEvidenceSchema.match(/FOOTAGE_EVIDENCE_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
 if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
@@ -120,6 +122,8 @@ if (!transcriptVersion || !currentState.includes(`**Transcript IR:** ${transcrip
   failures.push(`current-state Transcript IR version is not ${transcriptVersion ?? "discoverable"}`);
 if (!editVersion || !currentState.includes(`**Edit IR:** ${editVersion}`))
   failures.push(`current-state Edit IR version is not ${editVersion ?? "discoverable"}`);
+if (!footageEvidenceVersion || !currentState.includes(`**Footage Evidence:** ${footageEvidenceVersion}`))
+  failures.push(`current-state Footage Evidence version is not ${footageEvidenceVersion ?? "discoverable"}`);
 
 const cli = path.join(root, "core/dist/cli/index.js");
 if (existsSync(cli)) {

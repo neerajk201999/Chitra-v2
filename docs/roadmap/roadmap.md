@@ -5,20 +5,23 @@
 > **Capability-program rebaseline (2026-07-18).** Current-source verification
 > confirms Remotion leads renderer/ecosystem breadth, HyperFrames leads workflow/
 > media breadth and now includes plan→sketch→final-preview review, while
-> video-use leads compact transcript-addressed footage editing. ADR-0032 ships
-> scope-safe accepted-revision memory; transcript/clip-audio editing and
-> still-first directorial probes are next. See the
+> video-use established compact transcript-addressed footage editing. ADR-0032
+> ships scope-safe accepted-revision memory; ADR-0034/0035 now close Chitra's
+> provider-neutral edit plus requested-range evidence slice. Still-first
+> directorial probes are next. See the
 > [current capability audit](../research/capability-audit-2026-07-18.md).
 > The 2026-07-16 “renderer feature-complete” sentence below is historical and
 > superseded: current Remotion/HyperFrames source proves important compositor,
 > imported-animation, media/audio, player, and distribution gaps. Renderer work
 > remains residual/user-job driven, but the renderer is not literally complete.
 >
-> **P0 footage slice (2026-07-18, ADR-0034).** Provider-neutral word transcripts
+> **P0 footage slice (2026-07-18, ADR-0034/0035).** Provider-neutral word transcripts
 > now lock to exact local footage, pack into bounded phrase context, conform an
 > explainable word-addressed EDL, and render normalized source-audio-preserving
-> plates with cut fades and receipts. Requested-range word/waveform evidence and
-> cut-picture critique remain next; no transcription provider is bundled.
+> plates with cut fades and receipts. Requested EDL ranges now produce labeled
+> filmstrips, audio/explicit-silence waveforms, adjacent-cut strips, and neutral
+> RGB/luma/RMS facts under content-addressed manifests. Semantic cut judgment
+> remains Creative Review work; no transcription provider is bundled.
 
 > **Program rebaseline (2026-07-16).** The architecture remains aligned, but the
 > active queue had narrowed around one Card Vault reconstruction. Review 0003

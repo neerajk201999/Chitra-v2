@@ -22,6 +22,13 @@ versioned separately.
   generated audiovisual benchmark proving deterministic three-cut output and
   all-silent behavior, and rejection of stale digest, quote drift, traversal,
   changed source bytes, locked-source overwrite, and symlink output targets.
+- ADR-0035 Footage Evidence 0.1 and `edit-evidence`: content-addressed,
+  EDL-selected word filmstrips, audio/explicit-silence waveforms, four-frame
+  adjacent-cut strips, and neutral RGB/luma/RMS diagnostics without whole-video
+  context or false aesthetic thresholds.
+- A generated moving/silent footage benchmark proving bounded source-end-safe
+  sampling, CLI/library equivalence, exact cache reuse, and rejection of stale
+  edits, unknown segments, changed sources, and changed cached artifacts.
 
 ### Changed
 

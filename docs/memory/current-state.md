@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
+**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -87,8 +87,13 @@ and CHANGELOG.
 - ADR-0034 Transcript/Edit IR 0.1: provider-neutral word tokens lock to exact
   owned/licensed footage bytes and media facts; deterministic phrase packing,
   quote-conformed word-addressed EDLs, source-drift checks, mixed silent/audio
-  rendering, cut fades, bus normalization, and hash receipts. Transcription and
-  word-aligned visual evidence remain host/provider work.
+  rendering, cut fades, bus normalization, and hash receipts. Transcription
+  remains host/provider work.
+- ADR-0035 Footage Evidence 0.1: one to twelve requested EDL segments compile to
+  word-labeled source-time filmstrips, audio or explicit-silence waveforms, and
+  adjacent four-frame cut strips with neutral RGB/luma/RMS facts. Requests and
+  artifacts are digest-bound and cached; semantic cut quality remains review,
+  not a pixel threshold.
 
 ## Evidence, not claims
 
@@ -107,11 +112,16 @@ and CHANGELOG.
   and mixed audio lock to exact bytes; six tokens pack 75% smaller than normalized
   word JSON; three explainable segments render 3,030ms with preserved speech,
   synthesized silence, cut fades, normalized geometry/audio, and byte-identical
-  repeat output. Four stale/unsafe contracts are rejected.
+  repeat output. Seven stale/unsafe contracts are rejected.
+- Requested-range evidence benchmark: three of four EDL segments from moving
+  audiovisual and silent footage produce fifteen word-addressed samples, three
+  adjacent cut strips, audio/silence waveforms, and neutral discontinuity facts;
+  exact source-end sampling is safe, CLI/library manifests match, exact cache is
+  reused, and five stale/corrupt requests are rejected.
 - Public distribution: unauthenticated clone resolved protected `main` at
   `c2b666670d87294763ebedabdd0b7922fc140346`; isolated npm-prefix installation
   fetched `chitra-video@0.4.0`, reported CLI 0.4.0, and passed runtime probe.
-- Unit suite: 83 tests.
+- Unit suite: 84 tests.
 - Creative Review contract benchmark: valid typed review, hidden
   principle/severity/verdict matching, deterministic repeated scoring, the
   documented label-collection CLI flow, and rejection of detached evidence,
@@ -190,8 +200,8 @@ Ordered next slices:
 1. Publish and independently retest the 0.5.0 Cursor-first recovery on a cold
    network/cache, then use the same Aether brief to measure still-first
    feasibility and preview quality.
-2. Add requested-range word-aligned filmstrip/waveform evidence and cut-boundary
-   evaluation on top of ADR-0034; keep transcription providers optional.
+2. Run a still-first directorial-search slice on the fixed Aether brief: bounded
+   concepts, hero-frame probes, blind selection, and retained decision evidence.
 3. Collect the pre-registered ≥20-case independent Creative Review study using
    real motion clips/audio and populate ADR-0032 with actual accepted outcomes.
 4. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
@@ -233,7 +243,7 @@ The evidence and reasoning for this rebaseline are in
   timing remains open.
 - ADR-0033 vendors only the executed MIT Three.js module and nine OFL font
   files, removing five full runtime packages. With Transcript/Edit IR included,
-  the npm artifact is 569.0 kB compressed/2.1 MB unpacked before dependencies;
+  the npm artifact is 574.7 kB compressed/2.1 MB unpacked before dependencies;
   installed footprint falls
   33% from 93.7 to 62.8 MiB. GSAP remains a normal licensed dependency.
 - The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”
