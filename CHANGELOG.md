@@ -15,6 +15,13 @@ versioned separately.
   context compilation, rejected-proposal retention, and a 6,000-character ceiling.
 - A current source-backed competitor capability matrix and workflow/product-
   differentiation report with explicit adopt/improve/replace/omit decisions.
+- ADR-0034 Transcript/Edit IR 0.1 with exact footage locking, compact phrase
+  packs, quote-conformed word-addressed EDLs, source-audio-preserving FFmpeg
+  rendering, mixed silent-source support, cut fades, and hash receipts.
+- `transcript-lock`, `transcript-pack`, `edit-check`, and `edit-render`, plus a
+  generated audiovisual benchmark proving deterministic three-cut output and
+  all-silent behavior, and rejection of stale digest, quote drift, traversal,
+  changed source bytes, locked-source overwrite, and symlink output targets.
 
 ### Changed
 

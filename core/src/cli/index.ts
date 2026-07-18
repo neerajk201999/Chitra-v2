@@ -25,6 +25,7 @@ import { assertReleaseTargets, makeReleaseReceipt, releaseFingerprint, verifyRel
 import { CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview } from "../creative/review.js";
 import { validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy } from "../creative/calibration.js";
 import { compileRevisionContext, validateRevisionContextQuery, validateRevisionMemory } from "../creative/memory.js";
+import { lockTranscript, packTranscript, renderEdit, resolveEdit, resolveEditArtifactTarget, validateEditDecisionList, validateTranscript, verifyTranscriptSources, type EditDecisionListT, type LockedTranscriptT } from "../editing/index.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -102,6 +103,22 @@ function loadStoryboard(file: string): StoryboardT {
     process.exit(2);
   }
   return validation.storyboard;
+}
+
+function loadLockedTranscript(file: string): LockedTranscriptT {
+  let raw: unknown;
+  try { raw = JSON.parse(readFileSync(path.resolve(file), "utf8")); } catch (e) { fail(`Cannot read ${file}: ${(e as Error).message}`); }
+  const validation = validateTranscript(raw, true);
+  if (!validation.ok) fail(`Invalid locked transcript: ${validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+  return validation.transcript as LockedTranscriptT;
+}
+
+function loadEdit(file: string): EditDecisionListT {
+  let raw: unknown;
+  try { raw = JSON.parse(readFileSync(path.resolve(file), "utf8")); } catch (e) { fail(`Cannot read ${file}: ${(e as Error).message}`); }
+  const validation = validateEditDecisionList(raw);
+  if (!validation.ok) fail(`Invalid edit decision list: ${validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+  return validation.edit;
 }
 
 async function loadIntake(file: string): Promise<IntakeT> {
@@ -291,6 +308,86 @@ program
     }
     if (opts.json || !opts.out) console.log(JSON.stringify(context, null, 2));
     else console.log(`✔ revision context compiled — ${context.selected}/${context.eligible} relevant entries (${context.omittedByBudget} omitted by budget)`);
+  });
+
+program
+  .command("transcript-lock")
+  .argument("<transcript>", "provider-neutral Transcript IR draft JSON")
+  .requiredOption("-o, --out <file>", "locked transcript output")
+  .option("--project <dir>", "project root for source paths (default: transcript directory)")
+  .description("Bind word-timed footage transcripts to exact local source bytes and media facts (ADR-0034)")
+  .action((file: string, opts: { out: string; project?: string }) => {
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(path.resolve(file), "utf8")); } catch (e) { fail(`Cannot read ${file}: ${(e as Error).message}`); }
+    try {
+      const locked = lockTranscript(raw, path.resolve(opts.project ?? path.dirname(path.resolve(file))));
+      const out = path.resolve(opts.out);
+      mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, `${JSON.stringify(locked, null, 2)}\n`);
+      console.log(`✔ transcript locked — ${locked.sources.length} sources, ${locked.tokens.length} tokens\n  ${opts.out}`);
+    } catch (e) { fail((e as Error).message); }
+  });
+
+program
+  .command("transcript-pack")
+  .argument("<transcript>", "locked Transcript IR JSON")
+  .requiredOption("-o, --out <file>", "compact Markdown output")
+  .option("--project <dir>", "project root for source verification (default: transcript directory)")
+  .option("--source <ids...>", "include only these source IDs")
+  .option("--max-chars <count>", "hard complete-pack character budget", "50000")
+  .description("Compile word JSON into a compact phrase-addressed agent reading surface (ADR-0034)")
+  .action((file: string, opts: { out: string; project?: string; source?: string[]; maxChars: string }) => {
+    const transcript = loadLockedTranscript(file);
+    const maxChars = Number(opts.maxChars);
+    if (!Number.isInteger(maxChars) || maxChars < 1000 || maxChars > 200000) fail("--max-chars must be an integer from 1000 to 200000");
+    try {
+      verifyTranscriptSources(transcript, path.resolve(opts.project ?? path.dirname(path.resolve(file))));
+      const packed = packTranscript(transcript, { sourceIds: opts.source, maxChars });
+      const out = path.resolve(opts.out);
+      mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, packed);
+      console.log(`✔ transcript packed — ${packed.length} characters, ${transcript.tokens.length} addressable tokens\n  ${opts.out}`);
+    } catch (e) { fail((e as Error).message); }
+  });
+
+program
+  .command("edit-check")
+  .argument("<transcript>", "locked Transcript IR JSON")
+  .argument("<edit>", "Edit Decision List JSON")
+  .option("--project <dir>", "project root for source verification (default: transcript directory)")
+  .option("--json", "print resolved edit ranges")
+  .description("Conform an explainable word-addressed EDL to locked footage (ADR-0034)")
+  .action((transcriptFile: string, editFile: string, opts: { project?: string; json?: boolean }) => {
+    const transcript = loadLockedTranscript(transcriptFile), edit = loadEdit(editFile);
+    try {
+      verifyTranscriptSources(transcript, path.resolve(opts.project ?? path.dirname(path.resolve(transcriptFile))));
+      const segments = resolveEdit(transcript, edit);
+      if (opts.json) console.log(JSON.stringify({ segments, durationMs: segments.reduce((sum, segment) => sum + segment.durationMs, 0) }, null, 2));
+      else console.log(`✔ edit valid — ${segments.length} segments, ${(segments.reduce((sum, segment) => sum + segment.durationMs, 0) / 1000).toFixed(2)}s`);
+    } catch (e) { fail((e as Error).message); }
+  });
+
+program
+  .command("edit-render")
+  .argument("<transcript>", "locked Transcript IR JSON")
+  .argument("<edit>", "Edit Decision List JSON")
+  .requiredOption("-o, --out <file>", "rendered edit output (.mp4)")
+  .option("--receipt <file>", "hash-bound render receipt (default: <out>.edit.json)")
+  .option("--project <dir>", "project root for source paths (default: transcript directory)")
+  .option("-q, --quality <profile>", "draft | high", "high")
+  .description("Render word-addressed footage with source audio, cut fades, and a receipt (ADR-0034)")
+  .action((transcriptFile: string, editFile: string, opts: { out: string; receipt?: string; project?: string; quality: string }) => {
+    if (!(["draft", "high"] as string[]).includes(opts.quality)) fail("--quality must be draft or high");
+    const transcript = loadLockedTranscript(transcriptFile), edit = loadEdit(editFile);
+    try {
+      const projectDir = path.resolve(opts.project ?? path.dirname(path.resolve(transcriptFile)));
+      const outputFile = resolveEditArtifactTarget(transcript, projectDir, opts.out);
+      const receiptFile = resolveEditArtifactTarget(transcript, projectDir, opts.receipt ?? `${opts.out}.edit.json`);
+      if (outputFile === receiptFile) fail("edit receipt cannot overwrite the rendered output");
+      const receipt = renderEdit(transcript, edit, projectDir, outputFile, opts.quality as "draft" | "high");
+      writeFileSync(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
+      console.log(`✔ edit rendered — ${receipt.segments.length} segments, ${(receipt.output.durationMs / 1000).toFixed(2)}s, ${opts.quality}\n  ${opts.out}\n  receipt: ${receiptFile}`);
+    } catch (e) { fail((e as Error).message); }
   });
 
 program

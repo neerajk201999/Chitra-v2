@@ -1,7 +1,7 @@
 {
   "name": "chitra-video",
   "version": "0.5.0",
-  "description": "Deterministic core for Chitra: typed multimodal intake, reference evidence, Motion IR gates, rendering, and critic evidence",
+  "description": "Deterministic Chitra core: multimodal intake, transcript-addressed editing, Motion IR, rendering, gates, and critic evidence",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

@@ -15,8 +15,9 @@ questions. Ask only for a missing decision that materially changes the film.
 - Images/screenshots/brand assets: inspect directly, copy to project-local
   `assets/`, preserve faithfully, and record provenance.
 - Links: research with the host agent. Capture only visuals that enter the film.
-- Footage/audio: probe first; transcribe when speech controls narrative; measure
-  landmarks before beat-addressed motion.
+- Footage/audio: probe first; when speech or clip audio matters, load
+  `footage-editing.md`, preserve provider-neutral word timing, and compile its
+  compact phrase pack. Measure landmarks before beat-addressed motion.
 - `reference-only`/`unknown` bytes cannot enter a render. `owned`/`licensed`
   claims come from the user and remain their responsibility.
 

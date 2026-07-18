@@ -7,7 +7,7 @@ adds the production interpretation needed during Direction.
 |---|---:|---:|---|
 | Typography, layouts, shapes, gradients | yes | yes | No calibrated professional optical-spacing guarantee. |
 | Images, screenshots, product UI | yes | yes | Rasterized text has weaker structural inspection. |
-| Video plates/footage | yes | yes | Clip audio does not pass through. |
+| Video plates/footage | yes | yes | `edit-render` preserves clip audio; Score video elements remain visual-only. |
 | Cursor/type interactions | yes | yes | Not arbitrary website execution. |
 | Particles and motif morphs | yes | yes | No general physics simulation. |
 | 2D/2.5D transform keyframes | yes | yes | One-level groups; no deep local compositions. |
@@ -18,8 +18,8 @@ adds the production interpretation needed during Direction.
 | Environment reflections/cast shadows | no | pre-rendered still/video | No environment-map or shadow pipeline. |
 | General character/physics simulation | no | pre-rendered still/video | External 3D/video production required. |
 | Music bed and sparse SFX | yes | yes | Limited automation; final loudness measured. |
-| Voiceover, word timing, clip audio | no | pre-mixed track | No typed narration/word timeline. |
-| Transcript-addressed footage EDL | no | external edit | No provider-neutral word timeline or phrase-addressed Score path. |
+| Voiceover generation/sync | no provider | supplied recording | Transcript IR has word timing; no TTS or narration-generation adapter. |
+| Transcript-addressed footage EDL | yes | transcription provider | Locked word timeline, compact pack, quote-conformed EDL, rendered audio-preserving plate. |
 | Seekable Lottie/Rive/glTF import | no | pre-rendered plate | No deterministic runtime adapter. |
 | Beat/onset choreography | yes | yes | Dense audio can over-count. |
 | Reference decomposition/comparison | yes | yes | No semantics, optical flow, or taste measurement. |

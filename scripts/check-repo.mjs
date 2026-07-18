@@ -96,6 +96,9 @@ const intakeSchema = readFileSync(path.join(root, "core/src/intake/schema.ts"), 
 const intakeVersion = intakeSchema.match(/INTAKE_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const memorySchema = readFileSync(path.join(root, "core/src/creative/memory.ts"), "utf8");
 const revisionMemoryVersion = memorySchema.match(/REVISION_MEMORY_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const editingSchema = readFileSync(path.join(root, "core/src/editing/index.ts"), "utf8");
+const transcriptVersion = editingSchema.match(/TRANSCRIPT_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const editVersion = editingSchema.match(/EDIT_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const currentState = readFileSync(path.join(root, "docs/memory/current-state.md"), "utf8");
 if (!currentState.includes(`**Package:** ${pkg.version}`))
   failures.push(`current-state package version is not ${pkg.version}`);
@@ -113,6 +116,10 @@ if (!intakeVersion || !currentState.includes(`**Intake IR:** ${intakeVersion}`))
   failures.push(`current-state Intake IR version is not ${intakeVersion ?? "discoverable"}`);
 if (!revisionMemoryVersion || !currentState.includes(`**Revision Memory:** ${revisionMemoryVersion}`))
   failures.push(`current-state Revision Memory version is not ${revisionMemoryVersion ?? "discoverable"}`);
+if (!transcriptVersion || !currentState.includes(`**Transcript IR:** ${transcriptVersion}`))
+  failures.push(`current-state Transcript IR version is not ${transcriptVersion ?? "discoverable"}`);
+if (!editVersion || !currentState.includes(`**Edit IR:** ${editVersion}`))
+  failures.push(`current-state Edit IR version is not ${editVersion ?? "discoverable"}`);
 
 const cli = path.join(root, "core/dist/cli/index.js");
 if (existsSync(cli)) {

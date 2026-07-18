@@ -32,6 +32,8 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 
 DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pixels)
   intake/    multimodal source/provenance contract and deterministic locking
+  editing/   locked word transcripts → compact phrase context → typed EDL →
+             normalized audio-preserving footage plates + hash receipts
   ir/        Direction, Storyboard, and Score schemas, validation, versioning
   motion/    token registry: easing families, duration scale, stagger patterns,
              transition types, register definitions (machine-readable mirror of docs/motion/)
@@ -42,7 +44,7 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
   gates/     Quality Engine layers 1–2 (ID-tagged rules, thresholds from motion/)
   evidence/  contact sheets: filmstrip @ cut boundaries + waveform + timing labels;
              per-scene hero frames (input for VLM critics)
-  audio/     beat grid extraction, narration word-timestamps, loudness, mix, sync points
+  audio/     beat grid extraction, final-bus loudness, mix, and sync points
   assets/    fonts, images, footage ingest (hashing, license provenance)
 ```
 

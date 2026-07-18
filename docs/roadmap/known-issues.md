@@ -7,7 +7,13 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    ≤12fps JPEG profile: the 9.6s fixture renders 115 frames in 8.1s with 3.0 MiB
    cache. Full-fps release still needs streaming/chunking or a new backend (M5).
 2. **No paint-settle guarantee** between `seek()` and screenshot beyond empirical determinism on macOS; Linux/CI golden-frame verification pending (M5). Determinism claims are same-machine only.
-3. **Audio covers music + SFX + detected beat timing** (ADR-0007/0011/0027) — still no narration/voiceover timeline, energy-envelope property tracks, or clip-audio pass-through. Music-led final muxes are two-pass normalized and measured at −14 ±0.5 LUFS with true peak ≤−1.5 dBTP; beat detection, `at.onBeat`, and beat-cut gates are live. (M2 remainder.)
+3. **Audio covers music + SFX + detected beat timing and transcript-edited clip
+   audio** (ADR-0007/0011/0027/0034). `edit-render` preserves source audio,
+   synthesizes silence for mixed silent clips, applies cut fades, and normalizes
+   its bus; Score video elements remain visual-only. There is still no TTS/
+   narration generation adapter, energy-envelope property track, or automatic
+   word-aligned overlay sync. Music-led release muxes remain measured at −14
+   ±0.5 LUFS with true peak ≤−1.5 dBTP. (M2 remainder.)
 4. **VLM critic unproven**: ADR-0029 provides the review contract and ADR-0030
    provides blind-panel provenance, consensus, disagreement, consent, coverage,
    and separate agreement metrics. The four existing cases remain author-
@@ -70,11 +76,12 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     isolates project/brand scope, requires evidence for accepted revisions, and
     compiles bounded deterministic context, but its benchmark is synthetic. No
     outside-user corpus yet shows that retrieval improves watched work.
-16. **Major user-job parity gaps remain.** Chitra has no transcript-addressed
-    footage EDL, clip-audio pass-through, typed narration/word timeline, Lottie/
-    Rive import, masks/mattes/blend modes/deep local comps, mature player/studio,
-    or distributed renderer. The current capability audit prioritizes these by
-    blocked workflow; “all competitor capabilities” is not a current claim.
+16. **Major user-job parity gaps remain.** ADR-0034 closes the first transcript/
+    clip-audio EDL slice, but Chitra has no bundled transcription, requested-
+    range word-aligned filmstrip/waveform, automated cut-picture evaluation,
+    TTS/narration generation, Lottie/Rive import, masks/mattes/blend modes/deep
+    local comps, mature player/studio, or distributed renderer. “All competitor
+    capabilities” is not a current claim.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. ✅ Figure text gate bypass fixed 2026-07-16 (ADR-0024).** Rendered figure DOM text now enters size, bounded-sample pixel contrast, safe-zone, reading-time, and overlap gates. The browser benchmark triggers all five and leaves a compliant control green. Rasterized text and sub-interval defects remain item 6.

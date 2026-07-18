@@ -58,7 +58,7 @@ references as evidence for a problem—not a popularity vote—and maintains:
 
 | Finding | Implemented foundation | Next executable proof |
 |---|---|---|
-| Whole-video context is wasteful | progressive skills, sampled evidence, bounded release gates | transcript-addressed footage IR and requested-range filmstrips |
+| Whole-video context is wasteful | progressive skills, sampled evidence, bounded release gates, ADR-0034 locked transcript/phrase pack/EDL | requested-range word-aligned filmstrips and waveform evidence |
 | Motion cannot rescue bad direction | typed Direction and Storyboard conformance | directorial alternatives + still-first blind probe |
 | Rules do not equal taste | Creative Review and independent study contracts | collect ≥20 real cases with motion/audio |
 | Feedback is repeatedly lost | ADR-0032 accepted-revision memory | outside-user ledger entries and measured retrieval usefulness |
@@ -70,12 +70,11 @@ references as evidence for a problem—not a popularity vote—and maintains:
 
 1. Publish and externally verify lightweight `0.5.0`; instrument only explicit,
    consented first-use facts.
-2. Build provider-neutral transcript/clip-audio editing because it unlocks
-   product demos, founder videos, tutorials, and social edits while reducing
-   context by orders of magnitude.
+2. Extend ADR-0034's provider-neutral transcript/clip-audio editing with
+   requested-range word/waveform evidence and cut-boundary evaluation; keep
+   transcription providers optional.
 3. Build hero-frame/directorial search before more renderer breadth.
 4. Collect independent reviews and real accepted-revision records.
 5. Add masks/compositions, Lottie/Rive, 3D, audio, or backend breadth only where
    a fixed film or outside workflow proves the missing substrate is causal.
 6. Run neutral ChitraBench and publish losses as well as wins.
-

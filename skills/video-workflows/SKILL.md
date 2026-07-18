@@ -19,7 +19,10 @@ not invented claims. Use a music bed and sparse SFX under MO-AUD-3.
 ## Screen demo
 
 Use `product-demo`, normally 45–90 seconds. Start from a screen recording and
-optional narration. Transcribe first, select 3–6 timestamped proof moments, use
+optional narration. When speech or clip audio matters, follow create-video's
+`footage-editing.md`: lock the provider-neutral word transcript, read the compact
+phrase pack, approve an explainable EDL, and render a source-audio-preserving
+plate. Select 3–6 timestamped proof moments, use
 moving clips for interaction and stills for holds, and crop recorder chrome,
 personal data, toolbars, and transient toasts before scoring. Captions describe
 what the footage actually proves.
