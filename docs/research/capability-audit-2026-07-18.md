@@ -5,6 +5,13 @@
 metadata, official documentation, and executable Chitra registries. Product
 behavior that could not be inspected is labelled unverified.
 
+> **Superseded HyperFrames cut:** HyperFrames expanded materially by 2026-07-23.
+> Its current verified renderer/media/workflow surface and the resulting parity
+> decision are recorded in
+> [the 2026-07-23 audit](hyperframes-and-studio-process-audit-2026-07-23.md).
+> Keep this document for the broader Remotion/EditFrame/video-use comparison;
+> do not use its HyperFrames version or workflow inventory as current truth.
+
 ## Executive conclusion
 
 Chitra is now easier and lighter than its failed Cursor run. Stable npm `0.5.0`

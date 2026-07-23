@@ -14,13 +14,14 @@ export interface ReleaseArtifacts {
   storyboard: string;
   score: string;
   brand?: string;
+  styleAcceptances?: string;
 }
 
 type ReleaseInputName = "intake" | "direction" | "storyboard" | "score";
 type ReleaseFileBinding = { path: string; sha256: string };
 
 export interface ReleaseFingerprint {
-  files: Record<ReleaseInputName, ReleaseFileBinding> & { brand?: ReleaseFileBinding };
+  files: Record<ReleaseInputName, ReleaseFileBinding> & { brand?: ReleaseFileBinding; styleAcceptances?: ReleaseFileBinding };
   renderHash: string;
   inputHash: string;
 }
@@ -104,7 +105,7 @@ const audioMeasurement = z.discriminatedUnion("status", [
 ]);
 
 export const ReleaseReceiptSchema = z.object({
-  receiptVersion: z.literal("0.1.0"),
+  receiptVersion: z.literal("0.2.0"),
   releaseId: z.string().regex(/^[a-f0-9]{16}$/),
   tool: z.object({ packageVersion: z.string().min(1), compilerCacheVersion: z.string().min(1) }),
   quality: z.enum(["draft", "standard", "high"]),
@@ -115,15 +116,22 @@ export const ReleaseReceiptSchema = z.object({
       storyboard: z.object({ path: z.string().min(1), sha256: z.string().length(64) }),
       score: z.object({ path: z.string().min(1), sha256: z.string().length(64) }),
       brand: z.object({ path: z.string().min(1), sha256: z.string().length(64) }).optional(),
+      styleAcceptances: z.object({ path: z.string().min(1), sha256: z.string().length(64) }).optional(),
     }),
     renderHash: z.string().length(64),
     inputHash: z.string().length(64),
   }),
   gates: z.object({
     findings: z.array(z.object({
-      ruleId: z.string(), severity: z.enum(["P1", "P2", "P3"]), path: z.string(), message: z.string(), timecodeMs: z.number().optional(),
+      ruleId: z.string(), severity: z.enum(["P1", "P2", "P3"]), policy: z.enum(["hard-defect", "style-flag"]),
+      path: z.string(), message: z.string(), timecodeMs: z.number().optional(),
+      accepted: z.object({ reason: z.string().min(8) }).optional(),
     })),
-    summary: z.object({ p1: z.number().int(), p2: z.number().int(), p3: z.number().int(), releasable: z.boolean() }),
+    summary: z.object({
+      p1: z.number().int(), p2: z.number().int(), p3: z.number().int(),
+      hardDefects: z.number().int(), styleFlags: z.number().int(), acceptedStyleFlags: z.number().int(),
+      releasable: z.boolean(),
+    }),
     sampledFrames: z.number().int().positive(),
     maxIntervalMs: z.number().positive(),
   }),
@@ -134,6 +142,23 @@ export const ReleaseReceiptSchema = z.object({
   evidence: z.array(z.object({ path: z.string().min(1), sha256: z.string().length(64) })).min(1),
 });
 export type ReleaseReceipt = z.infer<typeof ReleaseReceiptSchema>;
+export const LegacyReleaseReceiptSchema = ReleaseReceiptSchema.extend({
+  receiptVersion: z.literal("0.1.0"),
+  inputs: ReleaseReceiptSchema.shape.inputs.extend({
+    files: ReleaseReceiptSchema.shape.inputs.shape.files.omit({ styleAcceptances: true }),
+  }),
+  gates: z.object({
+    findings: z.array(z.object({
+      ruleId: z.string(), severity: z.enum(["P1", "P2", "P3"]), path: z.string(), message: z.string(), timecodeMs: z.number().optional(),
+    })),
+    summary: z.object({ p1: z.number().int(), p2: z.number().int(), p3: z.number().int(), releasable: z.boolean() }),
+    sampledFrames: z.number().int().positive(),
+    maxIntervalMs: z.number().positive(),
+  }),
+});
+export type LegacyReleaseReceipt = z.infer<typeof LegacyReleaseReceiptSchema>;
+const StoredReleaseReceiptSchema = z.union([ReleaseReceiptSchema, LegacyReleaseReceiptSchema]);
+export type StoredReleaseReceipt = z.infer<typeof StoredReleaseReceiptSchema>;
 
 const relative = (base: string, file: string) => path.relative(base, path.resolve(file)) || ".";
 
@@ -151,7 +176,7 @@ export function makeReleaseReceipt(args: {
 }): ReleaseReceipt {
   const base = path.dirname(path.resolve(args.receiptFile));
   const receipt: ReleaseReceipt = {
-    receiptVersion: "0.1.0",
+    receiptVersion: "0.2.0",
     releaseId: args.fingerprint.inputHash.slice(0, 16),
     tool: args.tool,
     quality: args.quality,
@@ -167,11 +192,11 @@ export function makeReleaseReceipt(args: {
   return ReleaseReceiptSchema.parse(receipt);
 }
 
-export function verifyReleaseReceipt(receiptFile: string): { ok: boolean; issues: string[]; receipt?: ReleaseReceipt } {
+export function verifyReleaseReceipt(receiptFile: string): { ok: boolean; issues: string[]; receipt?: StoredReleaseReceipt } {
   const absolute = path.resolve(receiptFile);
   if (!existsSync(absolute)) return { ok: false, issues: [`receipt not found: ${absolute}`] };
-  let receipt: ReleaseReceipt;
-  try { receipt = ReleaseReceiptSchema.parse(JSON.parse(readFileSync(absolute, "utf8"))); }
+  let receipt: StoredReleaseReceipt;
+  try { receipt = StoredReleaseReceiptSchema.parse(JSON.parse(readFileSync(absolute, "utf8"))); }
   catch (error) { return { ok: false, issues: [`invalid release receipt: ${(error as Error).message}`] }; }
   const base = path.dirname(absolute);
   const issues: string[] = [];
@@ -189,6 +214,13 @@ export function verifyReleaseReceipt(receiptFile: string): { ok: boolean; issues
     artifacts.brand = file;
     if (!existsSync(file)) issues.push(`brand input is missing: ${file}`);
     else if (sha256File(file) !== binding.sha256) issues.push("brand input hash changed");
+  }
+  if (receipt.receiptVersion === "0.2.0" && receipt.inputs.files.styleAcceptances) {
+    const binding = receipt.inputs.files.styleAcceptances;
+    const file = path.resolve(base, binding.path);
+    artifacts.styleAcceptances = file;
+    if (!existsSync(file)) issues.push(`styleAcceptances input is missing: ${file}`);
+    else if (sha256File(file) !== binding.sha256) issues.push("styleAcceptances input hash changed");
   }
   if (!issues.some((issue) => issue.includes("input is missing"))) {
     try {

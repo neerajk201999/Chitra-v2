@@ -13,12 +13,12 @@ This is the particle motif flagged as the last expressiveness gap in known-issue
 1. **`particles` element** — a deterministic field of dots.
    - `formation`: `grid` (cols×rows) | `ring` (count around a circle) | `scatter` (seeded pseudo-random, deterministic from `seed`).
    - `color`, `dotSize` (px at 1080, compiler-scaled), `count`/`cols`/`rows`, `radius` (ring, stage units), `seed`.
-   - Rendered as `count` absolutely-positioned dot divs at compile-time-computed coordinates. Each dot carries a seeded `data-phase` ∈ [0,1). Fully deterministic; dot count is bounded (≤ 400) so it never becomes a perf or slop hazard.
+   - Rendered as `count` absolutely-positioned dot divs at compile-time-computed coordinates. Each dot carries a seeded `data-phase` ∈ [0,1). Fully deterministic; fields above 400 dots remain possible but receive an explicit performance/density review.
 2. **Three preset behaviors** (no keyframe hatch):
    - `particle-shimmer` (ambient, looping): per-dot opacity oscillates between a floor and ceiling, phase-offset by `data-phase` — the matrix twinkle. Loops inside the paused master timeline, so it stays seek-deterministic.
    - `particle-form` (enter): dots arrive into the formation with a radial stagger (center-out), scaling and fading up — the "assemble" moment.
    - `particle-morph` (feature): dots travel from their current formation to a target formation named by the animation's `morphTo` field (grid↔ring↔scatter). The compiler tracks per-element formation state across the scene's animation order and emits per-dot fromTo tweens.
-3. **Gate (MO-PART-1):** shimmer amplitude is bounded (floor ≥ 0.15, so dots never fully vanish — a field that blinks off reads as broken, not alive); more than 400 dots is a P1 (perf + taste). Particle fields count as ambient for MO-CHOR-2 (they never compete with a hero).
+3. **Gates:** MO-PART-1 keeps particle structure valid and shimmer visible; MO-PART-2 flags more than 400 dots for performance/density review without vetoing an intentional dense field. Particle fields count as ambient for MO-CHOR-2 (they never compete with a hero).
 
 ## Consequences
 

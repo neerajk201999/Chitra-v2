@@ -6,7 +6,16 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { validateScore, type ScoreT } from "../src/ir/schema.js";
 import { compile, resolveSceneTimeline, totalDurationMs } from "../src/compile/index.js";
-import { frameGateSampleTimes, runFrameGates, runStaticGates, runConformance } from "../src/gates/index.js";
+import {
+  RULE_POLICIES,
+  applyGatePolicies,
+  applyStyleAcceptances,
+  frameGateSampleTimes,
+  runFrameGates,
+  runStaticGates,
+  runConformance,
+  summarize,
+} from "../src/gates/index.js";
 import { pruneLegacyFrameCaches, renderStorageEstimate, sceneHash, type RenderSession } from "../src/render/index.js";
 import { browserCandidates } from "../src/browser/index.js";
 import { CAPABILITIES } from "../src/capabilities/index.js";
@@ -196,6 +205,80 @@ describe("static gates (Quality Engine layer 2)", () => {
     expect(v.ok).toBe(true);
     const f = runStaticGates(v.ok ? v.score : score);
     expect(f.some((x) => x.ruleId === "MO-SLOP-1")).toBe(true);
+  });
+});
+
+describe("gate priority and release policy", () => {
+  it("does not let a P1 style opinion veto an intentional composition", () => {
+    const score = validFixture();
+    for (const element of score.scenes[1].elements) (element as { role?: string }).role = "hero";
+    const findings = applyGatePolicies(runStaticGates(score));
+    const hero = findings.find((finding) => finding.ruleId === "MO-CHOR-2");
+    expect(hero).toMatchObject({ severity: "P1", policy: "style-flag" });
+    expect(summarize(findings).releasable).toBe(true);
+  });
+
+  it("keeps structural corruption non-overridable", () => {
+    const score = validFixture();
+    score.scenes[0].choreography[0].target = "missing-target";
+    const findings = applyGatePolicies(runStaticGates(score));
+    const broken = findings.find((finding) => finding.ruleId === "IR-REF-2");
+    expect(broken).toMatchObject({ severity: "P1", policy: "hard-defect" });
+    expect(summarize(findings).releasable).toBe(false);
+    expect(() => applyStyleAcceptances(findings, [{
+      ruleId: "IR-REF-2", path: broken!.path, reason: "Intentional visual exception",
+    }])).toThrow(/hard defect cannot be accepted/);
+  });
+
+  it("promotes legibility only when the affected copy is explicitly required", () => {
+    const finding = {
+      ruleId: "MO-TYPE-2", severity: "P1" as const, path: "scenes[0].elements[0]",
+      message: "low contrast", subjectTexts: ["Required claim"],
+    };
+    expect(applyGatePolicies([finding])[0].policy).toBe("style-flag");
+    const required = applyGatePolicies([finding], {
+      intake: {
+        constraints: { mustInclude: ["Required claim"], legal: [], accessibility: [] },
+      } as never,
+    });
+    expect(required[0].policy).toBe("hard-defect");
+    expect(applyGatePolicies([{ ...finding, subjectTexts: ["claim"] }], {
+      intake: {
+        constraints: { mustInclude: ["Required claim"], legal: [], accessibility: [] },
+      } as never,
+    })[0].policy).toBe("style-flag");
+    expect(applyGatePolicies([{ ...finding, subjectTexts: ["Card: Required claim"] }], {
+      intake: {
+        constraints: { mustInclude: ["Required claim"], legal: [], accessibility: [] },
+      } as never,
+    })[0].policy).toBe("hard-defect");
+    const storyboard = {
+      shots: [{ id: "planned", typography: { onScreenCopy: ["Required claim"] } }],
+    } as never;
+    expect(applyGatePolicies([{ ...finding, sceneId: "decorative" }], { storyboard })[0].policy).toBe("style-flag");
+    expect(applyGatePolicies([{ ...finding, sceneId: "planned" }], { storyboard })[0].policy).toBe("hard-defect");
+  });
+
+  it("binds a style acceptance to the exact finding selector and reason", () => {
+    const finding = applyGatePolicies([{
+      ruleId: "MO-CHOR-2", severity: "P1", path: "scenes[0].elements", message: "ensemble composition",
+    }]);
+    const accepted = applyStyleAcceptances(finding, [{
+      ruleId: "MO-CHOR-2", path: "scenes[0].elements", reason: "Intentional ensemble hierarchy",
+    }]);
+    expect(accepted[0].accepted?.reason).toBe("Intentional ensemble hierarchy");
+    expect(() => applyStyleAcceptances(finding, [{
+      ruleId: "MO-CHOR-2", path: "scenes[1].elements", reason: "Wrong selector should fail",
+    }])).toThrow(/does not match/);
+  });
+
+  it("fails closed when an emitted rule has no registry entry", () => {
+    const source = readFileSync(path.join(here, "../src/gates/index.ts"), "utf8");
+    const emitted = [...source.matchAll(/ruleId:\s*"([^"]+)"/g)].map((match) => match[1]);
+    expect([...new Set(emitted)].sort()).toEqual(Object.keys(RULE_POLICIES).sort());
+    expect(() => applyGatePolicies([{
+      ruleId: "UNKNOWN-RULE", severity: "P3", path: "x", message: "unknown",
+    }])).toThrow(/registry is missing/);
   });
 });
 
@@ -539,9 +622,9 @@ describe("particle fields (ADR-0009)", () => {
     expect((a.match(/class="pdot"/g) || []).length).toBe(48);
     expect(a).not.toContain("opacity:1.000;box-shadow");
   });
-  it("MO-PART-1 caps dot count and confines morphTo to particle-morph", () => {
-    const big = runStaticGates(withField({ cols: 24, rows: 24 })).filter((x) => x.ruleId === "MO-PART-1");
-    expect(big.some((x) => x.severity === "P1")).toBe(true);
+  it("MO-PART-2 reviews dense fields while MO-PART-1 confines morphTo", () => {
+    const big = applyGatePolicies(runStaticGates(withField({ cols: 24, rows: 24 })));
+    expect(big.find((x) => x.ruleId === "MO-PART-2")).toMatchObject({ severity: "P1", policy: "style-flag" });
     const s = withField();
     s.scenes[0].choreography.push({ id: "bad", target: "field", preset: "particle-shimmer", morphTo: "ring", at: { after: "scene-start", offsetMs: 0 } } as never);
     expect(runStaticGates(s).some((x) => x.ruleId === "MO-PART-1")).toBe(true);

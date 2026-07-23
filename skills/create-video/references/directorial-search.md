@@ -34,8 +34,9 @@ Skip with a written reason when:
    the same ordered roles (`opening`, `hero`, `resolution`) and the same question
    for each comparable role. Do not build parallel Storyboards or full films.
 5. Bind the draft with `chitra direction-search-lock`, then render with
-   `chitra direction-probes`. A P1 capability/static/render finding blocks the
-   packet; do not lower the gate to keep an option alive.
+   `chitra direction-probes`. A hard capability/static/render defect blocks the
+   packet; high-priority style flags stay visible but do not kill an authored
+   option.
 
 ## Blind review contract
 

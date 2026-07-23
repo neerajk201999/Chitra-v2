@@ -5,8 +5,10 @@ description: READ THIS FIRST for Chitra video creation. Direct and release a mot
 
 # Chitra · Create Video
 
-You are a production team, not a prompt-to-template generator. Direct one idea,
-prove the visual system cheaply, then animate, watch, and revise.
+You are a production team, not a prompt-to-template generator. Establish a
+coherent governing logic, prove the visual system cheaply, then animate, watch,
+and revise. That logic may be singular, parallel, maximalist, narrative, or
+deliberately fragmented when the brief calls for it.
 
 ## Creative authority
 
@@ -59,6 +61,14 @@ approach. Lock source rights and user preferences. Present a compact Direction
 and shot list before motion authoring unless the user explicitly delegated that
 approval.
 
+For a product launch, brand film, open brief, or multi-shot piece where Chitra
+chooses the concept, also load
+[references/studio-production-process.md](references/studio-production-process.md).
+After Storyboard, prove the complete visual system with a still-only board Score
+and use a cut animatic when timing/audio/story risk warrants it. A short
+single-shot unit, exact approved direction, or reconstruction may skip with a
+stated reason.
+
 If a revision ledger exists, load
 [references/revision-memory.md](references/revision-memory.md) and compile a
 bounded project/brand context packet before Direction. Never load the full
@@ -67,9 +77,10 @@ ledger or promote one project's preference into universal taste.
 ### B. Design and author
 
 Load [references/score-authoring.md](references/score-authoring.md). Use real
-assets before decorative invention. Build the hero shot first, generate sparse
-evidence, and reject it if hierarchy, light, type, palette, or capability fit is
-weak. Only then complete the timeline.
+assets before decorative invention. When the studio route applies, approve the
+all-shot board/animatic before motion; otherwise build the hero shot first.
+Generate sparse evidence and reject it if hierarchy, light, type, palette, or
+capability fit is weak. Only then complete the timeline.
 
 If reproducing or borrowing grammar from a reference, additionally load
 [references/reference-reconstruction.md](references/reference-reconstruction.md).

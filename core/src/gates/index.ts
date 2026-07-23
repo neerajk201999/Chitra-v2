@@ -2,7 +2,7 @@
  * Quality Engine — Layer 2: deterministic gates (ADR-0004).
  * Every rule is ID-tagged to docs/motion/motion-language.md. Static gates
  * read the Score; frame gates read the actual render (text regions + pixels).
- * Severity: P1 blocks release, P2 should fix, P3 note.
+ * Priority is P1/P2/P3; independent policy decides whether release blocks.
  */
 import sharp from "sharp";
 import { readFileSync } from "node:fs";
@@ -26,12 +26,112 @@ import {
 } from "../motion/tokens.js";
 import type { RenderSession, TextRegion } from "../render/index.js";
 
+export type GatePolicy = "hard-defect" | "style-flag";
+type RulePolicy = GatePolicy | "required-meaning" | "p1-hard";
+
 export interface Finding {
   ruleId: string;
   severity: "P1" | "P2" | "P3";
   path: string; // IR path (scenes[2].choreography[1]) or timecode context
   message: string;
   timecodeMs?: number;
+  /** Added at the release/check boundary from the exhaustive registry below. */
+  policy?: GatePolicy;
+  /** Rendered/declared copy used to decide whether a legibility symptom affects required meaning. */
+  subjectTexts?: string[];
+  sceneId?: string;
+  accepted?: { reason: string };
+}
+export type ClassifiedFinding = Omit<Finding, "policy"> & { policy: GatePolicy };
+
+/**
+ * Release policy is deliberately independent from priority (ADR-0041).
+ * "required-meaning" resolves to hard-defect only when the affected copy is
+ * explicitly required by locked Intake or approved Storyboard; otherwise it is
+ * a non-blocking style flag. Unknown rule IDs fail closed.
+ */
+export const RULE_POLICIES = {
+  "CC-ASSET-1": "hard-defect", "CC-ASSET-2": "hard-defect", "CC-ASSET-3": "hard-defect", "CC-ASSET-4": "hard-defect",
+  "CC-BOARD-1": "hard-defect", "CC-BOARD-2": "hard-defect", "CC-BOARD-3": "style-flag", "CC-BOARD-4": "hard-defect",
+  "CC-BOARD-5": "hard-defect", "CC-BOARD-6": "style-flag", "CC-BOARD-7": "p1-hard",
+  "CC-BRAND-3": "hard-defect", "CC-BRAND-4": "hard-defect", "CC-BRAND-5": "hard-defect", "CC-BRAND-6": "hard-defect",
+  "CC-CONF-1": "hard-defect", "CC-CONF-2": "hard-defect", "CC-CONF-3": "style-flag", "CC-CONF-4": "style-flag", "CC-CONF-5": "style-flag",
+  "CC-INT-1": "hard-defect", "CC-INT-2": "hard-defect", "CC-INT-3": "hard-defect", "CC-INT-4": "hard-defect",
+  "CC-INT-5": "hard-defect", "CC-INT-6": "hard-defect", "CC-INT-7": "hard-defect", "CC-INT-8": "hard-defect",
+  "CC-PROD-1": "style-flag", "CC-PROD-2": "p1-hard",
+  "CC-SCORE-1": "hard-defect", "CC-SCORE-2": "p1-hard", "CC-SCORE-3": "style-flag", "CC-SCORE-4": "hard-defect",
+  "CC-SCORE-5": "style-flag", "CC-SCORE-6": "style-flag", "CC-SCORE-7": "hard-defect", "CC-SCORE-8": "p1-hard",
+  "IR-CUR-1": "hard-defect", "IR-FIG-1": "style-flag", "IR-GROUP-1": "hard-defect", "IR-REF-1": "hard-defect", "IR-REF-2": "hard-defect",
+  "MO-3D-1": "style-flag", "MO-3D-2": "hard-defect",
+  "MO-AUD-2": "style-flag", "MO-AUD-3": "style-flag", "MO-AUD-4": "hard-defect",
+  "MO-CHOR-1": "style-flag", "MO-CHOR-2": "style-flag", "MO-CHOR-5": "style-flag",
+  "MO-DUR-2": "style-flag", "MO-EASE-1": "style-flag", "MO-EASE-2": "style-flag",
+  "MO-EDIT-1": "required-meaning", "MO-EDIT-2": "style-flag", "MO-EDIT-3": "style-flag", "MO-EDIT-5": "style-flag",
+  "MO-KEY-1": "hard-defect", "MO-MED-1": "style-flag", "MO-PART-1": "hard-defect", "MO-PART-2": "style-flag", "MO-REG-1": "style-flag",
+  "MO-SLOP-1": "style-flag", "MO-SLOP-2": "style-flag",
+  "MO-TYPE-1": "required-meaning", "MO-TYPE-2": "required-meaning", "MO-TYPE-4": "style-flag",
+  "QE-BLANK-1": "style-flag", "QE-OVERLAP-1": "required-meaning",
+} as const satisfies Record<string, RulePolicy>;
+
+export interface GatePolicyContext {
+  intake?: IntakeT;
+  storyboard?: StoryboardT;
+}
+export interface StyleAcceptance {
+  ruleId: string;
+  path: string;
+  reason: string;
+}
+
+const normalizeMeaning = (value: string) => value.toLocaleLowerCase().replace(/\s+/g, " ").trim();
+
+export function applyGatePolicies(findings: Finding[], context: GatePolicyContext = {}): ClassifiedFinding[] {
+  const globallyRequired = new Set<string>();
+  for (const statement of context.intake?.constraints.mustInclude ?? []) globallyRequired.add(normalizeMeaning(statement));
+  for (const statement of context.intake?.constraints.legal ?? []) globallyRequired.add(normalizeMeaning(statement));
+  for (const statement of context.intake?.constraints.accessibility ?? []) globallyRequired.add(normalizeMeaning(statement));
+  const storyboardRequired = new Map<string, Set<string>>();
+  for (const shot of context.storyboard?.shots ?? [])
+    storyboardRequired.set(shot.id, new Set(shot.typography.onScreenCopy.map(normalizeMeaning)));
+  const allStoryboardRequired = new Set([...storyboardRequired.values()].flatMap((items) => [...items]));
+
+  return findings.map((finding) => {
+    const registered = (RULE_POLICIES as Record<string, RulePolicy>)[finding.ruleId];
+    if (!registered) throw new Error(`gate policy registry is missing rule ${finding.ruleId}`);
+    let policy: GatePolicy;
+    if (finding.policy) policy = finding.policy;
+    else if (registered === "p1-hard") policy = finding.severity === "P1" ? "hard-defect" : "style-flag";
+    else if (registered !== "required-meaning") policy = registered;
+    else {
+      const subjects = (finding.subjectTexts ?? []).map(normalizeMeaning).filter(Boolean);
+      const required = new Set([
+        ...globallyRequired,
+        ...(finding.sceneId ? storyboardRequired.get(finding.sceneId) ?? [] : allStoryboardRequired),
+      ]);
+      const affectsRequired = subjects.some((subject) =>
+        [...required].some((item) => item === subject || subject.includes(item)));
+      policy = affectsRequired ? "hard-defect" : "style-flag";
+    }
+    return { ...finding, policy } as ClassifiedFinding;
+  });
+}
+
+export function applyStyleAcceptances(findings: ClassifiedFinding[], acceptances: StyleAcceptance[]): ClassifiedFinding[] {
+  const seen = new Set<string>();
+  const bySelector = new Map(findings.map((finding) => [`${finding.ruleId}|${finding.path}`, finding]));
+  for (const acceptance of acceptances) {
+    const selector = `${acceptance.ruleId}|${acceptance.path}`;
+    if (seen.has(selector)) throw new Error(`duplicate style acceptance for ${acceptance.ruleId} at ${acceptance.path}`);
+    seen.add(selector);
+    if (acceptance.reason.trim().length < 8) throw new Error(`style acceptance reason must be at least 8 characters for ${acceptance.ruleId}`);
+    const finding = bySelector.get(selector);
+    if (!finding) throw new Error(`style acceptance does not match a finding: ${acceptance.ruleId} at ${acceptance.path}`);
+    if (finding.policy !== "style-flag") throw new Error(`hard defect cannot be accepted: ${acceptance.ruleId} at ${acceptance.path}`);
+  }
+  return findings.map((finding) => {
+    const acceptance = acceptances.find((candidate) => candidate.ruleId === finding.ruleId && candidate.path === finding.path);
+    return acceptance ? { ...finding, accepted: { reason: acceptance.reason.trim() } } : finding;
+  });
 }
 
 const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
@@ -168,12 +268,12 @@ export function runStaticGates(score: ScoreT): Finding[] {
         f.push({ ruleId: "MO-3D-1", severity: "P2", path: p(`.elements[${ei}]`), message: `scene3d "${el.id}" spin ${el.spinDeg}° is agitated — a hero product settles (≤30° gentle oscillation)` });
     });
 
-    // MO-PART-1 (ADR-0009): particle fields are bounded; morphTo only on particle-morph.
+    // MO-PART-1/2 (ADR-0009): structure is hard; density is reviewable.
     scene.elements.forEach((el, ei) => {
       if (el.type !== "particles") return;
       const n = el.formation === "grid" ? el.cols * el.rows : el.formation === "custom" ? (el.points?.length ?? 0) : el.count;
       if (n > 400)
-        f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.elements[${ei}]`), message: `particle field "${el.id}" has ${n} dots (max 400 — perf and taste ceiling)` });
+        f.push({ ruleId: "MO-PART-2", severity: "P1", path: p(`.elements[${ei}]`), message: `particle field "${el.id}" has ${n} dots (recommended max 400 — performance and density review)` });
       if (el.formation === "custom" && !el.points?.length)
         f.push({ ruleId: "MO-PART-1", severity: "P1", path: p(`.elements[${ei}].points`), message: `custom particle field "${el.id}" requires ordered points` });
       if (el.formation !== "custom" && el.points)
@@ -362,12 +462,12 @@ export function runStaticGates(score: ScoreT): Finding[] {
       const needMs = (wordCount(el.content) / TYPOGRAPHY.readingWpm) * 60000 * TYPOGRAPHY.readingSafety + TYPOGRAPHY.sceneEntryGraceMs;
       const haveMs = visibleTo - visibleFrom;
       if (haveMs < needMs)
-        f.push({ ruleId: "MO-EDIT-1", severity: "P1", path: p(`.elements[${ei}]`), message: `"${el.content.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
+        f.push({ ruleId: "MO-EDIT-1", severity: "P1", path: p(`.elements[${ei}]`), sceneId: scene.id, subjectTexts: [el.content], message: `"${el.content.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
 
       // MO-TYPE-1: min size
       const px = TYPE_SCALE[el.textRole as keyof typeof TYPE_SCALE] * scale;
       if (px < minPx)
-        f.push({ ruleId: "MO-TYPE-1", severity: "P1", path: p(`.elements[${ei}]`), message: `Text renders at ${Math.round(px)}px; minimum for ${score.meta.register} is ${Math.round(minPx)}px` });
+        f.push({ ruleId: "MO-TYPE-1", severity: "P1", path: p(`.elements[${ei}]`), sceneId: scene.id, subjectTexts: [el.content], message: `Text renders at ${Math.round(px)}px; minimum for ${score.meta.register} is ${Math.round(minPx)}px` });
     });
 
     // Elements with no entrance and scenes with no motion
@@ -556,7 +656,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
     }
     for (const r of regions) {
       if (r.x < safe.x0 - 1 || r.y < safe.y0 - 1 || r.x + r.w > safe.x1 + 1 || r.y + r.h > safe.y1 + 1)
-        addFinding({ ruleId: "MO-TYPE-4", severity: "P1", path: r.sel, timecodeMs: Math.round(t), message: `Text outside ${score.meta.safeZone} safe zone at ${(t / 1000).toFixed(2)}s` });
+        addFinding({ ruleId: "MO-TYPE-4", severity: "P1", path: r.sel, sceneId: r.scene, subjectTexts: r.text ? [r.text] : [], timecodeMs: Math.round(t), message: `Text outside ${score.meta.safeZone} safe zone at ${(t / 1000).toFixed(2)}s` });
       if (r.overMedia && shot) {
         const left = Math.max(0, Math.min(W - 1, Math.floor(r.x)));
         const top = Math.max(0, Math.min(H - 1, Math.floor(r.y)));
@@ -566,7 +666,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
         const bgLum = luminance(stats.channels[0].mean, stats.channels[1].mean, stats.channels[2].mean);
         const ratio = contrast(hexLum(r.color), bgLum);
         if (ratio < TYPOGRAPHY.minContrast)
-          addFinding({ ruleId: "MO-TYPE-2", severity: "P1", path: r.sel, timecodeMs: Math.round(t), message: `Text contrast ${ratio.toFixed(1)}:1 over media at ${(t / 1000).toFixed(2)}s (min ${TYPOGRAPHY.minContrast}:1)` });
+          addFinding({ ruleId: "MO-TYPE-2", severity: "P1", path: r.sel, sceneId: r.scene, subjectTexts: r.text ? [r.text] : [], timecodeMs: Math.round(t), message: `Text contrast ${ratio.toFixed(1)}:1 over media at ${(t / 1000).toFixed(2)}s (min ${TYPOGRAPHY.minContrast}:1)` });
       }
     }
     for (let a = 0; a < regions.length; a++) {
@@ -577,7 +677,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
         const sameMatchCut = A.scene !== B.scene && !!A.text?.trim() && A.text.trim() === B.text?.trim() &&
           Math.abs(A.x - B.x) <= 2 && Math.abs(A.y - B.y) <= 2 && Math.abs(A.w - B.w) <= 2 && Math.abs(A.h - B.h) <= 2;
         if (ox > 2 && oy > 2 && !sameMatchCut)
-          addFinding({ ruleId: "QE-OVERLAP-1", severity: "P1", path: `${A.sel} ∩ ${B.sel}`, timecodeMs: Math.round(t), message: `Text elements overlap by ${Math.round(ox)}×${Math.round(oy)}px at ${(t / 1000).toFixed(2)}s` });
+          addFinding({ ruleId: "QE-OVERLAP-1", severity: "P1", path: `${A.sel} ∩ ${B.sel}`, sceneId: A.scene === B.scene ? A.scene : undefined, subjectTexts: [A.text, B.text].filter((value): value is string => !!value), timecodeMs: Math.round(t), message: `Text elements overlap by ${Math.round(ox)}×${Math.round(oy)}px at ${(t / 1000).toFixed(2)}s` });
       }
     }
   }
@@ -587,7 +687,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
     const readingGroups = new Map<string, { text: string[]; region: TextRegion }>();
     for (const { region, sampledAtMs, text } of figureText[si].values()) {
       if (region.fontSizePx < minPx)
-        addFinding({ ruleId: "MO-TYPE-1", severity: "P1", path: region.sel, timecodeMs: Math.round(sampledAtMs), message: `Figure text renders at ${Math.round(region.fontSizePx)}px; minimum for ${score.meta.register} is ${Math.round(minPx)}px` });
+        addFinding({ ruleId: "MO-TYPE-1", severity: "P1", path: region.sel, sceneId: region.scene, subjectTexts: text ? [text] : [], timecodeMs: Math.round(sampledAtMs), message: `Figure text renders at ${Math.round(region.fontSizePx)}px; minimum for ${score.meta.register} is ${Math.round(minPx)}px` });
       const key = region.target ?? region.figureId ?? region.sel;
       const group = readingGroups.get(key) ?? { text: [], region };
       group.text.push(text);
@@ -607,7 +707,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
       const needMs = (wordCount(text) / TYPOGRAPHY.readingWpm) * 60000 * TYPOGRAPHY.readingSafety + TYPOGRAPHY.sceneEntryGraceMs;
       const haveMs = Math.max(0, visibleTo - visibleFrom);
       if (text && haveMs < needMs)
-        addFinding({ ruleId: "MO-EDIT-1", severity: "P1", path: group.region.sel, message: `Figure text "${text.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
+        addFinding({ ruleId: "MO-EDIT-1", severity: "P1", path: group.region.sel, sceneId: group.region.scene, subjectTexts: [text], message: `Figure text "${text.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
     }
     const midpoint = (b.startMs + b.endMs) / 2;
     const mid = await session.seekAndCapture(midpoint);
@@ -639,7 +739,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
       const ratio = contrast(hexLum(colorHex), hexLum(bgFor(scene)));
       const min = el.textRole === "display" || el.textRole === "headline" ? 3 : TYPOGRAPHY.minContrast; // large-text allowance
       if (ratio < min)
-        f.push({ ruleId: "MO-TYPE-2", severity: "P1", path: `scenes[${si}].elements[${ei}]`, message: `Palette contrast ${ratio.toFixed(1)}:1 for "${el.content.slice(0, 30)}" (min ${min}:1)` });
+        f.push({ ruleId: "MO-TYPE-2", severity: "P1", path: `scenes[${si}].elements[${ei}]`, sceneId: scene.id, subjectTexts: [el.content], message: `Palette contrast ${ratio.toFixed(1)}:1 for "${el.content.slice(0, 30)}" (min ${min}:1)` });
     });
   });
 
@@ -1069,10 +1169,16 @@ export function runCreativeConformance(intake: IntakeT, direction: DirectionT, s
   ];
 }
 
-export function summarize(findings: Finding[]): { p1: number; p2: number; p3: number; releasable: boolean } {
-  const p1 = findings.filter((x) => x.severity === "P1").length;
-  const p2 = findings.filter((x) => x.severity === "P2").length;
-  const p3 = findings.filter((x) => x.severity === "P3").length;
-  return { p1, p2, p3, releasable: p1 === 0 };
+export function summarize(findings: Finding[]): {
+  p1: number; p2: number; p3: number; hardDefects: number; styleFlags: number; acceptedStyleFlags: number; releasable: boolean;
+} {
+  const classified = applyGatePolicies(findings);
+  const p1 = classified.filter((x) => x.severity === "P1").length;
+  const p2 = classified.filter((x) => x.severity === "P2").length;
+  const p3 = classified.filter((x) => x.severity === "P3").length;
+  const hardDefects = classified.filter((x) => x.policy === "hard-defect").length;
+  const styleFlags = classified.filter((x) => x.policy === "style-flag").length;
+  const acceptedStyleFlags = classified.filter((x) => x.policy === "style-flag" && x.accepted).length;
+  return { p1, p2, p3, hardDefects, styleFlags, acceptedStyleFlags, releasable: hardDefects === 0 };
 }
 export { totalDurationMs };

@@ -1,6 +1,6 @@
 # ADR-0041 — Hard defects and style flags are separate release policies
 
-**Status:** proposed · 2026-07-18
+**Status:** implemented · 2026-07-23 · external boundary-fixture review pending
 
 ## Context
 
@@ -44,9 +44,13 @@ difference. Aesthetic defaults are hypotheses; release integrity is a contract.
 6. Gate implementation uses one exhaustive policy registry checked in tests.
    Unknown rule IDs fail CI rather than defaulting silently. The CLI and receipt
    expose policy, priority, acceptance state, evidence time, and IR path.
-7. Existing P1 behavior remains unchanged until an adversarial migration suite
-   proves every current rule has an explicit policy and release blocks only hard
-   defects. This ADR is proposed, not authorization for a partial reclassification.
+7. The release receipt protocol advances to 0.2.0. It records policy,
+   priority, acceptance state, and reason. A style-acceptance file participates
+   in the release fingerprint, so changing it stales verification. Verification
+   remains backward-compatible with receipts issued by protocol 0.1.0.
+8. `render --force` remains a diagnostic-only escape hatch for inspecting a
+   broken draft. It cannot create or authorize a release receipt; `release`
+   never accepts hard defects.
 
 ## Required evidence before acceptance
 
@@ -58,7 +62,8 @@ difference. Aesthetic defaults are hypotheses; release integrity is a contract.
 - Packed-CLI release tests proving all style cases deliver with visible audit
   notes, all hard cases refuse, and selector-mismatched overrides do nothing.
 - Independent review of the boundary fixtures by someone other than the process
-  implementing the policy.
+  implementing the policy. This is the only remaining acceptance item and is
+  explicitly not satisfied by the first-party regression suite.
 
 ## Alternatives rejected
 
@@ -77,3 +82,22 @@ Chitra becomes permissive about authored form while strict about truth,
 required meaning, reproducibility, provenance, and delivered bytes. The policy
 adds receipt/schema work and requires migration tests, but removes house-style
 opinions from the release veto path without weakening objective guarantees.
+
+## Implementation evidence
+
+- `RULE_POLICIES` exhaustively classifies every emitted gate ID; an unknown ID
+  throws instead of receiving an implicit policy.
+- Required-copy context comes from locked Intake must-include/legal/
+  accessibility constraints and approved Storyboard on-screen copy.
+- Mixed rules use the explicit `p1-hard` registry policy when their P1 form is a
+  contract violation and their lower-priority form is advisory. Particle
+  structure remains MO-PART-1 hard; the density review is separately identified
+  as MO-PART-2 style.
+- `--accept-style` accepts only an exact `{ ruleId, path, reason }` match,
+  rejects hard defects and stale selectors, and binds the file into the receipt.
+- Unit fixtures prove intentional three-hero P1 output remains releasable,
+  missing animation targets remain hard, required-copy legibility is promoted,
+  and selector mismatch/hard override fail.
+- The release-integrity benchmark produces a style-flagged release with a bound
+  acceptance, refuses a broken target, verifies receipt 0.2.0, and retains the
+  existing stale-input/output and final-audio checks.

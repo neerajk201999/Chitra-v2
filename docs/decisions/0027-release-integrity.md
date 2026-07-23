@@ -25,7 +25,8 @@ from the delivered artifact.
 2. `chitra release` is the sole claim-bearing export path. In one process it
    validates Intake → Direction → Storyboard → Score conformance, static gates,
    rendered gates, final render, final-mux audio, and evidence before writing a
-   receipt. P1 findings block the transaction.
+   receipt. ADR-0041 supersedes the original severity-only veto: hard defects
+   block the transaction; style flags remain audited and non-blocking.
 3. The receipt binds the four creative artifacts, resolved render inputs,
    final video, evidence files, package/compiler versions, gate findings, and
    audio measurement by SHA-256. Inputs are hashed again after rendering; a

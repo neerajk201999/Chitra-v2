@@ -27,7 +27,7 @@ evidence, and stable npm `0.5.0` publication remain absent.
 | Executable IR | Score/Motion IR, edit/transcript IR | strict schema, static gates, browser fixtures | no nested compositions, masks/mattes/blends, alpha output, imported animation, general property tracks |
 | Compiler | Score → HTML/CSS/GSAP/Three | deterministic fixture captures and cache hashes | system Chromium is not version-pinned; raw figure CSS can bypass theme tokens |
 | Renderer | system Chromium seek/capture → FFmpeg | same-machine repeated captures, package first-frame checks | no cross-machine golden equivalence, interrupt recovery, concurrency proof, alpha, or distributed rendering |
-| Quality gates | schema, static, sampled rendered-frame gates | 89 unit tests and generated fault fixtures | hard defects and subjective style rules are not formally separated; temporal inspection is bounded |
+| Quality gates | schema, static, sampled rendered-frame gates | 94 unit tests and generated fault fixtures | hard/style policy is separated and receipt-bound; independent boundary review and temporal coverage remain open |
 | Evidence/review | contact sheets, cut strips, review/calibration contracts | schema and synthetic consensus tests | no independent ≥20-case corpus and no held-out adversarial evaluator |
 | Release | staged render/evidence, final-mux measurement, hash receipt | generated release transaction and tamper checks | receipt verification hashes audio/video but does not independently remeasure decoded invariants |
 | Distribution | public repo, npm `0.4.0`, GitHub `0.5.0-rc.4` | downloaded SHA-pinned CLI/probe/first frame | stable npm `0.5.0` unpublished; CommonJS library entry fails |
@@ -266,7 +266,7 @@ explicit in `chitra capabilities`; promised ones need permanent tests.
 | clean CLI package install | **met for rc.4 on one macOS machine and Ubuntu CI** |
 | clean library import | **ESM + CommonJS fixed and added to packed-package test; CI pending** |
 | every known bypass has permanent adversarial regression | **not met** |
-| every gate explicitly hard defect or overridable style flag | **not met** |
+| every gate explicitly hard defect or overridable style flag | **implemented; independent boundary-fixture review pending** |
 | loudness/frame/style checks uniformly inspect rendered output | **partially met** |
 | multi-OS full/golden/range CI | **not met** |
 | current version strings reconcile | **met now; single-source architecture not met** |

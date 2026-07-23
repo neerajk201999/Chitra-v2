@@ -164,7 +164,8 @@ try {
   assert.equal(fingerprint.files.brand?.path, path.resolve(lockedFile), "release fingerprint must include the locked Brand file");
   const receipt = makeReleaseReceipt({
     receiptFile: releaseReceipt, fingerprint, tool, quality: "high", findings: [],
-    summary: { p1: 0, p2: 0, p3: 0, releasable: true }, sampledFrames: 1, maxIntervalMs: 250,
+    summary: { p1: 0, p2: 0, p3: 0, hardDefects: 0, styleFlags: 0, acceptedStyleFlags: 0, releasable: true },
+    sampledFrames: 1, maxIntervalMs: 250,
     render: { path: releaseOut, durationMs: 1000, frames: 30, width: 1920, height: 1080, fps: 30, audio: { status: "missing" } },
     evidenceFiles: [releaseEvidence],
   });

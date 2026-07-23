@@ -1,4 +1,4 @@
-# Known Issues (v0.5.0 release candidate — 2026-07-18)
+# Known Issues (v0.5.0 release candidate — 2026-07-23)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 
@@ -105,6 +105,18 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     OCR or final typography. One earlier loaded run reached 20.7s. Outside
     macOS/Windows/Linux and harness samples remain required before a service-
     level claim or CI ceiling.
+19. **Gate policy is implemented but not independently boundary-reviewed.**
+    ADR-0041 separates priority from release behavior, exhaustively registers
+    rule policies, treats required-copy legibility contextually, and binds exact
+    style acceptances into receipt 0.2.0 while verifying 0.1 receipts. Mixed
+    contract rules explicitly distinguish their P1 form; particle structural
+    defects and high-density review no longer share one policy ID. First-party
+    unit and release fixtures prove the intended mechanics; an external reviewer
+    has not yet labelled the hard/style boundary cases.
+20. **The studio process has a harness contract, not measured outcomes.**
+    Open/high-stakes multi-shot work now proves an all-shot still board and can
+    render a cut animatic before motion. No outside project yet shows that this
+    reduces discarded animation, time, tokens, or revision count.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. ✅ Figure text gate bypass fixed 2026-07-16 (ADR-0024).** Rendered figure DOM text now enters size, bounded-sample pixel contrast, safe-zone, reading-time, and overlap gates. The browser benchmark triggers all five and leaves a compliant control green. Rasterized text and sub-interval defects remain item 6.

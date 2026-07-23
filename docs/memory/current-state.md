@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-18 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Brand System:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0
+**Verified:** 2026-07-23 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Brand System:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0 · **Release Receipt:** 0.2.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -62,6 +62,14 @@ and CHANGELOG.
   choreography/transition neighborhoods, cross-scene overlap checks, staged
   target-safe outputs, final-mux loudness/peak measurement, and receipts that
   bind the creative artifacts, resolved render inputs, video, and evidence.
+- ADR-0041 separates P1/P2/P3 triage priority from `hard-defect`/`style-flag`
+  release behavior. Every emitted rule ID is registry-classified and unknown
+  IDs fail closed. Required-copy legibility is contextual to locked Intake/
+  Storyboard meaning. Exact rule/path/reason style acceptances are optional,
+  receipt-visible, and hash-bound; hard defects cannot be overridden. Mixed
+  contract rules explicitly make only their P1 form hard, dense particle fields
+  have a separate non-blocking review ID, and receipt verification remains
+  backward-compatible with protocol 0.1.
 - Package 0.4.0 is public on npm with valid `main`/`types`/`exports`/`bin`;
   isolated registry installation, `chitra --version`, and `chitra probe` pass.
   The public repository, release tag, security-reporting path, and protected
@@ -118,6 +126,10 @@ and CHANGELOG.
   geometry, even-dimension H.264 safety, scaled storage preflight, and an
   adversarial compact-UI comparison. Standard/high and evidence stills remain
   full resolution.
+- The create-video harness maps existing artifacts to a professional studio
+  process and inserts an all-shot still board plus optional cut animatic before
+  expensive motion on open/high-stakes multi-shot work. It adds no fifth
+  planning IR and forces neither brand nor logo.
 
 ## Evidence, not claims
 
@@ -155,7 +167,7 @@ and CHANGELOG.
   package matches SHA-256 `b1feb333f8c4cafa4852859e088dc9fa1162ffcfb7753c9f7bcff76123cdd79d`,
   installs in 5.6s/62.9 MiB with zero browser bytes, and completes a real
   first-frame transaction in 11.2s with warm npm dependencies.
-- Unit suite: 89 tests.
+- Unit suite: 94 tests.
 - Still-first directorial-search benchmark: three materially different Aether
   concepts lock and render comparable identity-free hero probes; CLI/library
   artifacts agree; exact cache reuse holds; changed Direction, manifest, packet,
@@ -178,8 +190,10 @@ and CHANGELOG.
   candidate enforcement, duplicate-reviewer rejection, and byte-identical CLI
   output. It proves mechanics; no real independent corpus has been collected.
 - Release-integrity benchmark: generated four-tier project releases through the
-  CLI at −13.98 LUFS/−12.51 dBTP; the receipt verifies immediately, changed
-  Score/output bytes are rejected, and input-overwriting targets are blocked.
+  CLI at −13.98 LUFS/−12.51 dBTP; receipt 0.2 and a protocol-0.1 compatibility
+  fixture verify, a P1 three-hero style choice releases with a hash-bound exact
+  acceptance, a missing target is refused as hard, changed Score/output bytes
+  are rejected, and input-overwriting targets are blocked.
 - Multimodal Intake benchmark: inline, local, and URL origins; local evidence;
   preferences and anti-reference; repeated locks identical; traversal, symlink
   escape, stale hash, duplicate ID, and unknown provenance links rejected.
@@ -243,16 +257,19 @@ remains the center of gravity; renderer work requires a specific target-film gap
 
 Ordered next slices:
 
-1. Send the verified 0.5.0 GitHub preview to outside users and measure
+1. Have an independent reviewer label ADR-0041's hard/style boundary fixtures;
+   then close rendered-pixel contrast and analytical/all-change-frame coverage.
+2. Send the verified 0.5.0 GitHub preview to outside users and measure
    network-cold install/first-frame across macOS, Windows, and Linux plus Cursor,
    Claude Code, and Codex. Publish stable npm 0.5.0 when authentication returns.
-2. Run ADR-0036 with outside reviewers and real briefs; measure time/token cost,
+3. Run the studio board/animatic route and ADR-0036 with outside reviewers and
+   real briefs; measure time/token cost,
    discarded-animation reduction, blind preference, and accepted revisions.
-3. Collect the pre-registered ≥20-case independent Creative Review study using
+4. Collect the pre-registered ≥20-case independent Creative Review study using
    real motion clips/audio and populate ADR-0032 with actual accepted outcomes.
-4. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
+5. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
    a pre-registered neutral ChitraBench against real baselines.
-5. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
+6. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
    ADR-0028 before claiming improvement. Add masks, deeper comps, blend modes,
    motion blur, or richer audio only when
    a rights-approved measured residual isolates that capability. Never infer
@@ -297,6 +314,11 @@ The evidence and reasoning for this rebaseline are in
 - The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”
   claim: it now has a sophisticated human plan/sketch/final-preview loop.
   Chitra still has no calibrated evidence that its critic or output is better.
+- The 2026-07-23 HyperFrames audit checks source commit `7a294f1` and published
+  `0.7.68`: HyperFrames now has broader runtime, mask/shader, registry, Figma,
+  media/TTS, player/Studio/SDK, cloud, and specialized workflow surfaces plus a
+  complete product-launch brief/capture/frame/storyboard/sketch/build/preview
+  process. Chitra does not have parity and makes no superiority claim.
 - GitHub vulnerability alerts/private reporting and protected `main` are live;
   a single maintainer remains a governance and review ceiling.
 
