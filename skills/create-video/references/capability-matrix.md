@@ -11,8 +11,8 @@ adds the production interpretation needed during Direction.
 | Video plates/footage | yes | yes | `edit-render` preserves clip audio; Score video elements remain visual-only. |
 | Cursor/type interactions | yes | yes | Not arbitrary website execution. |
 | Particles and motif morphs | yes | yes | No general physics simulation. |
-| 2D/2.5D transform keyframes | yes | yes | One-level groups; no deep local compositions. |
-| Masks, mattes, blend modes, deep comps | no | pre-rendered plate | Not first-class in Score/compiler. |
+| 2D/2.5D transform keyframes | yes | yes | Bounded local compositions; no nested time remapping/independent timelines. |
+| Masks, mattes, blend modes, deep comps | yes | yes | Static typed clips/mattes/blends/filters, depth ≤8; no animated masks, shaders, or raw runtime. |
 | Motion blur, depth of field, filmic post | no | pre-rendered plate | Screenshot backend has no temporal blur. |
 | Curated 3D card/coin/slab | yes | textures | Bounded geometry and synthetic camera/lights. |
 | Arbitrary product geometry/glTF | no | pre-rendered still/video | No glTF/custom mesh import. A slab is not a custom product. |

@@ -26,10 +26,11 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 5. **Expressiveness ceiling (partly closed)**: figures, video-in-scene,
    cursor/type choreography, real 3D primitives, DOM frame tracks, ADR-0028
    textured internal mesh/camera/light/exposure tracks, custom particles,
-   one-level parent groups, and rights-gated source-assisted assets are built.
-   Card Vault is still not exact: motion blur remains a measured gap, while
-   local-coordinate/deeper comps, masks/mattes, blend modes, back/side textures,
-   custom geometry/materials, and richer motif vocabulary remain typed-IR gaps.
+   ADR-0042 static typed masks/blends/filters and bounded local compositions,
+   and rights-gated source-assisted assets are built. Card Vault is still not
+   exact: motion blur remains a measured gap, while animated masks/shaders,
+   back/side textures, custom geometry/materials, alpha/HDR/color handling, and
+   richer motif vocabulary remain typed-IR/backend gaps.
 6. **Temporal gates are bounded, not exhaustive.** ADR-0027 samples output
    frames at ≤250ms intervals plus animation/cut/transition neighborhoods.
    Shorter violations between those frames can still slip through; every-frame
@@ -85,8 +86,8 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     transcript/clip-audio EDL and requested visual/audio evidence slices, but
     Chitra has no bundled transcription, deterministic semantic cut judgment,
     visual-event addressing outside transcript tokens, TTS/narration generation,
-    Lottie/Rive import, masks/mattes/blend modes/deep
-    local comps, mature player/studio, or distributed renderer. Brand System 0.1
+    Lottie/Rive import, animated masks/shaders, mature player/studio, or
+    distributed renderer. Brand System 0.1
     locks and renders exact rules/palette/type but does not automatically infer
     semantic roles or prove professional brand expression. “All competitor
     capabilities” is not a current claim.

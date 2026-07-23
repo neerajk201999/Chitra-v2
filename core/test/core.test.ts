@@ -16,7 +16,7 @@ import {
   runConformance,
   summarize,
 } from "../src/gates/index.js";
-import { pruneLegacyFrameCaches, renderStorageEstimate, sceneHash, type RenderSession } from "../src/render/index.js";
+import { pruneLegacyFrameCaches, renderInputFiles, renderStorageEstimate, sceneHash, type RenderSession } from "../src/render/index.js";
 import { browserCandidates } from "../src/browser/index.js";
 import { CAPABILITIES } from "../src/capabilities/index.js";
 import { validateBrandSystem } from "../src/brand/index.js";
@@ -687,7 +687,7 @@ describe("particle fields (ADR-0009)", () => {
   });
 });
 
-describe("transform composition groups (ADR-0021)", () => {
+describe("local compositions and compositing (ADR-0021/0042)", () => {
   it("renders a child once under an independently targetable parent", () => {
     const s = validFixture();
     s.scenes[0].elements.push(
@@ -704,14 +704,121 @@ describe("transform composition groups (ADR-0021)", () => {
     expect(html.indexOf('id="cold-open--dot-comp"')).toBeLessThan(html.indexOf('id="cold-open--grouped-dot"'));
     expect(runStaticGates(v.score).filter((finding) => finding.ruleId === "IR-GROUP-1")).toEqual([]);
   });
-  it("blocks missing, multiply-owned, and nested children", () => {
+  it("renders nested local coordinates and blocks missing, multiply-owned, and cyclic children", () => {
+    const nested = validFixture();
+    nested.scenes[0].elements.push(
+      { type: "shape", id: "nested-dot", shape: "circle", color: "accent", position: { anchor: "center" }, width: 50, height: 50 } as never,
+      { type: "scene3d", id: "nested-3d", position: { anchor: "center" }, width: 50, height: 50 } as never,
+      { type: "group", id: "inner-comp", children: ["nested-dot", "nested-3d"], position: { anchor: "center" }, width: 50, height: 50 } as never,
+      { type: "group", id: "outer-comp", children: ["inner-comp"], position: { anchor: "center" }, width: 50, height: 50 } as never,
+    );
+    const parsed = validateScore(nested);
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      const html = compile(parsed.score).html;
+      expect(html).toContain('id="cold-open--outer-comp"');
+      expect(html.indexOf('id="cold-open--outer-comp"')).toBeLessThan(html.indexOf('id="cold-open--inner-comp"'));
+      expect(html.indexOf('id="cold-open--inner-comp"')).toBeLessThan(html.indexOf('id="cold-open--nested-dot"'));
+      expect(html).toContain("width:240px;height:135px");
+      expect(html).toContain('data-3d="cold-open--nested-3d" width="240" height="135"');
+      expect(html).toContain("const renderWidth = canvas.width, renderHeight = canvas.height");
+    }
+
     const s = validFixture();
     s.scenes[0].elements.push(
       { type: "group", id: "group-a", children: ["thesis", "missing"] } as never,
       { type: "group", id: "group-b", children: ["thesis", "group-a"] } as never,
     );
-    expect(runStaticGates(s).filter((finding) => finding.ruleId === "IR-GROUP-1").length).toBe(3);
-    expect(() => compile(s)).toThrow(/missing child|belongs to both groups|cannot contain group/);
+    expect(runStaticGates(s).filter((finding) => finding.ruleId === "IR-GROUP-1").length).toBeGreaterThanOrEqual(2);
+    expect(() => compile(s)).toThrow(/missing child|belongs to both groups/);
+
+    const cyclic = validFixture();
+    cyclic.scenes[0].elements.push(
+      { type: "group", id: "cycle-a", children: ["cycle-b"] } as never,
+      { type: "group", id: "cycle-b", children: ["cycle-a"] } as never,
+    );
+    expect(runStaticGates(cyclic).some((finding) => finding.ruleId === "IR-GROUP-1" && /cycle/.test(finding.message))).toBe(true);
+    expect(() => compile(cyclic)).toThrow(/composition cycle/);
+
+    const duplicate = validFixture();
+    duplicate.scenes[0].elements.push(structuredClone(duplicate.scenes[0].elements[0]));
+    expect(validateScore(duplicate).ok).toBe(false);
+    expect(() => compile(duplicate)).toThrow(/duplicate element IDs/);
+    const duplicateAnimation = validFixture();
+    duplicateAnimation.scenes[0].choreography.push(structuredClone(duplicateAnimation.scenes[0].choreography[0]));
+    expect(validateScore(duplicateAnimation).ok).toBe(false);
+
+    const overDepth = validFixture();
+    for (let index = 8; index >= 0; index--)
+      overDepth.scenes[0].elements.push({
+        type: "group", id: `depth-${index}`,
+        children: [index === 8 ? "thesis" : `depth-${index + 1}`],
+      } as never);
+    const parsedDepth = validateScore(overDepth);
+    expect(parsedDepth.ok).toBe(true);
+    if (parsedDepth.ok) {
+      expect(runStaticGates(parsedDepth.score).some((finding) => finding.ruleId === "IR-GROUP-1" && /depth exceeds 8/.test(finding.message))).toBe(true);
+      expect(() => compile(parsedDepth.score)).toThrow(/composition depth exceeds 8/);
+    }
+  });
+
+  it("compiles typed blend, filters, clips, and gradient mattes without raw CSS", () => {
+    const score = validFixture();
+    score.scenes[0].elements[0].compositing = {
+      opacity: 0.8,
+      blendMode: "screen",
+      isolation: true,
+      filters: [
+        { kind: "blur", px: 12 },
+        { kind: "saturate", amount: 1.4 },
+      ],
+      clip: { kind: "polygon", points: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 80, y: 100 }] },
+      matte: {
+        kind: "linear-gradient", angleDeg: 90,
+        stops: [{ offset: 0, opacity: 0 }, { offset: 1, opacity: 1 }],
+      },
+    };
+    const parsed = validateScore(score);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const html = compile(parsed.score).html;
+    expect(html).toContain("mix-blend-mode:screen");
+    expect(html).toContain("filter:blur(12.000px) saturate(1.4)");
+    expect(html).toContain("clip-path:polygon(0% 0%,100% 0%,80% 100%)");
+    expect(html).toContain("mask-image:linear-gradient(90deg");
+    expect(html).not.toContain("[object Object]");
+
+    const invalid = structuredClone(score);
+    invalid.scenes[0].elements[0].compositing.matte.stops[1].offset = 0;
+    expect(validateScore(invalid).ok).toBe(false);
+  });
+
+  it("binds matte asset bytes into render inputs and scene hashes", () => {
+    const project = mkdtempSync(path.join(os.tmpdir(), "chitra-matte-"));
+    try {
+      mkdirSync(path.join(project, "assets"));
+      const matte = path.join(project, "assets/matte.png");
+      writeFileSync(matte, "matte-v1");
+      const score = validFixture();
+      score.scenes[0].elements[0].compositing.matte = {
+        kind: "asset", src: "assets/matte.png", mode: "alpha", fit: "cover",
+        positionX: 50, positionY: 50,
+      };
+      expect(renderInputFiles(score, project).some((file) => file.endsWith("/assets/matte.png"))).toBe(true);
+      const before = sceneHash(score, 0, project);
+      writeFileSync(matte, "matte-v2");
+      expect(sceneHash(score, 0, project)).not.toBe(before);
+
+      const svg = path.join(project, "assets/matte.svg");
+      writeFileSync(svg, '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2" fill="white"/></svg>');
+      score.scenes[0].elements[0].compositing.matte.src = "assets/matte.svg";
+      const parsed = validateScore(score);
+      expect(parsed.ok).toBe(true);
+      if (parsed.ok)
+        expect(compile(parsed.score, project).html).toContain("data:image/svg+xml;base64,");
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
   });
 });
 

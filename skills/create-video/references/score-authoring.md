@@ -24,7 +24,8 @@ Do not dump `core/src/ir/schema.ts` into context. Copy the closest element from
 - stat/chart primitives;
 - particles with typed formations/custom points;
 - curated card/coin/slab `scene3d` with bounded mesh/camera/light tracks;
-- one-level transform groups;
+- bounded nested local-coordinate groups with typed overflow/compositing;
+- typed clips, alpha/luminance or gradient mattes, blend modes, and filters;
 - music bed, sparse choreography-bound SFX, beat landmarks;
 - token presets and typed frame-addressed transform tracks.
 
@@ -62,8 +63,10 @@ user authorizes it; freeze outputs locally and record model/prompt/rights.
   to every movement.
 
 Use motion tokens/presets. Raw timing/easing requires an `override.reason`.
-Relational timing uses `at.after`. Exact transform tracks use typed keyframes;
-they do not turn an unsupported compositor into a supported one.
+Relational timing uses `at.after`. Exact transform tracks use typed keyframes.
+Compositing parameters are static: animate the outer element transform/opacity,
+or use an authorized pre-rendered plate when the concept needs animated masks,
+shaders, motion blur, or an independent nested timeline.
 
 ## Figure and source integrity
 

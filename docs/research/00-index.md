@@ -5,6 +5,7 @@ decisions live in the 2026-07-18 audit; do not treat old “current” claims as
 
 - [capability-audit-2026-07-18.md](capability-audit-2026-07-18.md) — source-verified current capability matrix and adopt/improve/replace/omit decisions.
 - [workflows-and-differentiation-2026-07-18.md](workflows-and-differentiation-2026-07-18.md) — real production effort, top-tier quality posture, and Chitra's product wedge.
+- [compositing-capability-closure-2026-07-23.md](compositing-capability-closure-2026-07-23.md) — ADR-0042 source decision and measured browser-pixel boundaries after the current HyperFrames audit.
 
 | Report | Subject | Role | One-line verdict |
 |---|---|---|---|

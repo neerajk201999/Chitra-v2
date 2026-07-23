@@ -36,8 +36,11 @@ and CHANGELOG.
   targets, deterministically mapped by point index with bounded coordinates.
 - ADR-0025 heterogeneous custom-particle appearance: bounded per-point size and
   opacity plus a field glow multiplier, deterministic through browser capture.
-- ADR-0021 one-level full-stage transform groups with single child ownership,
-  stable nested IDs, and compiler failures for invalid hierarchy.
+- ADR-0042 typed clips, static alpha/luminance and gradient mattes, 17 blend
+  modes, bounded filters/isolation, and nested local-coordinate groups to depth
+  eight. Motion and appearance use separate layers; matte bytes participate in
+  provenance/cache/release identity. Animated masks/shaders/time remapping
+  remain unsupported.
 - ADR-0015 Reference Decomposer: `chitra decompose` emits validated Style DNA
   with source hash/media facts, hard-cut rhythm, quantized palette,
   luminance/saturation, frame-difference energy, audio onsets, and shot evidence.
@@ -171,7 +174,11 @@ and CHANGELOG.
   package matches SHA-256 `b1feb333f8c4cafa4852859e088dc9fa1162ffcfb7753c9f7bcff76123cdd79d`,
   installs in 5.6s/62.9 MiB with zero browser bytes, and completes a real
   first-frame transaction in 11.2s with warm npm dependencies.
-- Unit suite: 94 tests.
+- Unit suite: 96 tests.
+- Typed compositing benchmark: nested local widths resolve 160→80→40 px;
+  persistent appearance filters survive outer motion filters; project-local
+  alpha and luminance matte pixels render correctly; changed matte bytes
+  invalidate scene identity; repeat capture is byte-identical.
 - Still-first directorial-search benchmark: three materially different Aether
   concepts lock and render comparable identity-free hero probes; CLI/library
   artifacts agree; exact cache reuse holds; changed Direction, manifest, packet,
@@ -274,10 +281,10 @@ Ordered next slices:
 5. Prove public/outside first use across Claude Code, Codex, and Cursor, then run
    a pre-registered neutral ChitraBench against real baselines.
 6. Keep Card Vault as an immutable renderer benchmark. Rerun it to measure
-   ADR-0028 before claiming improvement. Add masks, deeper comps, blend modes,
-   motion blur, or richer audio only when
-   a rights-approved measured residual isolates that capability. Never infer
-   source-use rights from possession of a reference.
+   ADR-0028/0042 before claiming improvement. Add animated masks/shaders, motion
+   blur, richer audio, or broader 3D only when a rights-approved measured
+   residual isolates that capability. Never infer source-use rights from
+   possession of a reference.
 
 The evidence and reasoning for this rebaseline are in
 [program review 0003](../reviews/0003-program-rebaseline.md).
@@ -312,8 +319,9 @@ The evidence and reasoning for this rebaseline are in
   npm 0.5.0 and three-harness outside-user timing remain open.
 - ADR-0033 vendors only the executed MIT Three.js module and nine OFL font
   files, removing five full runtime packages. With Transcript/Edit IR included,
-  the npm artifact is 586.1 kB compressed/2.2 MB unpacked before dependencies;
-  installed footprint falls
+  the pre-ADR-0042 npm artifact was 586.1 kB compressed/2.2 MB unpacked before
+  dependencies; ADR-0042 adds no runtime dependency and the full dry-run is
+  603.0 kB/2.4 MB. Installed footprint previously fell
   33% from 93.7 to 62.8 MiB. GSAP remains a normal licensed dependency.
 - The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”
   claim: it now has a sophisticated human plan/sketch/final-preview loop.
@@ -322,7 +330,10 @@ The evidence and reasoning for this rebaseline are in
   `0.7.68`: HyperFrames now has broader runtime, mask/shader, registry, Figma,
   media/TTS, player/Studio/SDK, cloud, and specialized workflow surfaces plus a
   complete product-launch brief/capture/frame/storyboard/sketch/build/preview
-  process. Chitra does not have parity and makes no superiority claim.
+  process. ADR-0042 closes Chitra's static typed masks/blends/local-composition
+  gap, but imported runtimes, animated shaders/masks, 3D breadth, narration,
+  Studio/player, alpha/HDR/codecs, and cloud remain; Chitra does not have parity
+  and makes no superiority claim.
 - GitHub vulnerability alerts/private reporting and protected `main` are live;
   a single maintainer remains a governance and review ceiling.
 

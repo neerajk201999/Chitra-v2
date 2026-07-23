@@ -47,7 +47,11 @@ function threeSource(): string {
 function imageDataUrl(projectDir: string, source: string): string {
   const file = resolveProjectAsset(projectDir, source);
   const ext = path.extname(file).toLowerCase();
-  const mime = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
+  const mime =
+    ext === ".png" ? "image/png"
+    : ext === ".webp" ? "image/webp"
+    : ext === ".svg" ? "image/svg+xml"
+    : "image/jpeg";
   return `data:${mime};base64,${readFileSync(file).toString("base64")}`;
 }
 
@@ -181,6 +185,86 @@ function posStyle(el: { position: { anchor: string; x?: number; y?: number } }):
   return `${xPart}${yPart}transform:translate(${tx},${ty});`;
 }
 
+function compositingStyle(el: ElementT, scale: number, projectDir: string): string {
+  // Internal tests and library callers may construct an already-typed Score
+  // without reparsing defaults. Preserve the pre-0042 visual identity.
+  const c = el.compositing ?? {
+    opacity: 1,
+    blendMode: "normal" as const,
+    isolation: false,
+    filters: [],
+  };
+  const filters = c.filters.map((filter) => {
+    switch (filter.kind) {
+      case "blur": return `blur(${(filter.px * scale).toFixed(3)}px)`;
+      case "brightness": return `brightness(${filter.amount})`;
+      case "contrast": return `contrast(${filter.amount})`;
+      case "saturate": return `saturate(${filter.amount})`;
+      case "hue-rotate": return `hue-rotate(${filter.deg}deg)`;
+      case "grayscale": return `grayscale(${filter.amount})`;
+      case "sepia": return `sepia(${filter.amount})`;
+    }
+  });
+  const parts = [
+    `opacity:${c.opacity}`,
+    `mix-blend-mode:${c.blendMode}`,
+    c.isolation ? "isolation:isolate" : "",
+    filters.length ? `filter:${filters.join(" ")}` : "",
+  ];
+  if (c.clip) {
+    let value: string;
+    switch (c.clip.kind) {
+      case "inset":
+        value = `inset(${c.clip.top}% ${c.clip.right}% ${c.clip.bottom}% ${c.clip.left}% round ${c.clip.radius}%)`;
+        break;
+      case "circle":
+        value = `circle(${c.clip.radius}% at ${c.clip.x}% ${c.clip.y}%)`;
+        break;
+      case "ellipse":
+        value = `ellipse(${c.clip.radiusX}% ${c.clip.radiusY}% at ${c.clip.x}% ${c.clip.y}%)`;
+        break;
+      case "polygon":
+        value = `polygon(${c.clip.points.map((point) => `${point.x}% ${point.y}%`).join(",")})`;
+        break;
+    }
+    parts.push(`clip-path:${value}`);
+  }
+  if (c.matte) {
+    let image: string;
+    let size = "100% 100%";
+    let position = "50% 50%";
+    let mode = "alpha";
+    if (c.matte.kind === "asset") {
+      // Inlining makes matte readiness part of compilation rather than browser
+      // I/O. This keeps first capture deterministic and makes the compiled page
+      // genuinely self-contained.
+      image = `url('${imageDataUrl(projectDir, c.matte.src)}')`;
+      size = c.matte.fit === "stretch" ? "100% 100%" : c.matte.fit;
+      position = `${c.matte.positionX}% ${c.matte.positionY}%`;
+      mode = c.matte.mode;
+    } else {
+      const stops = c.matte.stops
+        .map((stop) => `rgba(0,0,0,${stop.opacity}) ${(stop.offset * 100).toFixed(3)}%`)
+        .join(",");
+      image = c.matte.kind === "linear-gradient"
+        ? `linear-gradient(${c.matte.angleDeg}deg,${stops})`
+        : `radial-gradient(circle at ${c.matte.x}% ${c.matte.y}%,${stops})`;
+    }
+    parts.push(
+      `mask-image:${image}`,
+      `-webkit-mask-image:${image}`,
+      `mask-mode:${mode}`,
+      `mask-size:${size}`,
+      `-webkit-mask-size:${size}`,
+      `mask-position:${position}`,
+      `-webkit-mask-position:${position}`,
+      "mask-repeat:no-repeat",
+      "-webkit-mask-repeat:no-repeat",
+    );
+  }
+  return `${parts.filter(Boolean).join(";")};`;
+}
+
 function formatStat(value: number, format: string, decimals: number): string {
   switch (format) {
     case "percent":
@@ -262,10 +346,17 @@ function cursorSvg(variant: string, sizePx: number): string {
   return `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 24 24" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.35));display:block;">${variant === "hand" ? hand : arrow}</svg>`;
 }
 
-function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: string, projectDir: string): string {
+function renderElement(
+  el: ElementT,
+  score: ScoreT,
+  scale: number,
+  sceneId: string,
+  projectDir: string,
+  viewport: { width: number; height: number },
+): string {
   const p = score.style.palette;
   const wrap = (inner: string, extra = "") =>
-    `<div class="pos" style="${posStyle(el as never)}${extra}"><div class="el" id="${sceneId}--${el.id}">${inner}</div></div>`;
+    `<div class="pos" style="${posStyle(el as never)}${extra}"><div class="el" id="${sceneId}--${el.id}"><div class="comp" style="${compositingStyle(el, scale, projectDir)}">${inner}</div></div></div>`;
 
   switch (el.type) {
     case "text": {
@@ -276,7 +367,7 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       const weight = el.textRole === "kicker" ? 600 : el.textRole === "display" || el.textRole === "headline" ? score.style.displayWeight : score.style.textWeight;
       const tracking = el.textRole === "kicker" ? "0.14em" : el.textRole === "display" || el.textRole === "headline" ? `${score.style.trackingDisplay}em` : "0";
       const transform = el.textRole === "kicker" ? "text-transform:uppercase;" : "";
-      const maxW = el.maxWidth ? `max-width:${el.maxWidth * (score.meta.width / 100)}px;` : "";
+      const maxW = el.maxWidth ? `max-width:${el.maxWidth * (viewport.width / 100)}px;` : "";
       const lh = el.textRole === "body" || el.textRole === "caption" ? 1.5 : 1.08;
       // ADR-0008 type-in: split into char spans + caret when targeted by the preset
       const scene = score.scenes.find((s) => s.id === sceneId);
@@ -295,9 +386,9 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       );
     }
     case "shape": {
-      const w = (el.width * score.meta.width) / 100;
-      const h = el.shape === "line" ? Math.max(2, 2 * scale) : (el.height * score.meta.height) / 100;
-      const r = el.shape === "circle" ? "50%" : `${(el.radius * Math.min(score.meta.width, score.meta.height)) / 100}px`;
+      const w = (el.width * viewport.width) / 100;
+      const h = el.shape === "line" ? Math.max(2, 2 * scale) : (el.height * viewport.height) / 100;
+      const r = el.shape === "circle" ? "50%" : `${(el.radius * Math.min(viewport.width, viewport.height)) / 100}px`;
       const bgStyle =
         el.shape === "gradient-field"
           ? // centered ellipse fading fully inside the box — off-center ellipses
@@ -307,9 +398,9 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       return wrap(`<div style="width:${w}px;height:${h}px;border-radius:${r};${bgStyle}opacity:${el.opacity};"></div>`);
     }
     case "image": {
-      const w = (el.width * score.meta.width) / 100;
-      const h = (el.height * score.meta.height) / 100;
-      const r = `${(el.radius * Math.min(score.meta.width, score.meta.height)) / 100}px`;
+      const w = (el.width * viewport.width) / 100;
+      const h = (el.height * viewport.height) / 100;
+      const r = `${(el.radius * Math.min(viewport.width, viewport.height)) / 100}px`;
       const scrim = el.scrim > 0 ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,${el.scrim});border-radius:${r};"></div>` : "";
       return wrap(
         `<div style="position:relative;width:${w}px;height:${h}px;border-radius:${r};overflow:hidden;"><img src="${esc(el.src)}" style="width:100%;height:100%;object-fit:${el.fit};display:block;"/>${scrim}</div>`
@@ -320,18 +411,18 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       // the clip to JPEGs (deterministic; headless <video> seeking is not) and
       // injects the frame directory via __chitra.setMedia; the seek runtime
       // swaps src and awaits decode before any capture.
-      const w = (el.width * score.meta.width) / 100;
-      const h = (el.height * score.meta.height) / 100;
-      const r = `${(el.radius * Math.min(score.meta.width, score.meta.height)) / 100}px`;
+      const w = (el.width * viewport.width) / 100;
+      const h = (el.height * viewport.height) / 100;
+      const r = `${(el.radius * Math.min(viewport.width, viewport.height)) / 100}px`;
       const scrim = el.scrim > 0 ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,${el.scrim});border-radius:${r};"></div>` : "";
       return wrap(
         `<div style="position:relative;width:${w}px;height:${h}px;border-radius:${r};overflow:hidden;background:#000;"><img class="chitra-vid" data-vid="${esc(sceneId)}--${esc(el.id)}" style="width:100%;height:100%;object-fit:${el.fit};display:block;"/>${scrim}</div>`
       );
     }
     case "figure": {
-      const w = (el.width * score.meta.width) / 100;
-      const h = (el.height * score.meta.height) / 100;
-      const r = `${(el.radius * Math.min(score.meta.width, score.meta.height)) / 100}px`;
+      const w = (el.width * viewport.width) / 100;
+      const h = (el.height * viewport.height) / 100;
+      const r = `${(el.radius * Math.min(viewport.width, viewport.height)) / 100}px`;
       const file = resolveProjectAsset(projectDir, el.src);
       const fragment = sanitizeFragment(readFileSync(file, "utf8"));
       const declared = new Set(el.assets.map((asset) => asset.src));
@@ -349,8 +440,8 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       );
     }
     case "particles": {
-      const w = (el.width * score.meta.width) / 100;
-      const h = (el.height * score.meta.height) / 100;
+      const w = (el.width * viewport.width) / 100;
+      const h = (el.height * viewport.height) / 100;
       const n = el.formation === "grid" ? el.cols * el.rows : el.formation === "custom" ? el.points!.length : el.count;
       const dots = formationDots(el, el.formation, n, el.width, el.height);
       const col = colorOf(p, el.color);
@@ -371,8 +462,8 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       return wrap(`<div class="pfield" style="position:relative;width:${w}px;height:${h}px;">${dotDivs}</div>`);
     }
     case "scene3d": {
-      const w = Math.round((el.width * score.meta.width) / 100);
-      const h = Math.round((el.height * score.meta.height) / 100);
+      const w = Math.round((el.width * viewport.width) / 100);
+      const h = Math.round((el.height * viewport.height) / 100);
       // Canvas is driven by the inlined Three runtime via data-3d = scene--id.
       return wrap(
         `<canvas class="scene3d" data-3d="${esc(sceneId)}--${esc(el.id)}" width="${w}" height="${h}" style="width:${w}px;height:${h}px;display:block;"></canvas>`
@@ -399,8 +490,8 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
       );
     }
     case "chart-bar": {
-      const w = (el.width * score.meta.width) / 100;
-      const h = (el.height * score.meta.height) / 100;
+      const w = (el.width * viewport.width) / 100;
+      const h = (el.height * viewport.height) / 100;
       const max = Math.max(...el.series.map((s) => s.value));
       const n = el.series.length;
       const gap = w * 0.04;
@@ -424,25 +515,66 @@ function renderElement(el: ElementT, score: ScoreT, scale: number, sceneId: stri
   }
 }
 
-/** ADR-0021: group siblings under a full-stage parent transform context. */
+/** ADR-0021/0042: render reference-addressed local compositions recursively. */
 function renderSceneElements(elements: ElementT[], score: ScoreT, scale: number, sceneId: string, projectDir: string): string {
   const byId = new Map(elements.map((element) => [element.id, element]));
+  if (byId.size !== elements.length)
+    throw new Error(`Scene "${sceneId}": duplicate element IDs are not compilable`);
   const owner = new Map<string, string>();
   for (const group of elements.filter((element) => element.type === "group")) {
     for (const childId of group.children) {
       const child = byId.get(childId);
       if (!child) throw new Error(`Scene "${sceneId}": group "${group.id}" references missing child "${childId}"`);
-      if (child.type === "group") throw new Error(`Scene "${sceneId}": group "${group.id}" cannot contain group "${childId}" (ADR-0021 is one level)`);
       const prior = owner.get(childId);
       if (prior) throw new Error(`Scene "${sceneId}": element "${childId}" belongs to both groups "${prior}" and "${group.id}"`);
       owner.set(childId, group.id);
     }
   }
-  return elements.filter((element) => !owner.has(element.id)).map((element) => {
-    if (element.type !== "group") return renderElement(element, score, scale, sceneId, projectDir);
-    const children = element.children.map((childId) => renderElement(byId.get(childId)!, score, scale, sceneId, projectDir)).join("\n");
-    return `<div class="pos" style="left:0;top:0;"><div class="el group" id="${sceneId}--${element.id}" style="position:relative;width:${score.meta.width}px;height:${score.meta.height}px;">${children}</div></div>`;
-  }).join("\n");
+  const validateGroup = (groupId: string, ancestry: string[]): void => {
+    if (ancestry.includes(groupId))
+      throw new Error(`Scene "${sceneId}": composition cycle ${[...ancestry, groupId].join(" -> ")}`);
+    if (ancestry.length >= 8)
+      throw new Error(`Scene "${sceneId}": composition depth exceeds 8 at "${groupId}"`);
+    const group = byId.get(groupId);
+    if (group?.type !== "group") return;
+    const next = [...ancestry, groupId];
+    for (const childId of group.children)
+      if (byId.get(childId)?.type === "group") validateGroup(childId, next);
+  };
+  for (const element of elements)
+    if (element.type === "group") validateGroup(element.id, []);
+  const renderNode = (
+    element: ElementT,
+    viewport: { width: number; height: number },
+    ancestry: string[],
+  ): string => {
+    if (element.type !== "group")
+      return renderElement(element, score, scale, sceneId, projectDir, viewport);
+    if (ancestry.includes(element.id))
+      throw new Error(`Scene "${sceneId}": composition cycle ${[...ancestry, element.id].join(" -> ")}`);
+    if (ancestry.length >= 8)
+      throw new Error(`Scene "${sceneId}": composition depth exceeds 8 at "${element.id}"`);
+    const width = (element.width * viewport.width) / 100;
+    const height = (element.height * viewport.height) / 100;
+    const nextAncestry = [...ancestry, element.id];
+    const children = element.children
+      .map((childId) => renderNode(byId.get(childId)!, { width, height }, nextAncestry))
+      .join("\n");
+    const style = [
+      `position:relative;width:${width}px;height:${height}px`,
+    ].join(";");
+    const compStyle = [
+      "position:absolute;inset:0",
+      `overflow:${element.overflow}`,
+      compositingStyle(element, scale, projectDir),
+    ].join(";");
+    return `<div class="pos" style="${posStyle(element)}"><div class="el group" id="${sceneId}--${element.id}" style="${style}"><div class="comp" style="${compStyle}">${children}</div></div></div>`;
+  };
+  const stage = { width: score.meta.width, height: score.meta.height };
+  return elements
+    .filter((element) => !owner.has(element.id))
+    .map((element) => renderNode(element, stage, []))
+    .join("\n");
 }
 
 // ── Choreography → GSAP tween specs (serialized into the page) ────────────
@@ -778,8 +910,6 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
           frontTexture: el.frontTexture ? imageDataUrl(projectDir, el.frontTexture) : null,
           trackStartMs: track ? s3cursor + track.startMs : null,
           segments: segments ?? null,
-          w: Math.round((el.width * width) / 100),
-          h: Math.round((el.height * height) / 100),
           sceneStartMs: s3cursor,
         });
       }
@@ -805,6 +935,7 @@ html,body{background:#000;}
 .scene{position:absolute;inset:0;visibility:hidden;}
 .pos{position:absolute;}
 .el{will-change:transform,opacity;}
+.comp{will-change:filter,opacity;min-width:0;min-height:0;}
 #blackout{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:95;}
 .grain{position:absolute;inset:0;pointer-events:none;z-index:99;}
 .click-ring{position:absolute;border-radius:50%;border:2.5px solid #fff;opacity:0;box-shadow:0 0 12px rgba(255,255,255,0.35);}
@@ -1097,11 +1228,12 @@ ${threeSource()}
       const canvas = document.querySelector('canvas[data-3d="' + s.key + '"]');
       if (!canvas) continue;
       const renderer = new WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-      renderer.setSize(s.w, s.h, false);
+      const renderWidth = canvas.width, renderHeight = canvas.height;
+      renderer.setSize(renderWidth, renderHeight, false);
       renderer.toneMapping = ACESFilmicToneMapping;
       renderer.toneMappingExposure = s.exposure;
       const scene = new Scene();
-      const cam = new PerspectiveCamera(30, s.w / s.h, 0.1, 100);
+      const cam = new PerspectiveCamera(30, renderWidth / renderHeight, 0.1, 100);
       cam.position.set(0, 0, 7.5);
       // PMREM environment from a vertical gradient tinted by envTint.
       var pmrem = new PMREMGenerator(renderer);
