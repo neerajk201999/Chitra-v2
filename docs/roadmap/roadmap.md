@@ -123,8 +123,10 @@ Lottie JSON with normal/reverse/alternate frame mapping and a pinned,
 conditionally inlined SVG runtime. Remaining honest gaps vs
 Remotion/HyperFrames for exact reconstruction include animated masks/shaders,
 motion blur, back/side textures and custom 3D geometry/materials,
-alpha/HDR/color output, Rive/dotLottie/generic runtimes, and narration/TTS
-generation. Clip audio is native through ADR-0034 edit plates but not direct
+alpha/HDR/color output, Rive/dotLottie/generic runtimes, and bundled
+TTS/voice-model generation. ADR-0044 makes frozen provider-neutral narration,
+exact word-addressed choreography, music ducking, and the measured final bus
+native. Clip audio is native through ADR-0034 edit plates but not direct
 Score-video mixing. Automated exhaustive reference comparison and named ROI
 diagnostics are built (ADR-0019/0022).
 

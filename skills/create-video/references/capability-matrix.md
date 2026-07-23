@@ -18,8 +18,9 @@ adds the production interpretation needed during Direction.
 | Arbitrary product geometry/glTF | no | pre-rendered still/video | No glTF/custom mesh import. A slab is not a custom product. |
 | Environment reflections/cast shadows | no | pre-rendered still/video | No environment-map or shadow pipeline. |
 | General character/physics simulation | no | pre-rendered still/video | External 3D/video production required. |
-| Music bed and sparse SFX | yes | yes | Limited automation; final loudness measured. |
-| Voiceover generation/sync | no provider | supplied recording | Transcript IR has word timing; no TTS or narration-generation adapter. |
+| Music bed and sparse SFX | yes | generated/supplied audio | Narration-aware ducking and measured final bus; no general DAW graph. |
+| Frozen voiceover and word-synced overlays | yes | supplied/generated audio | Exact word IDs can time any choreography; no phoneme/lip sync or automatic caption styling. |
+| Narration/TTS generation | no provider bundled | host TTS or supplied recording | Freeze audio and exact word timings locally; core has no credentials, voice model, or cloning. |
 | Transcript-addressed footage EDL | yes | transcription provider | Locked word timeline, compact pack, quote-conformed EDL, rendered audio-preserving plate. |
 | Requested footage/cut evidence | yes | — | EDL-selected filmstrips, waveforms, cut strips, and neutral diagnostics; semantic quality still needs review. |
 | Seekable vector Lottie JSON | yes | pre-rendered plate | Typed local vector JSON only; no expressions, external image/font assets, dotLottie, or arbitrary runtime. |

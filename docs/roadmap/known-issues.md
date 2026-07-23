@@ -10,13 +10,13 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
    remain full resolution. Full-fps release still needs streaming/chunking or a
    new backend (M5).
 2. **No paint-settle guarantee** between `seek()` and screenshot beyond empirical determinism on macOS; Linux/CI golden-frame verification pending (M5). Determinism claims are same-machine only.
-3. **Audio covers music + SFX + detected beat timing and transcript-edited clip
-   audio** (ADR-0007/0011/0027/0034). `edit-render` preserves source audio,
-   synthesizes silence for mixed silent clips, applies cut fades, and normalizes
-   its bus; Score video elements remain visual-only. There is still no TTS/
-   narration generation adapter, energy-envelope property track, or automatic
-   word-aligned overlay sync. Music-led release muxes remain measured at −14
-   ±0.5 LUFS with true peak ≤−1.5 dBTP. (M2 remainder.)
+3. **Audio covers music + SFX + frozen narration/word timing and
+   transcript-edited clip audio** (ADR-0007/0011/0027/0034/0044).
+   `at.onNarrationWord` synchronizes any choreography, music ducks under voice,
+   and the mixed program is measured at −14 ±0.5 LUFS with true peak ≤−1.5
+   dBTP. `edit-render` preserves source audio and applies cut fades. Score video
+   elements remain visual-only; core still has no TTS/voice model, phoneme/lip
+   sync, general automation graph, or energy-envelope property track.
 4. **VLM critic unproven**: ADR-0029 provides the review contract and ADR-0030
    provides blind-panel provenance, consensus, disagreement, consent, coverage,
    and separate agreement metrics. The four existing cases remain author-
@@ -85,7 +85,7 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
 16. **Major user-job parity gaps remain.** ADR-0034/0035 close the first
     transcript/clip-audio EDL and requested visual/audio evidence slices, but
     Chitra has no bundled transcription, deterministic semantic cut judgment,
-    visual-event addressing outside transcript tokens, TTS/narration generation,
+    visual-event addressing outside transcript tokens, bundled TTS/narration generation,
     Rive/dotLottie/generic runtime import, animated masks/shaders, mature player/studio, or
     distributed renderer. Brand System 0.1
     locks and renders exact rules/palette/type but does not automatically infer

@@ -42,13 +42,18 @@ export function measureAudio(file: string, targetTruePeak = -1.8): AudioMeasurem
   };
 }
 
-export function audioInvariantIssues(measurement: AudioMeasurement, hasMusic: boolean, hasSfx: boolean): string[] {
-  if (!hasMusic && !hasSfx) return measurement.status === "missing" ? [] : ["silent Score unexpectedly contains an audio stream"];
+export function audioInvariantIssues(
+  measurement: AudioMeasurement,
+  hasMusic: boolean,
+  hasSfx: boolean,
+  hasNarration = false,
+): string[] {
+  if (!hasMusic && !hasSfx && !hasNarration) return measurement.status === "missing" ? [] : ["silent Score unexpectedly contains an audio stream"];
   if (measurement.status === "missing") return ["Score declares audio but the final mux has no audio stream"];
   const issues: string[] = [];
   if (measurement.truePeakDbtp == null) issues.push("final true peak is not measurable");
   else if (measurement.truePeakDbtp > -1.5) issues.push(`final true peak ${measurement.truePeakDbtp.toFixed(2)} dBTP exceeds −1.5 dBTP`);
-  if (hasMusic) {
+  if (hasMusic || hasNarration) {
     if (measurement.integratedLufs == null) issues.push("final integrated loudness is not measurable");
     else if (Math.abs(measurement.integratedLufs + 14) > 0.5)
       issues.push(`final integrated loudness ${measurement.integratedLufs.toFixed(2)} LUFS is outside −14 ±0.5 LU`);

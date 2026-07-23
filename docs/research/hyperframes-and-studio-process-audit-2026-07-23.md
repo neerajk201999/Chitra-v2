@@ -52,12 +52,12 @@ the false conclusion that feature breadth is free.
 | Strategy | audience, single proposition, claims, desired response | intent interview and brief | typed objective, single message, preferences, anti-references | keep Chitra |
 | Concept pitches | explore distinct ways to make the proposition felt | intent pitch round and workflow concepts | 2–4 locked Directions and identity-free probes | keep; collect independent outcomes |
 | Treatment / visual language | define frame system, type, palette, motif, camera, sound | `frame.md` preset remixed to brand | Direction visual/sound thesis plus optional Brand System | keep flexible; never force a preset or brand |
-| Script and beat structure | turn strategy into a causal temporal story | `STORYBOARD.md` + `SCRIPT.md` | Direction beats + typed Storyboard; narration script not first-class | add narration adapter/script contract later |
+| Script and beat structure | turn strategy into a causal temporal story | `STORYBOARD.md` + `SCRIPT.md` | Direction beats + typed Storyboard; ADR-0044 locks narration script/word clock in Score | keep provider-neutral; improve script review separately |
 | Style frames and board | validate every important composition before animation | sketch board and frame visual design | selected-direction still probes plus post-Score hero evidence | add all-shot still-board checkpoint in harness |
 | Animatic | validate duration, cuts, copy, scratch audio and arc cheaply | sketch/build preview loop | no explicit pre-motion cut animatic | add optional still-only Score animatic in harness |
 | Production planning | assign shots, dependencies, risks and acceptance | per-frame packets/workers | typed production requirements but no shot-status manifest | add only when multi-worker evidence warrants |
 | Animation/compositing | build authored motion and image treatment | broad HTML/runtime/registry surface | narrow typed Score/GSAP/curated Three surface | expand from fixed benchmark residuals |
-| Edit and sound | make picture, voice, music and SFX one temporal system | narration, BGM/SFX, captions and audio metadata | music/SFX, beat grid, transcript edit plates; no TTS/narration adapter | P0 parity gap |
+| Edit and sound | make picture, voice, music and SFX one temporal system | narration, BGM/SFX, captions and audio metadata | frozen narration, word-addressed choreography, music ducking, SFX, measured bus; no bundled TTS | generation remains asset-assisted |
 | Review | judge watched work and revise locally | plan/sketch/final Studio checkpoints, diagnostics | evidence sheets, isolated Creative Review, selector-bound IR patches | Chitra differentiator only after calibration |
 | Online/QC/mastering | validate final delivered bytes | lint/check/render/player/cloud | rendered gates, mux measurement, staged release and hash receipt | Chitra strength; finish policy/pixel/cross-OS gaps |
 
@@ -87,7 +87,8 @@ blocked by:
   vector-only Lottie JSON is native under ADR-0043);
 - arbitrary HTML/runtime adapters or an equivalent safe extension boundary;
 - custom glTF/PBR/environment/shadow/post-production scenes;
-- narration/TTS and word-synchronized Score audio;
+- bundled narration/TTS generation (word-synchronized Score audio is native
+  under ADR-0044);
 - mature player/Studio and interactive review;
 - transparent overlays, broader codecs/HDR/color pipeline;
 - scalable/cloud rendering.

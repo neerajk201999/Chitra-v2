@@ -3,7 +3,8 @@
 Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 (Quality Engine), ADR-0005 (distribution), ADR-0017 (Intake), ADR-0018
 (creative ladder), ADR-0036 (still-first Direction selection), ADR-0042
-(typed compositing and local compositions), ADR-0043 (typed seekable Lottie).
+(typed compositing and local compositions), ADR-0043 (typed seekable Lottie),
+ADR-0044 (provider-neutral narration and word clock).
 
 ```
                         USER'S CODING AGENT (Claude Code / Codex / Cursor / Gemini CLI)
@@ -57,7 +58,7 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
   gates/     Quality Engine layers 1–2 (ID-tagged rules, thresholds from motion/)
   evidence/  contact sheets: filmstrip @ cut boundaries + waveform + timing labels;
              per-scene hero frames (input for VLM critics)
-  audio/     beat grid extraction, final-bus loudness, mix, and sync points
+  audio/     beat/word clocks, narration ducking, final-bus loudness, mix, sync
   assets/    fonts, images, footage ingest (hashing, license provenance)
 ```
 
