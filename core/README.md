@@ -6,9 +6,8 @@ Requires Node 22.12+, FFmpeg on `PATH`, and installed Chrome, Chromium, or Edge.
 Chitra uses `puppeteer-core` and does not download a browser during install.
 
 ```bash
-# Stable registry command (public registry currently serves 0.4.0):
-npm install -g chitra-video
-chitra probe
+# One command: install the exact CLI, matching agent skills, and verify host tools.
+npx --yes chitra-video@next setup
 chitra capabilities --json                     # native/assisted/unsupported truth
 chitra intake intake.json -o intake.lock.json # objective + mixed-source provenance
 chitra transcript-lock transcript.json -o transcript.lock.json --project . # exact footage + word timing
@@ -37,13 +36,13 @@ chitra release intake.lock.json direction.json storyboard.json score.json -o out
 chitra verify-release out/release.json          # verify the bound release artifacts
 ```
 
-For the current SHA-pinned prerelease command, use the public repository's
-[install guide](https://github.com/neerajk201999/Chitra-v2/blob/main/docs/INSTALL.md).
-The package README deliberately does not embed a candidate's own immutable URL;
-doing so would change the candidate bytes after its URL and digest are assigned.
+Use `chitra setup --agent cursor` (or `claude-code`, `codex`, `gemini-cli`) to
+target one agent explicitly. The public [install guide](https://github.com/neerajk201999/Chitra-v2/blob/main/docs/INSTALL.md)
+has source-development and troubleshooting paths.
 
-The npm package is the deterministic CLI. For the complete agent workflow,
-clone and open the public repository in Claude Code, Codex, Cursor, or Gemini:
+The npm package carries the deterministic CLI and frozen matching agent kit.
+Clone the public repository only to develop Chitra or inspect its full memory,
+examples, ADRs, and benchmarks:
 
 ```bash
 git clone https://github.com/neerajk201999/Chitra-v2.git

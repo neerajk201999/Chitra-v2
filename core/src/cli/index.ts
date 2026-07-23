@@ -59,6 +59,22 @@ function fail(msg: string): never {
   process.exit(2);
 }
 
+async function runProbe(): Promise<boolean> {
+  const ff = spawnSync("ffmpeg", ["-version"], { encoding: "utf8" });
+  console.log(ff.status === 0 ? `✔ ffmpeg: ${ff.stdout.split("\n")[0]}` : "✖ ffmpeg not found on PATH — install ffmpeg");
+  try {
+    const executable = resolveBrowserExecutable();
+    const browser = await launchBrowser({ headless: true });
+    const version = await browser.version();
+    await browser.close();
+    console.log(`✔ browser: ${version} (${executable})`);
+    return ff.status === 0;
+  } catch (error) {
+    console.log(`✖ browser: ${(error as Error).message}`);
+    return false;
+  }
+}
+
 function loadStyleAcceptances(file?: string): StyleAcceptance[] {
   if (!file) return [];
   const absolute = path.resolve(file);
@@ -1199,22 +1215,34 @@ program
   });
 
 program
+  .command("setup")
+  .option("--agent <agent>", "agent target: cursor, claude-code, codex, gemini-cli, or *", "*")
+  .option("--no-global", "do not install this exact CLI version globally")
+  .option("--skip-probe", "skip FFmpeg and browser verification")
+  .description("One-command install: persist the CLI, install matching Chitra skills, then verify the render host")
+  .action(async (opts: { agent: string; global: boolean; skipProbe?: boolean }) => {
+    const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+    const agentKit = path.join(packageRoot, "runtime-assets", "agent-kit");
+    if (!existsSync(path.join(agentKit, "skills", "manifest.json")))
+      fail("this Chitra package has no bundled agent kit; install a current chitra-video release");
+    if (opts.global) {
+      const install = spawnSync("npm", ["install", "--global", `chitra-video@${packageVersion}`], { encoding: "utf8" });
+      if (install.status !== 0)
+        fail(`could not install the CLI globally: ${(install.stderr || install.stdout).trim().slice(-500)}`);
+      console.log(`✔ CLI installed globally: chitra-video@${packageVersion}`);
+    }
+    const skills = spawnSync("npx", ["--yes", "skills", "add", agentKit, "--agent", opts.agent, "--skill", "*", "--copy", "--global", "--yes"], { encoding: "utf8" });
+    if (skills.status !== 0)
+      fail(`could not install Chitra skills: ${(skills.stderr || skills.stdout).trim().slice(-500)}`);
+    console.log(`✔ matching Chitra skills installed for ${opts.agent}`);
+    if (!opts.skipProbe && !(await runProbe())) process.exitCode = 1;
+  });
+
+program
   .command("probe")
   .description("Verify ffmpeg and launch an installed system browser")
   .action(async () => {
-    const ff = spawnSync("ffmpeg", ["-version"], { encoding: "utf8" });
-    console.log(ff.status === 0 ? `✔ ffmpeg: ${ff.stdout.split("\n")[0]}` : "✖ ffmpeg not found on PATH — install ffmpeg");
-    try {
-      const executable = resolveBrowserExecutable();
-      const browser = await launchBrowser({ headless: true });
-      const version = await browser.version();
-      await browser.close();
-      console.log(`✔ browser: ${version} (${executable})`);
-    } catch (error) {
-      console.log(`✖ browser: ${(error as Error).message}`);
-      process.exitCode = 1;
-    }
-    if (ff.status !== 0) process.exitCode = 1;
+    if (!(await runProbe())) process.exitCode = 1;
   });
 
 /** A minimal three-scene score that passes every gate in every register. */

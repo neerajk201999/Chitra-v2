@@ -4,7 +4,7 @@ All notable user-visible changes are recorded here. The format follows Keep a
 Changelog; versions follow Semantic Versioning. Motion IR compatibility is
 versioned separately.
 
-## [0.6.0-rc.1] — 2026-07-23
+## [0.6.0-rc.2] — 2026-07-23
 
 ### Changed
 
@@ -23,6 +23,10 @@ versioned separately.
 
 ### Added
 
+- `npx --yes chitra-video@next setup`: persists the exact CLI globally,
+  installs the same packaged skills for detected or named agent harnesses, and
+  verifies FFmpeg plus a real system browser. The package now carries a frozen
+  agent kit, avoiding a mutable repository/CLI mismatch during installation.
 - ADR-0045 Frame System 0.1: native free/stack/grid local layout, bounded
   reasoned optical typography treatments, rendered focal/reading/alignment/gap
   contracts, all-element browser geometry, and `chitra stage-check` ownership

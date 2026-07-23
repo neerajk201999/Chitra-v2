@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-23 · **Package:** 0.6.0-rc.1 · **Intake IR:** 0.1.0 · **Brand System:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0 · **Release Receipt:** 0.2.0
+**Verified:** 2026-07-23 · **Package:** 0.6.0-rc.2 · **Intake IR:** 0.1.0 · **Brand System:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0 · **Release Receipt:** 0.2.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -342,7 +342,8 @@ The evidence and reasoning for this rebaseline are in
   603.0 kB/2.4 MB. ADR-0043's pinned Lottie SVG build moves the measured dry-run
   to 669.8 kB/2.7 MB without adding an npm dependency; ADR-0044's typed
   narration/mix path moves it to 672.1 kB/2.7 MB. ADR-0045's Frame System and
-  staged handoff code measures 680.6 kB/2.7 MB, still with no new dependency.
+  staged handoff code measures 680.6 kB/2.7 MB. The rc.2 frozen agent kit
+  moves the package to 701.1 kB/2.8 MB with no new runtime dependency.
   Compiled Scores include Lottie runtime bytes only when they contain Lottie. Installed footprint previously fell
   33% from 93.7 to 62.8 MiB. GSAP remains a normal licensed dependency.
 - The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”
