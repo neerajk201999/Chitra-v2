@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { Command } from "commander";
 import { validateScore, validateDirection, validateStoryboard, type ScoreT, type DirectionT, type StoryboardT } from "../ir/schema.js";
-import { FRAME_GATE_INTERVAL_MS, frameGateSampleTimes, runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runBrandConformance, runCreativeConformance, summarize, type Finding } from "../gates/index.js";
+import { FRAME_GATE_INTERVAL_MS, applyGatePolicies, applyStyleAcceptances, frameGateSampleTimes, runStaticGates, runFrameGates, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runBrandConformance, runCreativeConformance, summarize, type Finding, type StyleAcceptance } from "../gates/index.js";
 import { COMPILER_CACHE_VERSION, openSession, renderScore, type Quality } from "../render/index.js";
 import { launchBrowser, resolveBrowserExecutable } from "../browser/index.js";
 import { CAPABILITIES, CAPABILITY_MATRIX_VERSION } from "../capabilities/index.js";
@@ -58,6 +58,25 @@ function fail(msg: string): never {
   process.exit(2);
 }
 
+function loadStyleAcceptances(file?: string): StyleAcceptance[] {
+  if (!file) return [];
+  const absolute = path.resolve(file);
+  if (!existsSync(absolute)) fail(`No such style-acceptance file: ${absolute}`);
+  let raw: unknown;
+  try { raw = JSON.parse(readFileSync(absolute, "utf8")); }
+  catch (error) { fail(`Invalid JSON in ${file}: ${(error as Error).message}`); }
+  const list = Array.isArray(raw) ? raw : typeof raw === "object" && raw !== null && Array.isArray((raw as { acceptances?: unknown }).acceptances)
+    ? (raw as { acceptances: unknown[] }).acceptances
+    : fail("style-acceptance file must be an array or { \"acceptances\": [...] }");
+  return list.map((entry, index) => {
+    if (typeof entry !== "object" || entry === null) fail(`style acceptance ${index} must be an object`);
+    const value = entry as Record<string, unknown>;
+    if (typeof value.ruleId !== "string" || typeof value.path !== "string" || typeof value.reason !== "string")
+      fail(`style acceptance ${index} requires string ruleId, path, and reason`);
+    return { ruleId: value.ruleId, path: value.path, reason: value.reason };
+  });
+}
+
 function parseCompareRegion(spec: string): CompareRegion {
   const parts = spec.split(":");
   if (parts.length !== 5 && parts.length !== 7) fail(`--region must be id:x:y:width:height[:startPair:endPair], got "${spec}"`);
@@ -68,16 +87,18 @@ function parseCompareRegion(spec: string): CompareRegion {
 }
 
 function printFindings(findings: Finding[], json: boolean) {
-  const s = summarize(findings);
+  const classified = applyGatePolicies(findings);
+  const s = summarize(classified);
   if (json) {
-    console.log(JSON.stringify({ findings, summary: s }, null, 2));
+    console.log(JSON.stringify({ findings: classified, summary: s }, null, 2));
     return s;
   }
-  for (const f of [...findings].sort((a, b) => a.severity.localeCompare(b.severity))) {
+  for (const f of [...classified].sort((a, b) => a.severity.localeCompare(b.severity))) {
     const tc = f.timecodeMs != null ? ` @${(f.timecodeMs / 1000).toFixed(2)}s` : "";
-    console.log(`  ${f.severity} [${f.ruleId}] ${f.path}${tc}\n     ${f.message}`);
+    const accepted = f.accepted ? ` · accepted: ${f.accepted.reason}` : "";
+    console.log(`  ${f.severity} ${f.policy} [${f.ruleId}] ${f.path}${tc}${accepted}\n     ${f.message}`);
   }
-  console.log(`\n${s.releasable ? "✔" : "✖"} ${s.p1} P1 · ${s.p2} P2 · ${s.p3} P3 — ${s.releasable ? "gates green" : "P1 findings block release"}`);
+  console.log(`\n${s.releasable ? "✔" : "✖"} ${s.hardDefects} hard defects · ${s.styleFlags} style flags (${s.acceptedStyleFlags} accepted) · ${s.p1} P1 / ${s.p2} P2 / ${s.p3} P3 — ${s.releasable ? "release policy green" : "hard defects block release"}`);
   return s;
 }
 
@@ -624,15 +645,15 @@ program
   .option("-o, --out <file>", "output mp4", "out.mp4")
   .option("-q, --quality <q>", "draft | standard | high", "standard")
   .option("--json", "machine-readable output")
-  .option("--force", "render even with P1 static-gate findings")
-  .description("Deterministic render to H.264 (per-scene cache; only dirty scenes re-render). Refuses P1 findings unless --force.")
+  .option("--force", "diagnostic render even with hard static defects; never permits release")
+  .description("Deterministic render to H.264 (per-scene cache; only dirty scenes re-render). Refuses hard defects unless diagnostic --force is explicit.")
   .action(async (file: string, opts: { out: string; quality: string; json?: boolean; force?: boolean }) => {
     const { score, projectDir } = loadScore(file);
     if (!["draft", "standard", "high"].includes(opts.quality)) fail(`quality must be draft|standard|high`);
-    const staticFindings = runStaticGates(score).filter((x) => x.severity === "P1");
+    const staticFindings = applyGatePolicies(runStaticGates(score)).filter((x) => x.policy === "hard-defect");
     if (staticFindings.length && !opts.force) {
       printFindings(staticFindings, !!opts.json);
-      fail("P1 findings block render — fix them or pass --force");
+      fail("hard defects block render — fix them or pass --force");
     }
     const r = await renderScore(score, projectDir, opts.out, {
       quality: opts.quality as Quality,
@@ -668,11 +689,17 @@ program
   .option("-r, --receipt <file>", "release receipt JSON", "out/release.json")
   .option("-q, --quality <q>", "standard | high", "high")
   .option("--brand <file>", "locked Brand System required when score.meta.brand is present")
+  .option("--accept-style <file>", "selector-bound accepted style flags JSON; never overrides hard defects")
   .option("--json", "machine-readable output")
   .description("Verified release transaction: creative/static/rendered gates → final render/audio → evidence → hash-bound receipt (ADR-0027)")
-  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { out: string; evidence: string; receipt: string; quality: string; brand?: string; json?: boolean }) => {
+  .action(async (intakeFile: string, directionFile: string, storyboardFile: string, scoreFile: string, opts: { out: string; evidence: string; receipt: string; quality: string; brand?: string; acceptStyle?: string; json?: boolean }) => {
     if (!['standard', 'high'].includes(opts.quality)) fail("release quality must be standard|high");
-    const artifacts: ReleaseArtifacts = { intake: intakeFile, direction: directionFile, storyboard: storyboardFile, score: scoreFile, ...(opts.brand ? { brand: opts.brand } : {}) };
+    const artifacts: ReleaseArtifacts = {
+      intake: intakeFile, direction: directionFile, storyboard: storyboardFile, score: scoreFile,
+      ...(opts.brand ? { brand: opts.brand } : {}),
+      ...(opts.acceptStyle ? { styleAcceptances: opts.acceptStyle } : {}),
+    };
+    const styleAcceptances = loadStyleAcceptances(opts.acceptStyle);
     const intake = await loadIntake(intakeFile);
     const direction = loadDirection(directionFile);
     const storyboard = loadStoryboard(storyboardFile);
@@ -683,14 +710,14 @@ program
     const tool = { packageVersion, compilerCacheVersion: COMPILER_CACHE_VERSION };
     const before = releaseFingerprint(artifacts, score, projectDir, tool);
     assertReleaseTargets(artifacts, score, projectDir, opts);
-    const findings = [
+    let findings = applyGatePolicies([
       ...runCreativeConformance(intake, direction, storyboard, score, projectDir),
       ...(brand ? runBrandConformance(brand, intake, direction, score) : []),
       ...runStaticGates(score),
-    ];
-    if (findings.some((finding) => finding.severity === "P1")) {
+    ], { intake, storyboard });
+    if (findings.some((finding) => finding.policy === "hard-defect")) {
       printFindings(findings, !!opts.json);
-      fail("P1 findings block release");
+      fail("hard defects block release");
     }
 
     const tag = `${before.inputHash.slice(0, 12)}-${process.pid}`;
@@ -704,10 +731,13 @@ program
       const session = await openSession(score, projectDir, path.join(projectDir, ".chitra-cache"));
       let evidence: Awaited<ReturnType<typeof generateEvidence>>;
       try {
-        findings.push(...await runFrameGates(score, session));
-        if (findings.some((finding) => finding.severity === "P1")) {
+        findings = applyStyleAcceptances(
+          applyGatePolicies([...findings, ...await runFrameGates(score, session)], { intake, storyboard }),
+          styleAcceptances,
+        );
+        if (findings.some((finding) => finding.policy === "hard-defect")) {
           printFindings(findings, !!opts.json);
-          throw new Error("rendered P1 findings block release");
+          throw new Error("rendered hard defects block release");
         }
         evidence = await generateEvidence(score, session, stagedEvidence);
       } finally {

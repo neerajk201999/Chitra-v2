@@ -1,8 +1,8 @@
 # Chitra — Agent Entry Point
 
-Chitra creates cinematic motion-design videos: you direct through four JSON artifacts, a deterministic core validates/renders/gates, then you critique the rendered evidence and revise.
+Chitra creates cinematic motion-design videos: you direct through four JSON artifacts, prove open/multi-shot work with an all-shot still board and optional cut animatic, then a deterministic core validates/renders/gates before evidence-bound critique and revision.
 
-**To create a video:** follow [skills/create-video/SKILL.md](skills/create-video/SKILL.md) exactly — `intake.json` → locked provenance → bounded still-first Direction search when ambiguity warrants it → selected `direction.json` → `storyboard.json` → `score.json` → draft render → evidence → critique (≤3 passes) → `chitra release` + verified receipt.
+**To create a video:** follow [skills/create-video/SKILL.md](skills/create-video/SKILL.md) exactly — `intake.json` → locked provenance → bounded still-first Direction search when ambiguity warrants it → selected `direction.json` → `storyboard.json` → all-shot board/animatic when warranted → `score.json` → draft render → evidence → critique (≤3 passes) → `chitra release` + verified receipt.
 
 **To critique a render:** follow [skills/critique-video/SKILL.md](skills/critique-video/SKILL.md) — watch before reading intent or gates; emit an evidence-bound Creative Review 0.1 with `CR-*` principles, fixes, expected effects, and uncertainty.
 

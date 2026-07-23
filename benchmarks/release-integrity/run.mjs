@@ -66,7 +66,61 @@ try {
   assert(released.audio.truePeakDbtp <= -1.5, `true peak ${released.audio.truePeakDbtp}`);
   const verified = verifyReleaseReceipt(receipt);
   assert(verified.ok, verified.issues.join("; "));
+  assert.equal(verified.receipt.receiptVersion, "0.2.0");
   assert(verified.receipt.gates.sampledFrames > 3);
+  assert(verified.receipt.gates.findings.every((finding) => finding.policy === "hard-defect" || finding.policy === "style-flag"));
+  const legacy = structuredClone(verified.receipt);
+  legacy.receiptVersion = "0.1.0";
+  legacy.gates.findings = legacy.gates.findings.map(({ policy: _policy, accepted: _accepted, ...finding }) => finding);
+  legacy.gates.summary = {
+    p1: legacy.gates.summary.p1,
+    p2: legacy.gates.summary.p2,
+    p3: legacy.gates.summary.p3,
+    releasable: legacy.gates.summary.releasable,
+  };
+  const legacyReceipt = path.join(project, "out/release-0.1.json");
+  writeFileSync(legacyReceipt, JSON.stringify(legacy, null, 2));
+  const legacyVerified = verifyReleaseReceipt(legacyReceipt);
+  assert(legacyVerified.ok, `0.1 release receipts must remain verifiable: ${legacyVerified.issues.join("; ")}`);
+
+  const styleScore = structuredClone(score);
+  styleScore.scenes[0].elements[0].role = "hero";
+  styleScore.scenes[0].elements.push({
+    type: "shape", id: "halo", role: "hero", shape: "circle",
+    position: { anchor: "center", x: 50, y: 50 }, width: 50, height: 50,
+    color: "accent", opacity: 0.08,
+  });
+  writeFileSync(path.join(project, "score-style.json"), JSON.stringify(styleScore, null, 2));
+  const acceptances = [{ ruleId: "MO-CHOR-2", path: "scenes[0].elements", reason: "Intentional ensemble hierarchy" }];
+  writeFileSync(path.join(project, "style-acceptances.json"), JSON.stringify({ acceptances }, null, 2));
+  const styleOut = path.join(project, "style/final.mp4");
+  const styleEvidence = path.join(project, "style/evidence");
+  const styleReceipt = path.join(project, "style/release.json");
+  const styled = JSON.parse(run(process.execPath, [
+    cli, "release", path.join(project, "intake.lock.json"), path.join(project, "direction.json"),
+    path.join(project, "storyboard.json"), path.join(project, "score-style.json"),
+    "-o", styleOut, "-e", styleEvidence, "-r", styleReceipt,
+    "--accept-style", path.join(project, "style-acceptances.json"), "--json",
+  ]));
+  assert.equal(styled.summary.releasable, true);
+  assert.equal(styled.summary.hardDefects, 0);
+  assert(styled.summary.p1 > 0, "P1 priority must remain visible");
+  assert.equal(styled.summary.acceptedStyleFlags, 1);
+  const styledReceipt = verifyReleaseReceipt(styleReceipt);
+  assert(styledReceipt.ok, styledReceipt.issues.join("; "));
+  assert.equal(styledReceipt.receipt.inputs.files.styleAcceptances.sha256.length, 64);
+
+  const brokenScore = structuredClone(score);
+  brokenScore.scenes[0].choreography[0].target = "missing-target";
+  writeFileSync(path.join(project, "score-broken.json"), JSON.stringify(brokenScore, null, 2));
+  const broken = spawnSync(process.execPath, [
+    cli, "release", path.join(project, "intake.lock.json"), path.join(project, "direction.json"),
+    path.join(project, "storyboard.json"), path.join(project, "score-broken.json"),
+    "-o", path.join(project, "broken/final.mp4"), "-e", path.join(project, "broken/evidence"),
+    "-r", path.join(project, "broken/release.json"), "--json",
+  ], { encoding: "utf8" });
+  assert.notEqual(broken.status, 0, "hard defects must block release");
+  assert.match(broken.stderr, /hard defects block release/);
 
   const originalScore = readFileSync(path.join(project, "score.json"), "utf8");
   const changed = JSON.parse(originalScore);
@@ -79,7 +133,7 @@ try {
   assert.equal(readFileSync(path.join(project, "score.json"), "utf8"), originalScore, "unsafe target rejection must preserve the input");
   writeFileSync(out, Buffer.concat([readFileSync(out), Buffer.from("tamper")]));
   assert.equal(verifyReleaseReceipt(receipt).ok, false, "changed output must stale the receipt");
-  console.log(`✔ release integrity: ${released.releaseId}, ${released.audio.integratedLufs.toFixed(2)} LUFS, ${released.audio.truePeakDbtp.toFixed(2)} dBTP, stale input/output refused`);
+  console.log(`✔ release integrity: ${released.releaseId}, style policy/acceptance bound, hard defect refused, ${released.audio.integratedLufs.toFixed(2)} LUFS, ${released.audio.truePeakDbtp.toFixed(2)} dBTP, stale input/output refused`);
 } finally {
   rmSync(project, { recursive: true, force: true });
 }

@@ -9,6 +9,9 @@ it without cloning the repository:
 
 ADR-0031 defines the approval and conformance behavior.
 
-The current cross-project audit, user jobs, gaps, priorities, and explicit
-adopt/improve/replace/omit decisions are in
+The broad cross-project matrix remains in
 [Capability audit — 2026-07-18](../research/capability-audit-2026-07-18.md).
+HyperFrames and the professional launch-film process changed materially after
+that cut; use the verified
+[2026-07-23 HyperFrames/studio-process audit](../research/hyperframes-and-studio-process-audit-2026-07-23.md)
+for current parity and workflow claims.

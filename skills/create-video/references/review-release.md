@@ -44,8 +44,14 @@ chitra release intake.lock.json direction.json storyboard.json score.json \
 chitra verify-release out/release.json
 ```
 
+When the author intentionally keeps a flagged style choice, pass
+`--accept-style style-acceptances.json`. Each record must exactly match
+`ruleId` and `path` and carry a substantive reason; the file is hash-bound into
+the receipt.
+
 Deliver final video, receipt, contact sheet, elapsed time, and every remaining
-limitation. If the same P1/P2 or visual defect survives a targeted revision,
+limitation. Hard defects cannot be overridden. Style flags remain visible and
+do not block. If the same high-priority or visual defect survives a targeted revision,
 record it as a capability/system gap rather than spending unbounded tokens.
 
 After the user explicitly accepts, rejects, or reverts a revision, load

@@ -1,6 +1,17 @@
 # Roadmap — MVP to v1.0
 
-**Status (2026-07-18): M0 ✅ · M1 ✅ · M2 partial · M3 partial · M4 (Creative Intelligence) IN PROGRESS.** See [known-issues.md](known-issues.md) for the honest ledger.
+**Status (2026-07-23): M0 ✅ · M1 ✅ · M2 partial · M3 partial · M4 (Creative Intelligence) IN PROGRESS.** See [known-issues.md](known-issues.md) for the honest ledger.
+
+> **2026-07-23 recheck.** HyperFrames `7a294f1` / npm `0.7.68` materially
+> expands the verified parity target: broad seekable runtimes, masks/shaders,
+> Figma/media/TTS, player/Studio/SDK/cloud, 100+ block directories, and a
+> professional brief→capture→frame system→storyboard/script→sketch→build→preview
+> product-launch loop. Chitra is not at parity. ADR-0041's hard/style gate
+> migration is implemented with receipt 0.2.0 and adversarial release evidence;
+> independent boundary review remains. The create-video harness now adds an
+> all-shot style board and optional cut animatic before motion without adding a
+> redundant planning IR. See the
+> [current audit](../research/hyperframes-and-studio-process-audit-2026-07-23.md).
 
 > **Capability-program rebaseline (2026-07-18).** Current-source verification
 > confirms Remotion leads renderer/ecosystem breadth, HyperFrames leads workflow/
@@ -172,8 +183,8 @@ bounded heterogeneous particle size/opacity/glow for that measured gap; exact
 reconstruction remains open.
 Remaining (priority order):
 
-- **Production-readiness rebaseline:** complete ADR-0041's adversarial two-tier
-  gate migration before adding renderer features. Then close rendered-pixel,
+- **Production-readiness rebaseline:** independently review ADR-0041's
+  implemented two-tier boundary fixtures. Then close rendered-pixel,
   transient-frame, packed-library, interrupt/concurrency, and multi-OS evidence
   gaps recorded in `AUDIT_PHASE0.md`.
 - **Creative QA data collection**: independently label ≥20 cases across brand film,

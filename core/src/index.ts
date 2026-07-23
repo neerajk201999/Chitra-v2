@@ -3,10 +3,44 @@ export * from "./motion/tokens.js";
 export * from "./capabilities/index.js";
 export { compile, resolveSceneTimeline, totalDurationMs, type CompileResult } from "./compile/index.js";
 export { openSession, renderScore, renderInputFiles, sceneHash, scoreHash, type RenderSession, type RenderResult, type TextRegion, type Quality } from "./render/index.js";
-export { runStaticGates, runFrameGates, frameGateSampleTimes, FRAME_GATE_INTERVAL_MS, runConformance, runIntakeDirectionConformance, runDirectionStoryboardConformance, runStoryboardScoreConformance, runAssetProvenanceConformance, runBrandConformance, runCreativeConformance, summarize, type Finding } from "./gates/index.js";
+export {
+  RULE_POLICIES,
+  applyGatePolicies,
+  applyStyleAcceptances,
+  runStaticGates,
+  runFrameGates,
+  frameGateSampleTimes,
+  FRAME_GATE_INTERVAL_MS,
+  runConformance,
+  runIntakeDirectionConformance,
+  runDirectionStoryboardConformance,
+  runStoryboardScoreConformance,
+  runAssetProvenanceConformance,
+  runBrandConformance,
+  runCreativeConformance,
+  summarize,
+  type Finding,
+  type ClassifiedFinding,
+  type GatePolicy,
+  type GatePolicyContext,
+  type StyleAcceptance,
+} from "./gates/index.js";
 export { generateEvidence, type EvidenceResult } from "./evidence/index.js";
 export { measureAudio, audioInvariantIssues, type AudioMeasurement } from "./audio/measure.js";
-export { assertReleaseTargets, releaseFingerprint, makeReleaseReceipt, verifyReleaseReceipt, ReleaseReceiptSchema, sha256File, type ReleaseArtifacts, type ReleaseFingerprint, type ReleaseReceipt } from "./release/index.js";
+export {
+  assertReleaseTargets,
+  releaseFingerprint,
+  makeReleaseReceipt,
+  verifyReleaseReceipt,
+  ReleaseReceiptSchema,
+  LegacyReleaseReceiptSchema,
+  sha256File,
+  type ReleaseArtifacts,
+  type ReleaseFingerprint,
+  type ReleaseReceipt,
+  type LegacyReleaseReceipt,
+  type StoredReleaseReceipt,
+} from "./release/index.js";
 export { STYLE_DNA_VERSION, StyleDNA, type StyleDNAT } from "./reference/schema.js";
 export { decomposeReference, type DecomposeOptions } from "./reference/decompose.js";
 export { COMPARISON_VERSION, ReferenceComparison, type ReferenceComparisonT } from "./reference/comparison-schema.js";

@@ -34,7 +34,7 @@ Isolated critic sub-agents (Impeccable's anchoring rule: deterministic findings 
 - Findings: severity-tagged (P0–P3), citing IR paths + timecodes, each mapped to a fix action. Scored against honest rubrics with anti-inflation calibration ("most real videos score 20–32/40").
 
 ### The loop
-`render → gates → critics → editor patches IR spans → dirty scenes re-render → re-critique`, **hard-capped at 3 revision passes** (video-use's lesson), then escalate remaining findings to the human with the evidence sheets. Release gate: zero P0/P1 findings + all deterministic gates green.
+`render → gates → critics → editor patches IR spans → dirty scenes re-render → re-critique`, **hard-capped at 3 revision passes** (video-use's lesson), then escalate remaining findings to the human with the evidence sheets. ADR-0041 supersedes the severity-only release sentence: priority orders work; only hard defects veto delivery, while style flags remain visible.
 
 ## Consequences
 

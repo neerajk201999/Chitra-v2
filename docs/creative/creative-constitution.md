@@ -15,15 +15,18 @@ This is a living document. When an accepted revision teaches us something the
 constitution didn't know, we amend it here (ADR-0012 Style Memory) so future
 sessions inherit the taste instead of relearning it.
 
-> **The one test above all (CC-CORE-1):** every element, every beat, every cut
+> **The contextual test above all (CC-CORE-1):** every element, every beat, every cut
 > must answer *why does this exist, why now, why this movement?* If the honest
-> answer is "it looked nice" or "to fill time," it is slop. Cut it.
+> answer is only "it looked nice" or "to fill time," reconsider it. Deliberate
+> ornament, maximalism, ambiguity, interruption, and sensory pleasure can be the
+> reason when they serve the locked brief.
 
 ## 1. Narrative philosophy (CC-NARR)
 
-- **CC-NARR-1 — One idea per film.** A launch film sells a single feeling, not a
-  feature list. Name it in the brief; every shot serves it. Apple's iPhone film
-  is "inevitability," not "specs."
+- **CC-NARR-1 — One governing relationship by default.** A focused launch film
+  usually benefits from a single proposition or emotional relationship, while
+  a montage, anthology, or maximalist piece may deliberately carry several.
+  Name the organizing logic so multiplicity is authored rather than accidental.
 - **CC-NARR-2 — Tension before resolution.** Establish a gap (problem, question,
   absence) before the product resolves it. No tension = an ad, not a film.
 - **CC-NARR-3 — Product as protagonist, not exhibit.** The product *does*
@@ -79,8 +82,10 @@ sessions inherit the taste instead of relearning it.
 
 ## 6. Composition & hierarchy philosophy (CC-COMP)
 
-- **CC-COMP-1 — One hero per frame.** Everything else supports (enforced:
-  MO-CHOR-2). If two things fight for the eye, the frame has failed.
+- **CC-COMP-1 — Attention is authored.** One hero is a useful default, not a
+  release law. Ensembles, split attention, simultaneity, and deliberate
+  competition are valid when the intended viewing path is explainable.
+  MO-CHOR-2 is therefore an audited style flag, not a veto.
 - **CC-COMP-2 — Alignment is invisible quality.** Elements share edges and a grid.
   Misalignment is the fastest tell of AI slop.
 - **CC-COMP-3 — Density signals register.** Sparse = luxury; dense = utility/data.

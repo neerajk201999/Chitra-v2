@@ -6,6 +6,21 @@ versioned separately.
 
 ## [Unreleased]
 
+### Changed
+
+- Separate gate priority from release policy: hard defects block, style flags
+  remain visible and non-blocking, required-copy legibility resolves from
+  locked Intake/Storyboard context, and unknown rule IDs fail closed.
+- Advance release receipts to 0.2.0 with policy and optional exact
+  rule/path/reason style acceptance bound into the release fingerprint while
+  retaining verification compatibility for 0.1 receipts.
+- Split particle structural corruption (`MO-PART-1`, hard) from intentional
+  high-density review (`MO-PART-2`, style), make mixed contract policies
+  explicit, and prevent short decorative substrings from being mistaken for
+  required copy.
+- Add a professional launch-film board/animatic checkpoint to the create-video
+  harness and re-audit HyperFrames at source commit `7a294f1`.
+
 ### Added
 
 - Phase 0 production-readiness audit with explicit first-party evidence limits,

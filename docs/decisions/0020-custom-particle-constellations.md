@@ -20,7 +20,8 @@ particle script or physics engine.
    array of normalized `{x,y}` coordinates inside its own 0–100 box.
 2. `particle-morph` may use `morphTo:"custom"` with `morphPoints`. Source and
    destination counts must match, coordinates must remain in bounds, and both
-   arrays remain capped at 400 dots by MO-PART-1.
+   arrays remain capped at 400 dots by schema; grid density above 400 is
+   reviewable under MO-PART-2 rather than release-blocking.
 3. Custom data is legal only on its matching surface: `points` only with a
    custom base formation; `morphPoints` only with a custom particle morph.
    Misuse is a P1 rather than a silent fallback.

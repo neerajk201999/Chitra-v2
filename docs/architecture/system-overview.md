@@ -17,17 +17,23 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 │    ► Shot Planner ► Motion Director ► Sound Director                        │
 │                │                                          ▲                  │
 │                ▼                                          │ patches          │
-│    Intake ► 2–4 Directions ► blind still selection ► Storyboard ► Score      │
+│    Intake ► 2–4 Directions ► blind still selection ► Storyboard             │
+│                │                              │                              │
+│                │                              ▼                              │
+│                │                 all-shot board ► animatic when useful       │
+│                │                              │                              │
+│                │                              ▼                              │
+│                │                     hero motion test ► Score                │
 │                │                                          ▲                  │
 │                ▼                                          │ findings         │
 │         ┌── deterministic core ──┐              Critics (isolated VLM        │
-│         │ validate → compile →   │              sub-agents; watch evidence   │
+│         │ validate → compile →   │              or human pass; watch evidence│
 │         │ render → gates →       │ ──────────►  sheets from the render)      │
 │         │ evidence sheets        │              ≤3 revision passes           │
 │         └─────────────────────── ┘                                           │
 │                │                                                             │
 │                ▼                                                             │
-│        Release gate (0 P1 under current policy) ──► export + receipt         │
+│        Release gate (0 hard defects; style flags audited) ─► export+receipt │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pixels)
@@ -52,6 +58,11 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
   assets/    fonts, images, footage ingest (hashing, license provenance)
 ```
 
+The board and animatic reuse Score rather than introducing another planning IR:
+`board.score.json` has final compositions and little or no choreography;
+`score.json` adds proven motion. The animatic is optional because it retires
+timing/editorial risk, not because every film needs a ceremony.
+
 ## Data flow invariants
 
 1. Everything between stages is a **diffable text artifact** (IR JSON + markdown direction). No stage communicates through prose-only handoffs.
@@ -63,6 +74,9 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
 4. Creative hypotheses live in the constitution/craft/motion systems and remain
    distinct from calibrated evidence. Skills cite stable rules; they do not
    turn unvalidated taste opinions into automatic scores.
+5. Gate priority and release policy are independent. P1/P2/P3 orders attention;
+   `hard-defect` blocks delivery and `style-flag` never vetoes authored form.
+   Required-copy context can promote a legibility symptom to a hard defect.
 
 ## Repository layout (target)
 
