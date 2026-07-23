@@ -24,6 +24,8 @@ Do not dump `core/src/ir/schema.ts` into context. Copy the closest element from
 - stat/chart primitives;
 - particles with typed formations/custom points;
 - curated card/coin/slab `scene3d` with bounded mesh/camera/light tracks;
+- project-local vector-only `lottie` JSON with typed trim, repetition, and
+  normal/reverse/alternate scene-time playback;
 - bounded nested local-coordinate groups with typed overflow/compositing;
 - typed clips, alpha/luminance or gradient mattes, blend modes, and filters;
 - music bed, sparse choreography-bound SFX, beat landmarks;
@@ -46,6 +48,12 @@ ffmpeg -ss <seconds> -i <video> -frames:v 1 assets/still.png
 Crop recorder chrome and personal data. Never put remote URLs in Score. Host
 image/video generation tools may create plates, textures, or footage when the
 user authorizes it; freeze outputs locally and record model/prompt/rights.
+
+Lottie sources must be local vector JSON. Convert text to paths and embed vector
+precompositions in the JSON; expressions, external images/fonts, network URLs,
+dotLottie, and Rive are rejected. Treat a supplied animation like any other
+source: declare `assetUse`, choose an explicit source-frame range, and inspect
+random/backward seeks when timing is critical.
 
 ## Composition and motion
 

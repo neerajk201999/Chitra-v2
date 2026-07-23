@@ -5,7 +5,8 @@ export const CAPABILITY_IDS = [
   "curated-3d", "arbitrary-3d", "environment-reflections-shadows",
   "masks-blends-deep-comps", "motion-blur-dof", "music-sfx",
   "voiceover-word-sync", "reference-analysis", "generated-media", "professional-taste",
-  "clip-audio", "transcript-edl", "footage-evidence", "imported-animation", "player-studio",
+  "clip-audio", "transcript-edl", "footage-evidence", "lottie-animation",
+  "rive-animation", "imported-animation", "player-studio",
   "distributed-render", "brand-system", "accepted-revision-memory", "directorial-search",
 ] as const;
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];
@@ -36,7 +37,9 @@ export const CAPABILITIES: Capability[] = [
   { id: "clip-audio", support: "native", mechanism: "edit-render preserves source audio, synthesizes mixed-source silence, fades cuts, and normalizes the bus", boundary: "Score video elements remain visual-only; edited footage enters as a rendered plate" },
   { id: "transcript-edl", support: "native", mechanism: "locked provider-neutral word timeline, compact phrase pack, typed quote-conformed EDL", boundary: "no bundled transcription provider or visual-event addressing outside transcript tokens" },
   { id: "footage-evidence", support: "native", mechanism: "bounded EDL-selected filmstrips, waveforms, adjacent-cut strips, neutral discontinuity metrics, hash cache", boundary: "semantic cut quality still requires evidence-bound review and calibration" },
-  { id: "imported-animation", support: "asset-assisted", mechanism: "owned/licensed pre-rendered still or video", boundary: "no seekable Lottie, Rive, or glTF adapter" },
+  { id: "lottie-animation", support: "native", mechanism: "typed project-local vector JSON, pinned SVG runtime, scene-time frame mapping, normal/reverse/alternate playback", boundary: "vector-only JSON; no expressions, external images/fonts, dotLottie, Canvas renderer, or arbitrary runtime" },
+  { id: "rive-animation", support: "asset-assisted", mechanism: "owned/licensed pre-rendered still or video", boundary: "no .riv runtime or state-machine/data-binding adapter" },
+  { id: "imported-animation", support: "asset-assisted", mechanism: "typed Lottie is native; other owned/licensed animations enter as pre-rendered still or video", boundary: "generic import does not imply Rive, dotLottie, glTF, arbitrary scripts, or every After Effects feature" },
   { id: "player-studio", support: "unsupported", mechanism: "evidence and rendered files only", boundary: "no embeddable player or timeline editor" },
   { id: "distributed-render", support: "unsupported", mechanism: "single local render worker", boundary: "no chunk plan, remote workers, or deterministic assembly" },
   { id: "brand-system", support: "native", mechanism: "locked Brand System IR, exact rule/palette/type conformance, local WOFF2 rendering, and cache/provenance binding", boundary: "host agent still interprets evidence; no automatic semantic brand extraction or professional-expression guarantee" },

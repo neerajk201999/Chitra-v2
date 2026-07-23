@@ -24,7 +24,7 @@ checklist to copy.
 | P2 | Public README previously named unpublished `chitra-video@0.5.0`. | Commands now install the current public package without asserting 0.5 availability; docs state npm still resolves 0.4.0. |
 | P2 open | npm authentication is expired (`npm whoami` returns 401), so public 0.5 install and release evidence cannot be completed. | Requires owner `npm login`; no publish or shipped-version claim made. |
 | P2 open | The memory benchmark is synthetic and universal-promotion provenance is declared, not externally verified. | Known issue retained; collect real accepted/rejected outcomes and ≥20 blind cases before taste-lift claims. |
-| P2 open | Transcript EDL, clip audio, narration timing, imported animation, compositor depth, player/studio, and distributed render remain meaningful gaps. | Explicit capability status and ordered roadmap; no parity claim. |
+| P2 open | Narration timing, Rive/dotLottie/generic imported animation, animated compositing, player/studio, and distributed render remain meaningful gaps. Transcript EDL/clip audio, static typed compositing, and vector-only Lottie subsequently landed. | Explicit capability status and ordered roadmap; no parity claim. |
 
 ## Verification evidence
 

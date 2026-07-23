@@ -44,6 +44,74 @@ function threeSource(): string {
   return readFileSync(path.join(runtimeAssets, "three", "three.module.js"), "utf8");
 }
 
+/** ADR-0043: one audited SVG-only lottie-web build, included only for Scores
+ * that contain a typed lottie element. */
+function lottieSource(): string {
+  return readFileSync(path.join(runtimeAssets, "lottie", "lottie_svg.min.js"), "utf8");
+}
+
+interface LottieData {
+  fr: number;
+  ip: number;
+  op: number;
+  w: number;
+  h: number;
+  layers: unknown[];
+  [key: string]: unknown;
+}
+
+function loadLottieData(projectDir: string, source: string): LottieData {
+  const file = resolveProjectAsset(projectDir, source);
+  const bytes = readFileSync(file);
+  if (bytes.length > 5 * 1024 * 1024)
+    throw new Error(`Lottie JSON exceeds the 5 MiB limit: ${source}`);
+  let value: unknown;
+  try {
+    value = JSON.parse(bytes.toString("utf8"));
+  } catch {
+    throw new Error(`Lottie source is not valid JSON: ${source}`);
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error(`Lottie source must contain one JSON object: ${source}`);
+  const data = value as LottieData;
+  if (!Number.isFinite(data.fr) || data.fr <= 0 || data.fr > 240)
+    throw new Error(`Lottie frame rate must be finite and within 0–240: ${source}`);
+  if (!Number.isFinite(data.ip) || !Number.isFinite(data.op) || data.ip < 0 || data.op <= data.ip || data.op - data.ip > 1_000_000)
+    throw new Error(`Lottie frame range must be finite, increasing, and bounded: ${source}`);
+  if (!Number.isFinite(data.w) || !Number.isFinite(data.h) || data.w <= 0 || data.h <= 0 || data.w > 8192 || data.h > 8192)
+    throw new Error(`Lottie dimensions must be finite and within 1–8192: ${source}`);
+  if (!Array.isArray(data.layers))
+    throw new Error(`Lottie source has no layers array: ${source}`);
+  if (data.fonts != null)
+    throw new Error(`Lottie font tables are unsupported; convert text to vector paths: ${source}`);
+  for (const asset of Array.isArray(data.assets) ? data.assets : []) {
+    if (asset && typeof asset === "object" && ("p" in asset || "u" in asset))
+      throw new Error(`Lottie external image assets are unsupported; use vector-only JSON: ${source}`);
+  }
+  const stack: unknown[] = [data];
+  let nodes = 0;
+  while (stack.length) {
+    const current = stack.pop();
+    if (++nodes > 250_000)
+      throw new Error(`Lottie JSON exceeds the structural complexity limit: ${source}`);
+    if (Array.isArray(current)) {
+      for (const child of current) stack.push(child);
+      continue;
+    }
+    if (!current || typeof current !== "object") continue;
+    if ((current as Record<string, unknown>).ty === 5)
+      throw new Error(`Lottie text layers are unsupported; convert text to vector paths: ${source}`);
+    for (const [key, child] of Object.entries(current)) {
+      if (key === "__proto__" || key === "prototype" || key === "constructor")
+        throw new Error(`Lottie JSON contains an unsafe object key: ${source}`);
+      if (key === "x" && typeof child === "string" && child.trim())
+        throw new Error(`Lottie expressions are unsupported for deterministic rendering: ${source}`);
+      stack.push(child);
+    }
+  }
+  return data;
+}
+
 function imageDataUrl(projectDir: string, source: string): string {
   const file = resolveProjectAsset(projectDir, source);
   const ext = path.extname(file).toLowerCase();
@@ -419,6 +487,13 @@ function renderElement(
         `<div style="position:relative;width:${w}px;height:${h}px;border-radius:${r};overflow:hidden;background:#000;"><img class="chitra-vid" data-vid="${esc(sceneId)}--${esc(el.id)}" style="width:100%;height:100%;object-fit:${el.fit};display:block;"/>${scrim}</div>`
       );
     }
+    case "lottie": {
+      const w = (el.width * viewport.width) / 100;
+      const h = (el.height * viewport.height) / 100;
+      return wrap(
+        `<div class="lottie" data-lottie="${esc(sceneId)}--${esc(el.id)}" style="width:${w}px;height:${h}px;overflow:hidden;"></div>`
+      );
+    }
     case "figure": {
       const w = (el.width * viewport.width) / 100;
       const h = (el.height * viewport.height) / 100;
@@ -768,7 +843,7 @@ function presetTweens(
 function textOverMedia(scene: SceneT): Set<string> {
   const over = new Set<string>();
   const hasBgImage = scene.background === "image";
-  const mediaIds = scene.elements.filter((e) => e.type === "image" || e.type === "video").map((e) => e.id);
+  const mediaIds = scene.elements.filter((e) => e.type === "image" || e.type === "video" || e.type === "lottie").map((e) => e.id);
   for (const el of scene.elements) {
     if (el.type !== "text" && el.type !== "stat") continue;
     if (hasBgImage || mediaIds.length > 0) over.add(el.id); // v0 conservative: any media in scene
@@ -795,6 +870,7 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
   // Scene DOM + tween specs
   let scenesHtml = "";
   const tweens: TweenSpec[] = [];
+  const lottieSpecs: Array<Record<string, unknown>> = [];
   const sceneBoundsMs: CompileResult["sceneBoundsMs"] = [];
   const textMeta: Array<{ sel: string; sceneId: string; color: string; overMedia: boolean }> = [];
   let cursor = 0;
@@ -806,6 +882,29 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
         : `background:${colorOf(p, scene.background)};`;
     const els = renderSceneElements(scene.elements, score, scale, scene.id, projectDir);
     scenesHtml += `<div class="scene" id="scene-${scene.id}" style="${bg}">${els}</div>\n`;
+    for (const element of scene.elements) {
+      if (element.type !== "lottie") continue;
+      const data = loadLottieData(projectDir, element.src);
+      const sourceStart = element.playback.startFrame ?? data.ip;
+      const sourceEnd = element.playback.endFrame ?? data.op - 1;
+      if (sourceStart < data.ip || sourceStart > data.op - 1 || sourceEnd < data.ip || sourceEnd > data.op - 1 || sourceEnd < sourceStart)
+        throw new Error(`Lottie playback range ${sourceStart}–${sourceEnd} is outside ${data.ip}–${data.op - 1}: ${element.src}`);
+      lottieSpecs.push({
+        key: `${scene.id}--${element.id}`,
+        data,
+        sceneStartMs: cursor,
+        startMs: element.playback.startMs,
+        durationMs: element.playback.durationMs ?? scene.durationMs - element.playback.startMs,
+        sourceStart,
+        sourceEnd,
+        iterations: element.playback.iterations,
+        direction: element.playback.direction,
+        preserveAspectRatio:
+          element.fit === "stretch" ? "none"
+          : element.fit === "cover" ? "xMidYMid slice"
+          : "xMidYMid meet",
+      });
+    }
 
     const overMedia = textOverMedia(scene);
     for (const el of scene.elements) {
@@ -917,6 +1016,8 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
     s3cursor += sc.durationMs;
   }
   const hasScene3d = scene3dSpecs.length > 0;
+  const hasLottie = lottieSpecs.length > 0;
+  const lottieSpecsJson = JSON.stringify(lottieSpecs).replace(/</g, "\\u003c");
 
   const grain =
     score.style.grain > 0
@@ -949,6 +1050,7 @@ html,body{background:#000;}
 ${scenesHtml}<div id="blackout"></div>${grain}
 </div>
 <script>${gsapSource()}</script>
+${hasLottie ? `<script>${lottieSource()}</script>` : ""}
 <script>
 "use strict";
 var SPECS = ${JSON.stringify(tweens)};
@@ -956,6 +1058,64 @@ var CUES = ${JSON.stringify(sceneCues)};
 var SETCUES = ${JSON.stringify(setCues)};
 var TEXTMETA = ${JSON.stringify(textMeta)};
 var DURATION_MS = ${durationMs};
+var LOTTIE_SPECS = ${lottieSpecsJson};
+var LOTTIE_INSTANCES = [];
+var LOTTIE_STATE = {};
+var LOTTIE_ERROR = null;
+var LOTTIE_READY = LOTTIE_SPECS.length ? Promise.all(LOTTIE_SPECS.map(function (s) {
+  return new Promise(function (resolve, reject) {
+    var container = document.querySelector('[data-lottie="' + s.key + '"]');
+    if (!container) return reject(new Error("missing Lottie container " + s.key));
+    var settled = false;
+    var timer = setTimeout(function () {
+      if (!settled) reject(new Error("Lottie readiness timed out: " + s.key));
+    }, 5000);
+    function done() {
+      if (settled) return;
+      settled = true; clearTimeout(timer); resolve(true);
+    }
+    function failed(event) {
+      if (settled) return;
+      settled = true; clearTimeout(timer);
+      reject(new Error("Lottie load failed: " + s.key + (event && event.type ? " (" + event.type + ")" : "")));
+    }
+    try {
+      var anim = lottie.loadAnimation({
+        container: container, renderer: "svg", loop: false, autoplay: false,
+        animationData: s.data,
+        rendererSettings: { preserveAspectRatio: s.preserveAspectRatio },
+      });
+      anim.addEventListener("DOMLoaded", done);
+      anim.addEventListener("data_failed", failed);
+      anim.addEventListener("error", failed);
+      LOTTIE_INSTANCES.push({ spec: s, anim: anim });
+      if (anim.isLoaded) Promise.resolve().then(done);
+    } catch (error) { failed(error); }
+  });
+})).catch(function (error) {
+  LOTTIE_ERROR = String(error && error.message ? error.message : error);
+  return false;
+}) : Promise.resolve(true);
+
+function seekLotties(ms) {
+  LOTTIE_INSTANCES.forEach(function (entry) {
+    var s = entry.spec;
+    var local = Math.max(0, Math.min(s.durationMs, ms - s.sceneStartMs - s.startMs));
+    var normalized = s.durationMs > 0 ? local / s.durationMs : 0;
+    var cycle, within;
+    if (normalized >= 1) { cycle = s.iterations - 1; within = 1; }
+    else {
+      var traversed = normalized * s.iterations;
+      cycle = Math.floor(traversed);
+      within = traversed - cycle;
+    }
+    var progress = s.direction === "reverse" || (s.direction === "alternate" && cycle % 2 === 1)
+      ? 1 - within : within;
+    var frame = s.sourceStart + (s.sourceEnd - s.sourceStart) * progress;
+    entry.anim.goToAndStop(frame, true);
+    LOTTIE_STATE[s.key] = frame;
+  });
+}
 
 function fmtStat(v, format, decimals) {
   var o = { maximumFractionDigits: decimals };
@@ -1069,6 +1229,7 @@ window.__chitra = {
   setMedia: function (map) { MEDIA = map || {}; },
   seek: function (ms) {
     tl.time(Math.min(ms, DURATION_MS - 0.001) / 1000, false);
+    seekLotties(ms);
     if (window.__three3d) window.__three3d.forEach(function (u) { u(ms); });
     var waits = [];
     VIDMETA.forEach(function (v) {
@@ -1101,7 +1262,7 @@ window.__chitra = {
           })();
         })
       : Promise.resolve();
-    return wait3d.then(function () { return Promise.all(
+    return Promise.all([wait3d, LOTTIE_READY]).then(function () { return Promise.all(
       faces.map(function (f) { return document.fonts.load(f.weight + " 16px '" + f.family + "'"); })
     ); }).then(function () {
       return document.fonts.ready;
@@ -1117,9 +1278,10 @@ window.__chitra = {
         // chitra-vid frames get src injected by the renderer post-load
         return img.getAttribute("src") && !(img.complete && img.naturalWidth > 0);
       }).map(function (img) { return img.getAttribute("src"); });
-      return { fontsOk: ok, missingTargets: MISSING, badImages: badImages, glError: window.__three3dError || null };
+      return { fontsOk: ok, missingTargets: MISSING, badImages: badImages, glError: window.__three3dError || null, lottieError: LOTTIE_ERROR };
     });
   },
+  lottieState: function (key) { return LOTTIE_STATE[key] == null ? null : LOTTIE_STATE[key]; },
   textRegions: function () {
     var stageEl = document.getElementById("stage");
     var stage = stageEl.getBoundingClientRect();

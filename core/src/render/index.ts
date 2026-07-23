@@ -54,7 +54,7 @@ const ENCODE = {
  * markup changes, GSAP upgrades). Part of every scene hash — without it the
  * cache serves frames compiled by an older compiler.
  */
-export const COMPILER_CACHE_VERSION = "17";
+export const COMPILER_CACHE_VERSION = "18";
 
 /** Content digest of a file, memoized on (path, mtime, size) — video files are
  *  tens of MB and sceneHash runs per scene per render. */
@@ -73,6 +73,7 @@ function sceneAssetSources(scene: ScoreT["scenes"][number]): string[] {
   const srcs: string[] = [];
   for (const element of scene.elements) {
     if (element.type === "image" || element.type === "video") srcs.push(element.src);
+    if (element.type === "lottie") srcs.push(element.src);
     if (element.type === "figure") srcs.push(element.src, ...element.assets.map((asset) => asset.src));
     if (element.type === "scene3d" && element.frontTexture) srcs.push(element.frontTexture);
     if (element.compositing?.matte?.kind === "asset") srcs.push(element.compositing.matte.src);
@@ -242,61 +243,68 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
     ? [...DETERMINISTIC_FLAGS, "--use-gl=angle", "--use-angle=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"]
     : DETERMINISTIC_FLAGS;
   const browser = await launchBrowser({ headless: true, args: flags });
-  const page = await browser.newPage();
-  await page.setViewport({ width: compiled.width, height: compiled.height, deviceScaleFactor: 1 });
-  await page.goto(`file://${pageFile}`, { waitUntil: "load" });
-  const media = prepareMedia(score, projectDir, workDir);
-  await page.evaluate((m) => (window as unknown as { __chitra: { setMedia(x: unknown): void } }).__chitra.setMedia(m), media.map);
-  const readiness = (await page.evaluate("window.__chitra.ready()")) as {
-    fontsOk: boolean;
-    missingTargets: string[];
-    badImages?: string[];
-    glError?: string | null;
-  };
-  if (readiness.glError) throw new Error(`3D scene failed to initialize (ADR-0010): ${readiness.glError}`);
-  if (!readiness.fontsOk) throw new Error("Fonts failed to load — compiled page is not deterministic");
-  if (readiness.missingTargets.length)
-    throw new Error(`Choreography targets missing in DOM: ${readiness.missingTargets.join(", ")} (compiler bug or bad IR target)`);
-  if (readiness.badImages?.length)
-    throw new Error(`Images failed to load: ${readiness.badImages.join(", ")} — check paths are relative to the score's directory`);
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: compiled.width, height: compiled.height, deviceScaleFactor: 1 });
+    await page.goto(`file://${pageFile}`, { waitUntil: "load" });
+    const media = prepareMedia(score, projectDir, workDir);
+    await page.evaluate((m) => (window as unknown as { __chitra: { setMedia(x: unknown): void } }).__chitra.setMedia(m), media.map);
+    const readiness = (await page.evaluate("window.__chitra.ready()")) as {
+      fontsOk: boolean;
+      missingTargets: string[];
+      badImages?: string[];
+      glError?: string | null;
+      lottieError?: string | null;
+    };
+    if (readiness.glError) throw new Error(`3D scene failed to initialize (ADR-0010): ${readiness.glError}`);
+    if (readiness.lottieError) throw new Error(`Lottie failed to initialize (ADR-0043): ${readiness.lottieError}`);
+    if (!readiness.fontsOk) throw new Error("Fonts failed to load — compiled page is not deterministic");
+    if (readiness.missingTargets.length)
+      throw new Error(`Choreography targets missing in DOM: ${readiness.missingTargets.join(", ")} (compiler bug or bad IR target)`);
+    if (readiness.badImages?.length)
+      throw new Error(`Images failed to load: ${readiness.badImages.join(", ")} — check paths are relative to the score's directory`);
 
-  const stage = await page.$("#stage");
-  if (!stage) throw new Error("No #stage in compiled page");
-  const stageBox = await stage.boundingBox();
-  if (!stageBox) throw new Error("#stage has no capturable bounding box");
+    const stage = await page.$("#stage");
+    if (!stage) throw new Error("No #stage in compiled page");
+    const stageBox = await stage.boundingBox();
+    if (!stageBox) throw new Error("#stage has no capturable bounding box");
 
-  return {
-    browser,
-    page,
-    compiled,
-    pageFile,
-    async close() {
-      await browser.close();
-    },
-    async seekAndCapture(ms: number, capture = { type: "png" }) {
-      await page.evaluate(`window.__chitra.seek(${ms})`);
-      if ("scale" in capture && capture.scale && capture.scale !== 1) {
-        const { scale, ...options } = capture;
-        return Buffer.from(await page.screenshot({ ...options, clip: { ...stageBox, scale } }));
-      }
-      return Buffer.from(await stage.screenshot(capture));
-    },
-    async contrastCapture(ms: number) {
-      await page.evaluate(`window.__chitra.seek(${ms})`);
-      await page.evaluate(() => {
-        const style = document.createElement("style");
-        style.id = "__chitra-contrast-mask";
-        style.textContent = ".text .txt,.figure *,.figure *::before,.figure *::after{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;text-decoration-color:transparent!important}";
-        document.head.appendChild(style);
-      });
-      try { return Buffer.from(await stage.screenshot({ type: "png" })); }
-      finally { await page.evaluate(() => document.getElementById("__chitra-contrast-mask")?.remove()); }
-    },
-    async textRegions(ms: number) {
-      await page.evaluate(`window.__chitra.seek(${ms})`);
-      return (await page.evaluate("window.__chitra.textRegions()")) as TextRegion[];
-    },
-  };
+    return {
+      browser,
+      page,
+      compiled,
+      pageFile,
+      async close() {
+        await browser.close();
+      },
+      async seekAndCapture(ms: number, capture = { type: "png" }) {
+        await page.evaluate(`window.__chitra.seek(${ms})`);
+        if ("scale" in capture && capture.scale && capture.scale !== 1) {
+          const { scale, ...options } = capture;
+          return Buffer.from(await page.screenshot({ ...options, clip: { ...stageBox, scale } }));
+        }
+        return Buffer.from(await stage.screenshot(capture));
+      },
+      async contrastCapture(ms: number) {
+        await page.evaluate(`window.__chitra.seek(${ms})`);
+        await page.evaluate(() => {
+          const style = document.createElement("style");
+          style.id = "__chitra-contrast-mask";
+          style.textContent = ".text .txt,.figure *,.figure *::before,.figure *::after{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;text-decoration-color:transparent!important}";
+          document.head.appendChild(style);
+        });
+        try { return Buffer.from(await stage.screenshot({ type: "png" })); }
+        finally { await page.evaluate(() => document.getElementById("__chitra-contrast-mask")?.remove()); }
+      },
+      async textRegions(ms: number) {
+        await page.evaluate(`window.__chitra.seek(${ms})`);
+        return (await page.evaluate("window.__chitra.textRegions()")) as TextRegion[];
+      },
+    };
+  } catch (error) {
+    await browser.close().catch(() => {});
+    throw error;
+  }
 }
 
 export interface RenderResult {

@@ -86,7 +86,7 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     transcript/clip-audio EDL and requested visual/audio evidence slices, but
     Chitra has no bundled transcription, deterministic semantic cut judgment,
     visual-event addressing outside transcript tokens, TTS/narration generation,
-    Lottie/Rive import, animated masks/shaders, mature player/studio, or
+    Rive/dotLottie/generic runtime import, animated masks/shaders, mature player/studio, or
     distributed renderer. Brand System 0.1
     locks and renders exact rules/palette/type but does not automatically infer
     semantic roles or prove professional brand expression. “All competitor

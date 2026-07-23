@@ -1,10 +1,12 @@
 # Chitra runtime assets
 
 Only bytes executed or embedded by Chitra are shipped here. This replaces full
-runtime dependencies for Three.js and four Fontsource families (ADR-0033).
+runtime dependencies for Three.js and four Fontsource families (ADR-0033), and
+the full multi-build Lottie package (ADR-0043).
 
 | Asset | Upstream version | License | Source | SHA-256 |
 |---|---:|---|---|---|
+| `lottie/lottie_svg.min.js` | lottie-web 5.13.0, SVG build | MIT | https://www.npmjs.com/package/lottie-web/v/5.13.0 | `ac64292815e1d96628a5c412f0b6f71a5134846e43b5b972ab85687bd7b53508` |
 | `three/three.module.js` | Three.js 0.169.0 | MIT | https://www.npmjs.com/package/three/v/0.169.0 | `0a3368c165eea773490aec7b77c22de70e3eac288503409256fdbf4d12578416` |
 | `fonts/inter/inter-latin-400-normal.woff2` | Fontsource Inter 5.2.8 | OFL-1.1 | https://www.npmjs.com/package/@fontsource/inter/v/5.2.8 | `8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc` |
 | `fonts/inter/inter-latin-500-normal.woff2` | 5.2.8 | OFL-1.1 | same | `f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f` |

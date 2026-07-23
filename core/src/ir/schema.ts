@@ -155,7 +155,7 @@ export type DirectionT = z.infer<typeof Direction>;
 
 // ── Tier 1.5: Storyboard ──────────────────────────────────────────────────
 const storyboardElementType = z.enum([
-  "text", "shape", "image", "video", "figure", "cursor", "particles",
+  "text", "shape", "image", "video", "lottie", "figure", "cursor", "particles",
   "scene3d", "stat", "chart-bar",
 ]);
 
@@ -401,6 +401,32 @@ const VideoElement = z.object({
   compositing,
 });
 
+/** ADR-0043: offline, seek-driven vector animation import. The runtime and JSON
+ * are inlined by the compiler; the Score never admits user JavaScript. */
+const LottieElement = z.object({
+  type: z.literal("lottie"),
+  id,
+  role: z.enum(["hero", "support", "ambient"]).default("support"),
+  src: projectAssetPath.refine((value) => /\.json$/i.test(value), "lottie source must be JSON"),
+  assetUse: AssetUse.optional(),
+  fit: z.enum(["contain", "cover", "stretch"]).default("contain"),
+  position: Position.default({ anchor: "center" }),
+  width: z.number().min(1).max(140).default(40),
+  height: z.number().min(1).max(140).default(40),
+  playback: z.object({
+    startMs: z.number().int().min(0).max(19950).default(0),
+    durationMs: z.number().int().min(50).max(20000).optional(),
+    startFrame: z.number().min(0).max(1_000_000).optional(),
+    endFrame: z.number().min(0).max(1_000_000).optional(),
+    iterations: z.number().int().min(1).max(20).default(1),
+    direction: z.enum(["normal", "reverse", "alternate"]).default("normal"),
+  }).strict().default({ startMs: 0, iterations: 1, direction: "normal" }),
+  compositing,
+}).superRefine((value, ctx) => {
+  if (value.playback.startFrame != null && value.playback.endFrame != null && value.playback.endFrame <= value.playback.startFrame)
+    ctx.addIssue({ code: "custom", path: ["playback", "endFrame"], message: "lottie endFrame must be greater than startFrame" });
+});
+
 /** ADR-0009/0020: deterministic dot-matrix particle field. Authors pick a
  *  generated formation or supply bounded, ordered custom coordinates. */
 const ParticleCoordinate = z.object({
@@ -558,6 +584,7 @@ export const Element = z.discriminatedUnion("type", [
   ShapeElement,
   ImageElement,
   VideoElement,
+  LottieElement,
   FigureElement,
   CursorElement,
   ParticlesElement,
@@ -738,6 +765,12 @@ export const Scene = z.object({
     if (elementIds.has(element.id))
       ctx.addIssue({ code: "custom", path: ["elements", index, "id"], message: `duplicate scene element id ${element.id}` });
     elementIds.add(element.id);
+    if (element.type === "lottie") {
+      if (element.playback.startMs >= value.durationMs)
+        ctx.addIssue({ code: "custom", path: ["elements", index, "playback", "startMs"], message: "lottie playback must start before the scene ends" });
+      if (element.playback.durationMs != null && element.playback.startMs + element.playback.durationMs > value.durationMs)
+        ctx.addIssue({ code: "custom", path: ["elements", index, "playback", "durationMs"], message: "lottie playback must remain within the scene" });
+    }
   });
   const animationIds = new Set<string>();
   value.choreography.forEach((animation, index) => {
