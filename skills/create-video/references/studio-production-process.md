@@ -62,9 +62,12 @@ is already locked by the reference.
 The host agent may reason as strategist, creative director, art director,
 storyboard artist, motion designer, editor, sound designer, and finishing/QC
 lead. Do not create separate prose documents for each role. Each role must
-change or validate the shared Intake, Direction, Storyboard, board Score, or
-Score. Parallel workers are justified only when scenes are independently
-specified and packet/coordination cost is lower than serial construction.
+change or validate the shared Intake, Direction, Storyboard, or a staged Score.
+When roles are split, follow [frame-production.md](frame-production.md):
+`board.score.json` locks Frame Design, `motion.score.json` may add only motion,
+and `score.json` may add only audio/SFX. Parallel workers are justified only
+when scenes are independently specified and packet/coordination cost is lower
+than serial construction.
 
 ## Flexibility
 

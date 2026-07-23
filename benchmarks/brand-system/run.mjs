@@ -75,6 +75,10 @@ scoreRaw.style = { ...scoreRaw.style, name: "acme-motion", palette, fonts: { dis
   { family: "Acme Sans", src: "assets/acme-400.woff2", weight: 400, assetUse: { sourceId: "brand-font-400", kind: "direct", note: "Render the licensed Acme text face directly" } },
   { family: "Acme Sans", src: "assets/acme-500.woff2", weight: 500, assetUse: { sourceId: "brand-font-500", kind: "direct", note: "Render the licensed Acme display face directly" } },
 ] };
+for (const scene of scoreRaw.scenes)
+  for (const element of scene.elements)
+    if (element.type === "text" && element.textRole === "kicker")
+      element.treatment = { ...(element.treatment ?? {}), reason: "Use the exact licensed Acme text face instead of synthesizing a semibold kicker", weight: 400 };
 
 try {
   const brandValidation = validateBrandSystem(brandRaw), intakeValidation = validateIntake(intakeRaw);

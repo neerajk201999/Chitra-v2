@@ -24,7 +24,7 @@ import {
   type Register,
   type SafeZone,
 } from "../motion/tokens.js";
-import type { RenderSession, TextRegion } from "../render/index.js";
+import type { LayoutRegion, RenderSession, TextRegion } from "../render/index.js";
 
 export type GatePolicy = "hard-defect" | "style-flag";
 type RulePolicy = GatePolicy | "required-meaning" | "p1-hard";
@@ -56,6 +56,7 @@ export const RULE_POLICIES = {
   "CC-BOARD-5": "hard-defect", "CC-BOARD-6": "style-flag", "CC-BOARD-7": "p1-hard",
   "CC-BRAND-3": "hard-defect", "CC-BRAND-4": "hard-defect", "CC-BRAND-5": "hard-defect", "CC-BRAND-6": "hard-defect",
   "CC-CONF-1": "hard-defect", "CC-CONF-2": "hard-defect", "CC-CONF-3": "style-flag", "CC-CONF-4": "style-flag", "CC-CONF-5": "style-flag",
+  "CC-FRAME-1": "hard-defect", "CC-FRAME-2": "hard-defect", "CC-FRAME-3": "hard-defect",
   "CC-INT-1": "hard-defect", "CC-INT-2": "hard-defect", "CC-INT-3": "hard-defect", "CC-INT-4": "hard-defect",
   "CC-INT-5": "hard-defect", "CC-INT-6": "hard-defect", "CC-INT-7": "hard-defect", "CC-INT-8": "hard-defect",
   "CC-PROD-1": "style-flag", "CC-PROD-2": "p1-hard",
@@ -767,6 +768,74 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
         addFinding({ ruleId: "MO-EDIT-1", severity: "P1", path: group.region.sel, sceneId: group.region.scene, subjectTexts: [text], message: `Figure text "${text.slice(0, 40)}…" visible ${Math.round(haveMs)}ms, needs ${Math.round(needMs)}ms at ${TYPOGRAPHY.readingWpm}wpm×${TYPOGRAPHY.readingSafety}` });
     }
     const midpoint = (b.startMs + b.endMs) / 2;
+    const frame = score.scenes[si].frame;
+    if (frame) {
+      const representativeMs = b.startMs + (frame.representativeMs ?? score.scenes[si].durationMs / 2);
+      const regions = (await session.layoutRegions(representativeMs))
+        .filter((region) => region.scene === score.scenes[si].id && region.visible);
+      const byTarget = new Map(regions.map((region) => [region.target, region]));
+      const requiredTargets = new Set([
+        frame.focalTarget,
+        ...frame.readingOrder,
+        ...frame.relationships.flatMap((relationship) =>
+          relationship.kind === "align" ? relationship.targets : [relationship.from, relationship.to]),
+      ]);
+      for (const target of requiredTargets) {
+        const region = byTarget.get(target);
+        const paintsPixels = region
+          ? await session.targetPaints(representativeMs, score.scenes[si].id, target, region)
+          : false;
+        if (!region || !paintsPixels)
+          addFinding({
+            ruleId: "CC-FRAME-1",
+            severity: "P1",
+            path: `scenes[${si}].frame`,
+            sceneId: score.scenes[si].id,
+            timecodeMs: Math.round(representativeMs),
+            message: `Frame target "${target}" does not paint visible pixels at the representative frame`,
+          });
+      }
+      const coordinate = (region: LayoutRegion, edge: "left" | "center-x" | "right" | "top" | "center-y" | "bottom") => {
+        if (edge === "left") return region.x;
+        if (edge === "center-x") return region.x + region.w / 2;
+        if (edge === "right") return region.x + region.w;
+        if (edge === "top") return region.y;
+        if (edge === "center-y") return region.y + region.h / 2;
+        return region.y + region.h;
+      };
+      for (const relationship of frame.relationships) {
+        if (relationship.kind === "align") {
+          const aligned = relationship.targets.map((target) => byTarget.get(target)).filter((region): region is LayoutRegion => !!region);
+          if (aligned.length !== relationship.targets.length) continue;
+          const values = aligned.map((region) => coordinate(region, relationship.edge));
+          const spread = Math.max(...values) - Math.min(...values);
+          if (spread > relationship.tolerancePx + 0.01)
+            addFinding({
+              ruleId: "CC-FRAME-2",
+              severity: "P1",
+              path: `scenes[${si}].frame.relationships.${relationship.id}`,
+              sceneId: score.scenes[si].id,
+              timecodeMs: Math.round(representativeMs),
+              message: `Declared ${relationship.edge} alignment drifts ${spread.toFixed(1)}px (max ${relationship.tolerancePx}px)`,
+            });
+        } else {
+          const from = byTarget.get(relationship.from), to = byTarget.get(relationship.to);
+          if (!from || !to) continue;
+          const gap = relationship.axis === "horizontal"
+            ? to.x - (from.x + from.w)
+            : to.y - (from.y + from.h);
+          if (gap < relationship.minPx - 0.01 || gap > relationship.maxPx + 0.01)
+            addFinding({
+              ruleId: "CC-FRAME-3",
+              severity: "P1",
+              path: `scenes[${si}].frame.relationships.${relationship.id}`,
+              sceneId: score.scenes[si].id,
+              timecodeMs: Math.round(representativeMs),
+              message: `Declared ${relationship.axis} gap is ${gap.toFixed(1)}px (expected ${relationship.minPx}–${relationship.maxPx}px)`,
+            });
+        }
+      }
+    }
     const mid = await session.seekAndCapture(midpoint);
     const stats = await sharp(mid).stats();
     const sd = stats.channels.reduce((s, c) => s + c.stdev, 0) / stats.channels.length;

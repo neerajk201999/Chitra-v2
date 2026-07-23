@@ -5,6 +5,7 @@ Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 (creative ladder), ADR-0036 (still-first Direction selection), ADR-0042
 (typed compositing and local compositions), ADR-0043 (typed seekable Lottie),
 ADR-0044 (provider-neutral narration and word clock).
+ADR-0045 (native Frame Systems and staged Score handoffs).
 
 ```
                         USER'S CODING AGENT (Claude Code / Codex / Cursor / Gemini CLI)
@@ -43,6 +44,8 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
   brand/     reusable locked rules/palette/typography plus local-font evidence
   creative/  bounded Direction search, identity-free still evidence, blind
              selection receipts, review/calibration, and scoped revision memory
+  production/ role-owned board→motion→master Score comparison; accepted static
+              frames cannot drift silently during motion or sound
   editing/   locked word transcripts → compact phrase context → typed EDL →
              normalized audio-preserving plates + requested-range filmstrip/
              waveform/cut evidence + hash receipts
@@ -66,6 +69,12 @@ The board and animatic reuse Score rather than introducing another planning IR:
 `board.score.json` has final compositions and little or no choreography;
 `score.json` adds proven motion. The animatic is optional because it retires
 timing/editorial risk, not because every film needs a ceremony.
+
+ADR-0045 makes that reuse executable: native groups may use free/stack/grid
+layout; scenes may declare rendered focal/reading/alignment/gap contracts; and
+`stage-check` restricts board→motion to choreography/transitions and
+motion→master to audio/SFX. These are authored-intent guarantees, not a
+professional-taste score or a forced template.
 
 ## Data flow invariants
 

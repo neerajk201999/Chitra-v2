@@ -22,6 +22,8 @@ chitra direction-search-lock intake.lock.json search.json --project . -o search.
 chitra direction-probes intake.lock.json search.lock.json --project . -o direction-probes # blind still packet
 chitra direction-select direction-probes/SEARCH_DIGEST/manifest.json selection.json -o selection-receipt.json
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # intent conformance
+chitra stage-check board.score.json motion.score.json --transition board-to-motion # preserve accepted frames
+chitra stage-check motion.score.json score.json --transition motion-to-master # preserve motion/timing
 chitra init --style night --title "My film"   # gate-passing starter score
 chitra decompose reference.mp4 -o style-dna.json # measured reference facts + shot evidence
 chitra compare reference.mp4 out.mp4 -o comparison.json # aligned pixel/audio-energy evidence
@@ -35,7 +37,7 @@ chitra release intake.lock.json direction.json storyboard.json score.json -o out
 chitra verify-release out/release.json          # verify the bound release artifacts
 ```
 
-For the current SHA-pinned 0.5.0 prerelease command, use the public repository's
+For the current SHA-pinned prerelease command, use the public repository's
 [install guide](https://github.com/neerajk201999/Chitra-v2/blob/main/docs/INSTALL.md).
 The package README deliberately does not embed a candidate's own immutable URL;
 doing so would change the candidate bytes after its URL and digest are assigned.

@@ -119,6 +119,37 @@ describe("first-use runtime profile", () => {
 });
 
 describe("Brand System and custom typography", () => {
+  it("renders title and chart labels with the exact validated style faces", () => {
+    const score = validFixture();
+    score.style.fonts.display = "Space Grotesk";
+    score.style.displayWeight = 700;
+    score.style.textWeight = 600;
+    score.scenes[0].elements.push({
+      type: "text", id: "face-title", role: "support", textRole: "title", content: "Exact title",
+      color: "text", align: "left", position: { anchor: "center" },
+      compositing: { opacity: 1, blendMode: "normal", isolation: false, filters: [] },
+    });
+    score.scenes[0].elements.push({
+      type: "chart-bar", id: "face-chart", role: "support",
+      series: [{ label: "A", value: 1 }], highlight: 0, color: "accent",
+      position: { anchor: "center" }, width: 20, height: 20,
+      compositing: { opacity: 1, blendMode: "normal", isolation: false, filters: [] },
+    });
+    const html = compile(score).html;
+    expect(html).toMatch(/data-text-role="title"[^>]+font-family:'Space Grotesk';font-weight:700/);
+    expect(html).toMatch(/<text[^>]+font-family="Inter" font-weight="600"/);
+  });
+
+  it("rejects unavailable bundled Score font weights instead of synthesizing them", () => {
+    const score = validFixture();
+    score.style.fonts.display = "Space Grotesk";
+    score.style.displayWeight = 600;
+    const result = validateScore(score);
+    expect(result.ok).toBe(false);
+    if (!result.ok)
+      expect(result.issues.some((issue) => issue.message.includes("Space Grotesk does not include weight 600"))).toBe(true);
+  });
+
   it("requires an exact declared weight for every custom Score font role", () => {
     const score = validFixture();
     score.style.fonts.display = "Acme Sans";
@@ -540,6 +571,9 @@ describe("figures & interaction choreography (ADR-0008)", () => {
       const figure = undeclared.scenes[0].elements.find((element) => element.id === "sourced-card");
       if (figure?.type === "figure") figure.assets = [];
       expect(() => compile(undeclared, project)).toThrow(/undeclared asset/);
+
+      writeFileSync(path.join(project, "figure.html"), '<div id="same"></div><div id="s&#97;me"></div>');
+      expect(() => compile(score, project)).toThrow(/encoded inner id/);
 
       writeFileSync(path.join(project, "figure.html"), '<img src="data:image/png;base64,AAAA">');
       expect(() => compile(score, project)).toThrow(/inline or file URL assets are forbidden/);

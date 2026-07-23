@@ -4,7 +4,7 @@ All notable user-visible changes are recorded here. The format follows Keep a
 Changelog; versions follow Semantic Versioning. Motion IR compatibility is
 versioned separately.
 
-## [Unreleased]
+## [0.6.0-rc.1] — 2026-07-23
 
 ### Changed
 
@@ -23,6 +23,12 @@ versioned separately.
 
 ### Added
 
+- ADR-0045 Frame System 0.1: native free/stack/grid local layout, bounded
+  reasoned optical typography treatments, rendered focal/reading/alignment/gap
+  contracts, all-element browser geometry, and `chitra stage-check` ownership
+  across static board, motion, and sound/master Scores. Includes seeded
+  geometry/stage-drift and backward-seek browser evidence with no new runtime
+  dependency.
 - ADR-0044 provider-neutral Score narration: frozen local voice with strict word
   clock and provenance, `at.onNarrationWord` choreography, typed music ducking,
   narration/music/SFX measured final bus, release/cache identity, and

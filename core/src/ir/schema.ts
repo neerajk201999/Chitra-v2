@@ -16,11 +16,14 @@ import {
   TYPE_SCALE,
 } from "../motion/tokens.js";
 import { CAPABILITIES, CAPABILITY_IDS } from "../capabilities/index.js";
-import { BUNDLED_FONT_FAMILIES, FontFamily, FontWeight } from "../brand/index.js";
+import { BUNDLED_FONT_FAMILIES, BUNDLED_FONT_WEIGHTS, FontFamily, FontWeight } from "../brand/index.js";
 
 const id = z
   .string()
   .regex(/^[a-z][a-z0-9-]*$/, "ids are kebab-case, start with a letter");
+const frameTarget = z
+  .string()
+  .regex(/^[a-z][a-z0-9-]*(\/[a-z][a-z0-9-]*)?$/, "frame targets are element IDs or figureId/innerId");
 const reason = z.string().min(8, "every creative decision carries a real reason");
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "6-digit hex color");
 const projectAssetPath = z.string().min(1).refine(
@@ -332,7 +335,25 @@ const Compositing = z.object({
   filters: z.array(FilterOperation).max(8).default([]),
   clip: ClipShape.optional(),
   matte: Matte.optional(),
-}).strict();
+}).strict().superRefine((value, ctx) => {
+  const clip = value.clip;
+  if (clip?.kind === "inset" && (clip.left + clip.right >= 100 || clip.top + clip.bottom >= 100))
+    ctx.addIssue({ code: "custom", path: ["clip"], message: "clip inset must preserve a positive visible area" });
+  if (clip?.kind === "circle" && clip.radius <= 0)
+    ctx.addIssue({ code: "custom", path: ["clip", "radius"], message: "clip circle radius must be positive" });
+  if (clip?.kind === "ellipse" && (clip.radiusX <= 0 || clip.radiusY <= 0))
+    ctx.addIssue({ code: "custom", path: ["clip"], message: "clip ellipse radii must be positive" });
+  if (clip?.kind === "polygon") {
+    const area = Math.abs(clip.points.reduce((sum, point, index) => {
+      const next = clip.points[(index + 1) % clip.points.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0)) / 2;
+    if (area < 0.01)
+      ctx.addIssue({ code: "custom", path: ["clip", "points"], message: "clip polygon must preserve a positive visible area" });
+  }
+  if (value.matte && value.matte.kind !== "asset" && value.matte.stops.every((stop) => stop.opacity <= 0))
+    ctx.addIssue({ code: "custom", path: ["matte", "stops"], message: "gradient matte must preserve some visible area" });
+});
 const compositing = Compositing.default({
   opacity: 1,
   blendMode: "normal",
@@ -349,6 +370,17 @@ const TextElement = z.object({
   color: z.enum(["text", "text-dim", "primary", "accent", "on-media"]).default("text"),
   maxWidth: z.number().min(10).max(100).optional(), // stage units
   align: z.enum(["left", "center", "right"]).default("center"),
+  /** ADR-0045: bounded optical override. Type roles remain the default system;
+   * treatments require a reason and never admit raw CSS. */
+  treatment: z.object({
+    reason,
+    sizePx1080: z.number().min(12).max(240).optional(),
+    lineHeight: z.number().min(0.8).max(2).optional(),
+    weight: z.number().int().min(300).max(700).optional(),
+    trackingEm: z.number().min(-0.08).max(0.2).optional(),
+    case: z.enum(["preserve", "upper", "lower"]).default("preserve"),
+    wrap: z.enum(["normal", "balance", "nowrap"]).default("normal"),
+  }).strict().optional(),
   position: Position.default({ anchor: "center" }),
   compositing,
 });
@@ -568,6 +600,29 @@ const GroupElement = z.object({
   position: Position.default({ anchor: "center" }),
   width: z.number().min(1).max(140).default(100),
   height: z.number().min(1).max(140).default(100),
+  /** ADR-0045: browser-native deterministic layout inside a local composition.
+   * Child position is authoritative only for `free`. */
+  layout: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("free") }).strict(),
+    z.object({
+      kind: z.literal("stack"),
+      axis: z.enum(["horizontal", "vertical"]),
+      itemSizing: z.enum(["intrinsic", "equal"]).default("intrinsic"),
+      gap: z.number().min(0).max(20).default(2),
+      padding: z.number().min(0).max(20).default(0),
+      align: z.enum(["start", "center", "end", "stretch"]).default("center"),
+      justify: z.enum(["start", "center", "end", "space-between"]).default("start"),
+    }).strict(),
+    z.object({
+      kind: z.literal("grid"),
+      columns: z.number().int().min(1).max(12),
+      columnGap: z.number().min(0).max(20).default(2),
+      rowGap: z.number().min(0).max(20).default(2),
+      padding: z.number().min(0).max(20).default(0),
+      align: z.enum(["start", "center", "end", "stretch"]).default("stretch"),
+      justify: z.enum(["start", "center", "end", "stretch"]).default("stretch"),
+    }).strict(),
+  ]).default({ kind: "free" }),
   overflow: z.enum(["visible", "hidden"]).default("visible"),
   compositing,
 }).superRefine((value, ctx) => {
@@ -755,6 +810,31 @@ export const Scene = z.object({
   backgroundImage: projectAssetPath.optional(),
   backgroundAssetUse: AssetUse.optional(),
   elements: z.array(Element).min(1).max(64),
+  /** ADR-0045: authored spatial intent checked against rendered geometry. */
+  frame: z.object({
+    intent: reason,
+    representativeMs: z.number().int().min(0).max(20000).optional(),
+    focalTarget: frameTarget,
+    readingOrder: z.array(frameTarget).min(1).max(16),
+    relationships: z.array(z.discriminatedUnion("kind", [
+      z.object({
+        kind: z.literal("align"),
+        id,
+        targets: z.array(frameTarget).min(2).max(12),
+        edge: z.enum(["left", "center-x", "right", "top", "center-y", "bottom"]),
+        tolerancePx: z.number().min(0).max(32).default(2),
+      }).strict(),
+      z.object({
+        kind: z.literal("gap"),
+        id,
+        from: frameTarget,
+        to: frameTarget,
+        axis: z.enum(["horizontal", "vertical"]),
+        minPx: z.number().min(0).max(4096),
+        maxPx: z.number().min(0).max(4096),
+      }).strict(),
+    ])).max(24).default([]),
+  }).strict().optional(),
   choreography: z.array(Animation).default([]),
   transitionOut: z
     .object({ type: transition, duration: durationToken.default("standard") })
@@ -778,6 +858,38 @@ export const Scene = z.object({
         ctx.addIssue({ code: "custom", path: ["elements", index, "playback", "durationMs"], message: "lottie playback must remain within the scene" });
     }
   });
+  if (value.frame) {
+    if (value.frame.representativeMs != null && value.frame.representativeMs >= value.durationMs)
+      ctx.addIssue({ code: "custom", path: ["frame", "representativeMs"], message: "representative frame must occur inside the scene" });
+    const targets = [
+      value.frame.focalTarget,
+      ...value.frame.readingOrder,
+      ...value.frame.relationships.flatMap((relationship) =>
+        relationship.kind === "align" ? relationship.targets : [relationship.from, relationship.to]),
+    ];
+    if (new Set(targets).size > 32)
+      ctx.addIssue({ code: "custom", path: ["frame"], message: "frame contract may cite at most 32 unique rendered targets" });
+    targets.forEach((target) => {
+      const root = target.split("/")[0];
+      if (!elementIds.has(root))
+        ctx.addIssue({ code: "custom", path: ["frame"], message: `frame target ${target} cites missing element ${root}` });
+      if (target.includes("/") && value.elements.find((element) => element.id === root)?.type !== "figure")
+        ctx.addIssue({ code: "custom", path: ["frame"], message: `nested frame target ${target} requires a figure root` });
+    });
+    if (new Set(value.frame.readingOrder).size !== value.frame.readingOrder.length)
+      ctx.addIssue({ code: "custom", path: ["frame", "readingOrder"], message: "frame reading-order targets must be unique" });
+    const relationshipIds = value.frame.relationships.map((relationship) => relationship.id);
+    if (new Set(relationshipIds).size !== relationshipIds.length)
+      ctx.addIssue({ code: "custom", path: ["frame", "relationships"], message: "frame relationship IDs must be unique" });
+    value.frame.relationships.forEach((relationship, index) => {
+      if (relationship.kind === "align" && new Set(relationship.targets).size !== relationship.targets.length)
+        ctx.addIssue({ code: "custom", path: ["frame", "relationships", index, "targets"], message: "frame alignment targets must be unique" });
+      if (relationship.kind === "gap" && relationship.from === relationship.to)
+        ctx.addIssue({ code: "custom", path: ["frame", "relationships", index], message: "frame gap endpoints must be distinct" });
+      if (relationship.kind === "gap" && relationship.maxPx < relationship.minPx)
+        ctx.addIssue({ code: "custom", path: ["frame", "relationships", index, "maxPx"], message: "frame gap maxPx must be greater than or equal to minPx" });
+    });
+  }
   const animationIds = new Set<string>();
   value.choreography.forEach((animation, index) => {
     if (animationIds.has(animation.id))
@@ -833,7 +945,10 @@ export const Style = z.object({
     ["text", value.fonts.text, value.textWeight],
     ["mono", value.fonts.mono, 400],
   ] as const) {
-    if (!(BUNDLED_FONT_FAMILIES as readonly string[]).includes(family) && !faces.has(`${family}:${weight}`))
+    if ((BUNDLED_FONT_FAMILIES as readonly string[]).includes(family) &&
+      !(BUNDLED_FONT_WEIGHTS as Record<string, readonly number[]>)[family].includes(weight))
+      ctx.addIssue({ code: "custom", path: ["fonts", role], message: `bundled family ${family} does not include weight ${weight}` });
+    else if (!(BUNDLED_FONT_FAMILIES as readonly string[]).includes(family) && !faces.has(`${family}:${weight}`))
       ctx.addIssue({ code: "custom", path: ["fonts", role], message: `custom family ${family} requires declared weight ${weight}` });
   }
 });
@@ -925,6 +1040,35 @@ export const Score = z.object({
     .strict()
     .optional(),
 }).superRefine((value, ctx) => {
+  const declaredFaces = new Set(value.style.fontAssets.map((face) => `${face.family}:${face.weight}`));
+  const validateRenderedFace = (
+    family: string,
+    weight: number,
+    path: (string | number)[],
+    description: string,
+  ) => {
+    const bundled = (BUNDLED_FONT_FAMILIES as readonly string[]).includes(family);
+    if (bundled && !(BUNDLED_FONT_WEIGHTS as Record<string, readonly number[]>)[family].includes(weight))
+      ctx.addIssue({ code: "custom", path, message: `bundled family ${family} does not include ${description} weight ${weight}` });
+    else if (!bundled && !declaredFaces.has(`${family}:${weight}`))
+      ctx.addIssue({ code: "custom", path, message: `custom family ${family} requires declared ${description} weight ${weight}` });
+  };
+  value.scenes.forEach((scene, sceneIndex) => {
+    scene.elements.forEach((element, elementIndex) => {
+      if (element.type === "stat" && element.label) {
+        validateRenderedFace(value.style.fonts.text, 600,
+          ["scenes", sceneIndex, "elements", elementIndex, "label"], "stat-label");
+        return;
+      }
+      if (element.type !== "text") return;
+      const display = element.textRole === "display" || element.textRole === "headline" || element.textRole === "title";
+      const weight = element.treatment?.weight ?? (element.textRole === "kicker" ? 600 : null);
+      if (weight == null) return;
+      validateRenderedFace(display ? value.style.fonts.display : value.style.fonts.text, weight,
+        ["scenes", sceneIndex, "elements", elementIndex, element.treatment?.weight == null ? "textRole" : "treatment", "weight"],
+        element.treatment?.weight == null ? `${element.textRole} implicit` : "treatment");
+    });
+  });
   const narration = value.audio?.narration;
   if (!narration) return;
   const durationMs = value.scenes.reduce((sum, scene) => sum + scene.durationMs, 0);

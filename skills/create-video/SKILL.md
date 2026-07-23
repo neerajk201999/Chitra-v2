@@ -69,6 +69,11 @@ and use a cut animatic when timing/audio/story risk warrants it. A short
 single-shot unit, exact approved direction, or reconstruction may skip with a
 stated reason.
 
+When roles are split across agents/passes, load
+[references/frame-production.md](references/frame-production.md). Use staged
+Scores and `chitra stage-check`; Frame, Motion, and Sound specialists must not
+freely rewrite the same film.
+
 If a revision ledger exists, load
 [references/revision-memory.md](references/revision-memory.md) and compile a
 bounded project/brand context packet before Direction. Never load the full

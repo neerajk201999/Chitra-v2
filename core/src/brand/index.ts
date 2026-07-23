@@ -6,6 +6,12 @@ import { hashFile, lockedProjectFile, verifyFingerprint } from "../assets/finger
 
 export const BRAND_SYSTEM_VERSION = "0.1.0";
 export const BUNDLED_FONT_FAMILIES = ["Inter", "Space Grotesk", "Instrument Serif", "JetBrains Mono"] as const;
+export const BUNDLED_FONT_WEIGHTS: Record<(typeof BUNDLED_FONT_FAMILIES)[number], readonly number[]> = {
+  Inter: [400, 500, 600],
+  "Space Grotesk": [400, 500, 700],
+  "Instrument Serif": [400],
+  "JetBrains Mono": [400, 500],
+};
 
 const id = z.string().regex(/^[a-z][a-z0-9-]*$/, "ids are kebab-case, start with a letter");
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/, "sha256 is 64 lowercase hex characters");
@@ -81,9 +87,12 @@ export const BrandSystem = z.object({
       ctx.addIssue({ code: "custom", path: ["fontAssets", index, "family"], message: `font family ${face.family} is not assigned to a typography role` });
   });
   for (const [role, spec] of Object.entries(value.typography)) {
-    if (role === "trackingDisplay" || (BUNDLED_FONT_FAMILIES as readonly string[]).includes((spec as { family: string }).family)) continue;
+    if (role === "trackingDisplay") continue;
     const font = spec as { family: string; weight: number };
-    if (!faces.has(`${font.family}:${font.weight}`))
+    if ((BUNDLED_FONT_FAMILIES as readonly string[]).includes(font.family)) {
+      if (!BUNDLED_FONT_WEIGHTS[font.family as keyof typeof BUNDLED_FONT_WEIGHTS].includes(font.weight))
+        ctx.addIssue({ code: "custom", path: ["typography", role], message: `bundled ${role} face ${font.family}:${font.weight} is not available` });
+    } else if (!faces.has(`${font.family}:${font.weight}`))
       ctx.addIssue({ code: "custom", path: ["typography", role], message: `custom ${role} face ${font.family}:${font.weight} is not declared` });
   }
 });

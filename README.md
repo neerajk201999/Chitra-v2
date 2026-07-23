@@ -21,8 +21,7 @@ prompt + optional sources → intake → bounded direction search → storyboard
 
 ## Status
 
-**v0.5.0 — Cursor-first performance, capability honesty, and revision-memory
-release candidate.**
+**v0.6.0-rc.1 — native Frame Systems and role-safe production handoffs.**
 `chitra intake` preserves objectives, mixed-source provenance, preferences,
 anti-references, brand constraints, assumptions, and evidence as locked JSON;
 the [intake benchmark](benchmarks/intake/results.md) verifies deterministic local
@@ -53,14 +52,23 @@ loading whole videos; they do not prove semantic cut quality. ADR-0036 adds a
 still-first search transaction: compare two to four materially different
 Directions through identity-free probes before paying to animate one. Its
 contract and integrity benchmark pass; its creative choices remain uncalibrated.
+ADR-0045 adds deterministic free/stack/grid frame composition, bounded optical
+type treatments, rendered focal/reading/alignment/gap contracts, and staged
+board→motion→sound ownership over one Score. Its browser benchmark proves
+geometry, drift rejection, and backward-seek identity—not professional taste or
+general HyperFrames superiority.
 
 ## Use it from your coding agent
 
 Requirements: Node 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz
-npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
+git clone https://github.com/neerajk201999/Chitra-v2.git
+cd Chitra-v2
+npm install --prefix ./core
+npm pack ./core --pack-destination .
+npm install -g ./chitra-video-0.6.0-rc.1.tgz
+npx skills add . --skill '*' --copy --global --yes
 chitra probe
 ```
 
@@ -71,10 +79,12 @@ for explicit Claude Code, Codex, Cursor, and Gemini CLI commands, or [run the
 friend test](docs/quickstarts/README.md) with two ready-to-use prompts and a
 compact feedback checklist.
 
-The command above installs the public, SHA-256-verified `0.5.0` GitHub
-prerelease. The public registry still resolves `0.4.0`; stable npm `0.5.0`
-remains blocked until authentication, publication, and a fresh registry install
-pass. See [the public artifact benchmark](benchmarks/public-preview-install/results.md).
+The source-matched command above is the supported ADR-0045 test path until the
+exact protected-main `0.6.0-rc.1` package is published and independently
+reinstalled. The older SHA-256-verified
+[`0.5.0` artifact](https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz)
+must not be paired with current-main skills: it has no Frame System fields or
+`stage-check`.
 
 Then ask for the outcome in your own language. A plain direction prompt is
 enough; references, images, links, screenshots, footage, audio, brand material,
@@ -95,6 +105,8 @@ chitra direction-search-lock intake.lock.json search.json --project . -o search.
 chitra direction-probes intake.lock.json search.lock.json --project . -o direction-probes # identity-free comparable stills
 chitra direction-select direction-probes/SEARCH_DIGEST/manifest.json selection.json -o selection-receipt.json # re-hash evidence and resolve exact winner
 chitra creative-check intake.lock.json direction.json storyboard.json score.json # preserve intent across every tier
+chitra stage-check board.score.json motion.score.json --transition board-to-motion # motion cannot redesign approved frames
+chitra stage-check motion.score.json score.json --transition motion-to-master # sound cannot retime/redesign motion
 chitra init --style night --register brand-film --title "My film"   # gate-passing starter
 chitra decompose reference.mp4 -o style-dna.json # measurable reference facts + evidence
 chitra compare reference.mp4 out.mp4 -o comparison.json --evidence comparison-evidence

@@ -1,4 +1,4 @@
-# Known Issues (v0.5.0 release candidate — 2026-07-23)
+# Known Issues (v0.6.0-rc.1 source candidate; public preview remains v0.5.0-rc.4 — 2026-07-23)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 
@@ -114,10 +114,18 @@ Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed 
     defects and high-density review no longer share one policy ID. First-party
     unit and release fixtures prove the intended mechanics; an external reviewer
     has not yet labelled the hard/style boundary cases.
-20. **The studio process has a harness contract, not measured outcomes.**
-    Open/high-stakes multi-shot work now proves an all-shot still board and can
-    render a cut animatic before motion. No outside project yet shows that this
-    reduces discarded animation, time, tokens, or revision count.
+20. **The studio process has executable handoffs, not measured outside
+    outcomes.** Open/high-stakes multi-shot work proves an all-shot still board
+    and can render a cut animatic before motion. ADR-0045 now prevents static
+    board drift during Motion and visual/timing drift during Sound; native
+    frame relationships enter rendered gates. No outside project yet shows
+    that this reduces discarded animation, time, tokens, or revision count.
+21. **Frame System 0.1 is bounded.** It provides free/stack/grid local layout,
+    optical type overrides, and explicit rendered alignment/gap contracts. It
+    is not a general constraint solver, responsive multi-aspect system,
+    calibrated optical-balance model, or evidence-backed recipe gallery.
+    Arbitrary figure CSS remains outside theme-purity enforcement (A8), and
+    only declared spatial relationships are hard-gated.
 
 ## Integrity findings from the 2026-07-16 due-diligence audit (docs open until fixed)
 - **A1. ✅ Figure text gate bypass fixed 2026-07-16 (ADR-0024).** Rendered figure DOM text now enters size, bounded-sample pixel contrast, safe-zone, reading-time, and overlap gates. The browser benchmark triggers all five and leaves a compliant control green. Rasterized text and sub-interval defects remain item 6.

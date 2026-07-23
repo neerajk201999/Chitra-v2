@@ -30,6 +30,7 @@ import { DirectorialProbeManifest, LockedDirectorialSearch, generateDirectorialP
 import { editDigest, lockTranscript, packTranscript, renderEdit, resolveEdit, resolveEditArtifactTarget, transcriptDigest, validateEditDecisionList, validateTranscript, verifyTranscriptSources, type EditDecisionListT, type LockedTranscriptT } from "../editing/index.js";
 import { FOOTAGE_EVIDENCE_VERSION, generateFootageEvidence } from "../editing/evidence.js";
 import { IR_VERSION } from "../motion/tokens.js";
+import { checkStageTransition, scoreStageDigest, type StageTransition } from "../production/stages.js";
 
 const program = new Command();
 const packageVersion = (createRequire(import.meta.url)("../../package.json") as { version: string }).version;
@@ -310,6 +311,43 @@ program
   .action((file: string) => {
     const storyboard = loadStoryboard(file);
     console.log(`✔ storyboard valid — "${storyboard.title}" (${storyboard.register}), ${storyboard.shots.length} shots`);
+  });
+
+program
+  .command("stage-check")
+  .argument("<from>", "accepted upstream Score")
+  .argument("<to>", "downstream specialist Score")
+  .requiredOption("--transition <kind>", "board-to-motion | motion-to-master")
+  .option("--json", "machine-readable result")
+  .description("Enforce Frame/Motion/Sound role ownership across staged Scores (ADR-0045)")
+  .action((fromFile: string, toFile: string, opts: { transition: string; json?: boolean }) => {
+    if (opts.transition !== "board-to-motion" && opts.transition !== "motion-to-master")
+      fail("--transition must be board-to-motion or motion-to-master");
+    const fromLoaded = loadScore(fromFile);
+    const toLoaded = loadScore(toFile);
+    const from = fromLoaded.score;
+    const to = toLoaded.score;
+    const transition = opts.transition as StageTransition;
+    let findings;
+    try {
+      findings = checkStageTransition(from, to, transition, {
+        fromProjectDir: fromLoaded.projectDir,
+        toProjectDir: toLoaded.projectDir,
+      });
+    } catch (error) {
+      fail(`Stage input verification failed: ${(error as Error).message}`);
+    }
+    const report = {
+      transition,
+      fromDigest: scoreStageDigest(from),
+      toDigest: scoreStageDigest(to),
+      ok: findings.length === 0,
+      findings,
+    };
+    if (opts.json) console.log(JSON.stringify(report, null, 2));
+    else if (report.ok) console.log(`✔ ${transition} handoff preserves role ownership\n  ${report.fromDigest.slice(0, 16)}… → ${report.toDigest.slice(0, 16)}…`);
+    else for (const finding of findings) console.error(`✖ [${finding.ruleId}] ${finding.path}: ${finding.message}`);
+    if (!report.ok) process.exitCode = 1;
   });
 
 program
