@@ -168,7 +168,10 @@ export interface ResolvedAnim {
 
 /** ADR-0011/0013: onBeat needs absolute scene start + beat grid; frame tracks
  *  need FPS. Callers that have them (compiler, gates) pass ctx. */
-export function resolveSceneTimeline(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[]; fps?: number }): ResolvedAnim[] {
+export function resolveSceneTimeline(
+  scene: SceneT,
+  ctx?: { sceneStartMs: number; beats?: number[]; fps?: number; narrationWordStarts?: ReadonlyMap<string, number> },
+): ResolvedAnim[] {
   const byId = new Map<string, ResolvedAnim>();
   const out: ResolvedAnim[] = [];
   for (const anim of scene.choreography) {
@@ -181,7 +184,14 @@ export function resolveSceneTimeline(scene: SceneT, ctx?: { sceneStartMs: number
       anim.override?.gsapEase ??
       EASINGS[(anim.easing ?? preset.defaultEasing) as EasingToken];
     let base = 0;
-    if (anim.at.onBeat != null) {
+    if (anim.at.onNarrationWord != null) {
+      const absolute = ctx?.narrationWordStarts?.get(anim.at.onNarrationWord);
+      if (absolute == null)
+        throw new Error(`Scene "${scene.id}": animation "${anim.id}" cites unknown narration word "${anim.at.onNarrationWord}"`);
+      base = absolute - (ctx?.sceneStartMs ?? 0);
+      if (base < 0 || base >= scene.durationMs)
+        throw new Error(`Scene "${scene.id}": narration word "${anim.at.onNarrationWord}" occurs outside this scene`);
+    } else if (anim.at.onBeat != null) {
       const beats = ctx?.beats;
       if (!beats?.length) throw new Error(`Scene "${scene.id}": animation "${anim.id}" uses at.onBeat but audio.music.beats is not declared (run \`chitra analyze-audio\`)`);
       if (anim.at.onBeat >= beats.length) throw new Error(`Scene "${scene.id}": animation "${anim.id}" onBeat ${anim.at.onBeat} exceeds ${beats.length} detected beats`);
@@ -873,6 +883,12 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
   const lottieSpecs: Array<Record<string, unknown>> = [];
   const sceneBoundsMs: CompileResult["sceneBoundsMs"] = [];
   const textMeta: Array<{ sel: string; sceneId: string; color: string; overMedia: boolean }> = [];
+  const narrationWordStarts = new Map(
+    (score.audio?.narration?.words ?? []).map((word) => [
+      word.id,
+      (score.audio?.narration?.startMs ?? 0) + word.startMs,
+    ]),
+  );
   let cursor = 0;
 
   for (const scene of score.scenes) {
@@ -918,7 +934,12 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
       }
     }
 
-    const resolved = resolveSceneTimeline(scene, { sceneStartMs: cursor, beats: score.audio?.music?.beats, fps });
+    const resolved = resolveSceneTimeline(scene, {
+      sceneStartMs: cursor,
+      beats: score.audio?.music?.beats,
+      fps,
+      narrationWordStarts,
+    });
     // Elements with an enter animation start hidden; compiler sets initial state.
     for (const r of resolved) tweens.push(...presetTweens(r, scene, cursor, score));
 
@@ -968,7 +989,12 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
   let s3cursor = 0;
   const scene3dSpecs: Array<Record<string, unknown>> = [];
   for (const sc of score.scenes) {
-    const resolved3d = resolveSceneTimeline(sc, { sceneStartMs: s3cursor, beats: score.audio?.music?.beats, fps });
+    const resolved3d = resolveSceneTimeline(sc, {
+      sceneStartMs: s3cursor,
+      beats: score.audio?.music?.beats,
+      fps,
+      narrationWordStarts,
+    });
     for (const el of sc.elements) {
       if (el.type === "scene3d") {
         const track = resolved3d.find((item) => item.anim.preset === "three-keyframe-track" && item.anim.target === el.id);

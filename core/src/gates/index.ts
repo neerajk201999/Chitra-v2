@@ -63,7 +63,7 @@ export const RULE_POLICIES = {
   "CC-SCORE-5": "style-flag", "CC-SCORE-6": "style-flag", "CC-SCORE-7": "hard-defect", "CC-SCORE-8": "p1-hard",
   "IR-CUR-1": "hard-defect", "IR-FIG-1": "style-flag", "IR-GROUP-1": "hard-defect", "IR-REF-1": "hard-defect", "IR-REF-2": "hard-defect",
   "MO-3D-1": "style-flag", "MO-3D-2": "hard-defect",
-  "MO-AUD-2": "style-flag", "MO-AUD-3": "style-flag", "MO-AUD-4": "hard-defect",
+  "MO-AUD-2": "style-flag", "MO-AUD-3": "style-flag", "MO-AUD-4": "hard-defect", "MO-AUD-5": "hard-defect",
   "MO-CHOR-1": "style-flag", "MO-CHOR-2": "style-flag", "MO-CHOR-5": "style-flag",
   "MO-DUR-2": "style-flag", "MO-EASE-1": "style-flag", "MO-EASE-2": "style-flag",
   "MO-EDIT-1": "required-meaning", "MO-EDIT-2": "style-flag", "MO-EDIT-3": "style-flag", "MO-EDIT-5": "style-flag",
@@ -135,6 +135,12 @@ export function applyStyleAcceptances(findings: ClassifiedFinding[], acceptances
 }
 
 const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+const narrationWordStartMap = (score: ScoreT) => new Map(
+  (score.audio?.narration?.words ?? []).map((word) => [
+    word.id,
+    (score.audio?.narration?.startMs ?? 0) + word.startMs,
+  ]),
+);
 
 // ── Static gates ───────────────────────────────────────────────────────────
 export function runStaticGates(score: ScoreT): Finding[] {
@@ -144,6 +150,7 @@ export function runStaticGates(score: ScoreT): Finding[] {
   const minPx = TYPOGRAPHY.minTextPx1080[score.meta.register as Register] * scale;
 
   const beats = score.audio?.music?.beats;
+  const narrationWordStarts = narrationWordStartMap(score);
   const sceneStart = (idx: number) => score.scenes.slice(0, idx).reduce((a, s) => a + s.durationMs, 0);
   score.scenes.forEach((scene, si) => {
     const p = (rest: string) => `scenes[${si}]${rest}`;
@@ -156,7 +163,21 @@ export function runStaticGates(score: ScoreT): Finding[] {
       else if (a.at.onBeat >= beats.length)
         f.push({ ruleId: "MO-AUD-4", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" onBeat ${a.at.onBeat} exceeds ${beats.length} detected beats` });
     });
-    const resolved = safeResolve(scene, { sceneStartMs: sceneStart(si), beats, fps: score.meta.fps });
+    scene.choreography.forEach((a, ai) => {
+      if (a.at.onNarrationWord == null) return;
+      const absolute = narrationWordStarts.get(a.at.onNarrationWord);
+      const start = sceneStart(si);
+      if (absolute == null)
+        f.push({ ruleId: "MO-AUD-5", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" cites unknown narration word "${a.at.onNarrationWord}"` });
+      else if (absolute < start || absolute >= start + scene.durationMs)
+        f.push({ ruleId: "MO-AUD-5", severity: "P1", path: p(`.choreography[${ai}]`), message: `"${a.id}" cites narration word "${a.at.onNarrationWord}" outside scene "${scene.id}"` });
+    });
+    const resolved = safeResolve(scene, {
+      sceneStartMs: sceneStart(si),
+      beats,
+      fps: score.meta.fps,
+      narrationWordStarts,
+    });
     if (!resolved) {
       f.push({ ruleId: "IR-REF-1", severity: "P1", path: p(".choreography"), message: "Choreography references an unknown animation id (broken relational timing)" });
       return;
@@ -540,7 +561,10 @@ export function runStaticGates(score: ScoreT): Finding[] {
   return f;
 }
 
-function safeResolve(scene: SceneT, ctx?: { sceneStartMs: number; beats?: number[]; fps?: number }) {
+function safeResolve(
+  scene: SceneT,
+  ctx?: { sceneStartMs: number; beats?: number[]; fps?: number; narrationWordStarts?: ReadonlyMap<string, number> },
+) {
   try {
     return resolveSceneTimeline(scene, ctx);
   } catch {
@@ -610,6 +634,7 @@ export function frameGateSampleTimes(score: ScoreT): number[] {
   const lastFrame = totalFrames - 1;
   const intervalFrames = Math.max(1, Math.floor(FRAME_GATE_INTERVAL_MS / frameMs));
   const frames = new Set<number>();
+  const narrationWordStarts = narrationWordStartMap(score);
   const addMs = (ms: number) => frames.add(Math.max(0, Math.min(lastFrame, Math.round(ms / frameMs))));
   let sceneStartMs = 0;
   for (const scene of score.scenes) {
@@ -623,7 +648,12 @@ export function frameGateSampleTimes(score: ScoreT): number[] {
     frames.add(Math.max(firstFrame, endFrame - 1));
     frames.add(endFrame);
 
-    const resolved = safeResolve(scene, { sceneStartMs, beats: score.audio?.music?.beats, fps: score.meta.fps }) ?? [];
+    const resolved = safeResolve(scene, {
+      sceneStartMs,
+      beats: score.audio?.music?.beats,
+      fps: score.meta.fps,
+      narrationWordStarts,
+    }) ?? [];
     for (const item of resolved) {
       const start = sceneStartMs + item.startMs;
       const end = start + item.durationMs;
@@ -640,6 +670,7 @@ export function frameGateSampleTimes(score: ScoreT): number[] {
 
 export async function runFrameGates(score: ScoreT, session: RenderSession): Promise<Finding[]> {
   const f: Finding[] = [];
+  const narrationWordStarts = narrationWordStartMap(score);
   const findingKeys = new Set<string>();
   const addFinding = (finding: Finding) => {
     const key = `${finding.ruleId}|${finding.path}`;
@@ -714,7 +745,12 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
       group.text.push(text);
       readingGroups.set(key, group);
     }
-    const resolved = safeResolve(score.scenes[si], { sceneStartMs: b.startMs, beats: score.audio?.music?.beats, fps: score.meta.fps }) ?? [];
+    const resolved = safeResolve(score.scenes[si], {
+      sceneStartMs: b.startMs,
+      beats: score.audio?.music?.beats,
+      fps: score.meta.fps,
+      narrationWordStarts,
+    }) ?? [];
     for (const [target, group] of readingGroups) {
       const targets = new Set([target, group.region.figureId].filter((value): value is string => !!value));
       let visibleFrom = 0, visibleTo = score.scenes[si].durationMs;
@@ -1056,6 +1092,7 @@ function renderedAssets(score: ScoreT): RenderedAsset[] {
     });
   });
   if (score.audio?.music) assets.push({ path: score.audio.music.src, assetUse: score.audio.music.assetUse, irPath: "score.audio.music.src" });
+  if (score.audio?.narration) assets.push({ path: score.audio.narration.src, assetUse: score.audio.narration.assetUse, irPath: "score.audio.narration.src" });
   return assets;
 }
 

@@ -88,6 +88,7 @@ export function renderInputFiles(score: ScoreT, projectDir = "."): string[] {
   const sources = new Set(score.scenes.flatMap(sceneAssetSources));
   for (const font of score.style.fontAssets) sources.add(font.src);
   if (score.audio?.music) sources.add(score.audio.music.src);
+  if (score.audio?.narration) sources.add(score.audio.narration.src);
   return [...sources].map((source) => resolveProjectAsset(projectDir, source)).sort();
 }
 
@@ -128,11 +129,17 @@ export function sceneHash(score: ScoreT, sceneIndex: number, projectDir = "."): 
     nextScene: score.scenes[sceneIndex + 1] ?? null,
     prevScene: score.scenes[sceneIndex - 1] ?? null,
     // `at.onBeat` changes pixels even when scenes are byte-identical.
-    audioTiming: score.audio?.music ? {
-      bpm: score.audio.music.bpm,
-      firstBeatMs: score.audio.music.firstBeatMs,
-      beats: score.audio.music.beats,
-    } : null,
+    audioTiming: {
+      music: score.audio?.music ? {
+        bpm: score.audio.music.bpm,
+        firstBeatMs: score.audio.music.firstBeatMs,
+        beats: score.audio.music.beats,
+      } : null,
+      narration: score.audio?.narration ? {
+        startMs: score.audio.narration.startMs,
+        words: score.audio.narration.words,
+      } : null,
+    },
   });
   return createHash("sha256").update(basis).digest("hex").slice(0, 16);
 }
@@ -143,11 +150,13 @@ export function scoreHash(score: ScoreT, projectDir = "."): string {
   // mtime/size memoization.
   digestMemo.clear();
   const music = score.audio?.music;
+  const narration = score.audio?.narration;
   return createHash("sha256").update(JSON.stringify({
     compilerV: COMPILER_CACHE_VERSION,
     score,
     scenes: score.scenes.map((_, index) => sceneHash(score, index, projectDir)),
     music: music ? fileDigest(resolveProjectAsset(projectDir, music.src)) : null,
+    narration: narration ? fileDigest(resolveProjectAsset(projectDir, narration.src)) : null,
   })).digest("hex");
 }
 
@@ -177,6 +186,24 @@ export interface TextRegion {
   figureId?: string;
   target?: string;
   text?: string;
+}
+
+function audioDurationMs(file: string): number {
+  const probe = spawnSync("ffprobe", [
+    "-v", "error", "-select_streams", "a:0",
+    "-show_entries", "stream=duration:format=duration", "-of", "json", file,
+  ], { encoding: "utf8" });
+  let value: unknown;
+  try {
+    const parsed = probe.status === 0 ? JSON.parse(probe.stdout) : null;
+    value = parsed?.streams?.[0]?.duration ?? parsed?.format?.duration;
+  } catch {
+    value = null;
+  }
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0)
+    throw new Error(`narration source has no measurable audio duration: ${file} (${(probe.stderr || probe.stdout).slice(-300)})`);
+  return seconds * 1000;
 }
 
 /** ADR-0007: pre-extract every video element to per-frame JPEGs (content-hashed,
@@ -228,6 +255,12 @@ export function prepareMedia(
 export async function openSession(score: ScoreT, projectDir: string, workDir: string): Promise<RenderSession> {
   for (let index = 0; index < score.scenes.length; index++) assetDigests(score, index, projectDir);
   if (score.audio?.music) resolveProjectAsset(projectDir, score.audio.music.src);
+  if (score.audio?.narration) {
+    const file = resolveProjectAsset(projectDir, score.audio.narration.src);
+    const finalWord = score.audio.narration.words.at(-1);
+    if (finalWord && finalWord.endMs > audioDurationMs(file) + 10)
+      throw new Error(`narration word clock ends at ${finalWord.endMs}ms beyond source audio duration: ${score.audio.narration.src}`);
+  }
   const compiled = compile(score, projectDir);
   mkdirSync(workDir, { recursive: true });
   // Page lives in the project dir so relative asset paths (images) resolve.
@@ -442,19 +475,26 @@ export async function renderScore(
     const enc = profile;
     mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
     const music = score.audio?.music;
+    const narration = score.audio?.narration;
     const sfx = collectSfx(score, projectDir, compiled);
     let audio: AudioMeasurement = { status: "missing" };
-    if (music || sfx.length) {
+    if (music || narration || sfx.length) {
       const silent = outFile.replace(/(\.[a-z0-9]+)?$/i, ".video-only.mp4");
       await pipeEncode(framePaths, fps, silent, enc.preset, enc.crf);
       await muxAudio(silent, outFile, {
         durationS: compiled.durationMs / 1000,
         music: music ? { file: resolveProjectAsset(projectDir, music.src), gainDb: music.gainDb, fadeOutMs: music.fadeOutMs } : null,
+        narration: narration ? {
+          file: resolveProjectAsset(projectDir, narration.src),
+          startMs: narration.startMs,
+          gainDb: narration.gainDb,
+          ducking: narration.ducking,
+        } : null,
         sfx,
       });
       rmSync(silent, { force: true });
       audio = measureAudio(outFile);
-      const audioIssues = audioInvariantIssues(audio, !!music, sfx.length > 0);
+      const audioIssues = audioInvariantIssues(audio, !!music, sfx.length > 0, !!narration);
       if (audioIssues.length) throw new Error(`final mux violates MO-AUD-1: ${audioIssues.join("; ")}`);
     } else {
       await pipeEncode(framePaths, fps, outFile, enc.preset, enc.crf);
@@ -513,9 +553,15 @@ export interface SfxEvent {
 export function collectSfx(score: ScoreT, projectDir: string, compiled: CompileResult): SfxEvent[] {
   const events: SfxEvent[] = [];
   const beats = score.audio?.music?.beats;
+  const narrationWordStarts = new Map(
+    (score.audio?.narration?.words ?? []).map((word) => [
+      word.id,
+      (score.audio?.narration?.startMs ?? 0) + word.startMs,
+    ]),
+  );
   score.scenes.forEach((scene, i) => {
     const sceneStart = compiled.sceneBoundsMs[i].startMs;
-    for (const r of resolveSceneTimeline(scene, { sceneStartMs: sceneStart, beats })) {
+    for (const r of resolveSceneTimeline(scene, { sceneStartMs: sceneStart, beats, narrationWordStarts })) {
       const sfx = (r.anim as { sfx?: { src: string; gainDb: number } }).sfx;
       if (!sfx) continue;
       const file = resolveProjectAsset(projectDir, sfx.src);
@@ -529,13 +575,23 @@ export function collectSfx(score: ScoreT, projectDir: string, compiled: CompileR
 async function muxAudio(
   videoFile: string,
   outFile: string,
-  opts: { durationS: number; music: { file: string; gainDb: number; fadeOutMs: number } | null; sfx: SfxEvent[] }
+  opts: {
+    durationS: number;
+    music: { file: string; gainDb: number; fadeOutMs: number } | null;
+    narration: {
+      file: string;
+      startMs: number;
+      gainDb: number;
+      ducking: { threshold: number; ratio: number; attackMs: number; releaseMs: number };
+    } | null;
+    sfx: SfxEvent[];
+  },
 ): Promise<void> {
   const D = opts.durationS.toFixed(3);
   const inputs: string[] = [];
   let idx = 0;
-  let bedLabel: string;
   const filters: string[] = [];
+  let musicLabel: string;
   if (opts.music) {
     if (!existsSync(opts.music.file)) return Promise.reject(new Error(`Music file not found: ${opts.music.file}`));
     inputs.push("-i", opts.music.file);
@@ -543,16 +599,40 @@ async function muxAudio(
     const fadeStart = Math.max(0, opts.durationS - fadeS);
     filters.push(
       `[${idx}:a]volume=${opts.music.gainDb}dB,apad,atrim=0:${D},` +
-        `afade=t=out:st=${fadeStart.toFixed(3)}:d=${fadeS.toFixed(3)},aresample=48000,aformat=channel_layouts=stereo[bed]`
+        `afade=t=out:st=${fadeStart.toFixed(3)}:d=${fadeS.toFixed(3)},aresample=48000,aformat=channel_layouts=stereo[music]`
     );
     idx++;
-    bedLabel = "[bed]";
+    musicLabel = "[music]";
   } else {
     inputs.push("-f", "lavfi", "-t", D, "-i", "anullsrc=r=48000:cl=stereo");
     filters.push(`[${idx}:a]atrim=0:${D}[bed]`);
     idx++;
-    bedLabel = "[bed]";
+    musicLabel = "[bed]";
   }
+
+  let narrationLabel = "";
+  if (opts.narration) {
+    if (!existsSync(opts.narration.file)) return Promise.reject(new Error(`Narration file not found: ${opts.narration.file}`));
+    inputs.push("-i", opts.narration.file);
+    filters.push(
+      `[${idx}:a]volume=${opts.narration.gainDb}dB,aresample=48000,aformat=channel_layouts=stereo,` +
+      `adelay=${opts.narration.startMs}|${opts.narration.startMs},apad,atrim=0:${D}[voice0]`,
+    );
+    idx++;
+    if (opts.music) {
+      filters.push(
+        `[voice0]asplit=2[voice][side]`,
+        `${musicLabel}[side]sidechaincompress=threshold=${opts.narration.ducking.threshold}:` +
+        `ratio=${opts.narration.ducking.ratio}:attack=${opts.narration.ducking.attackMs}:` +
+        `release=${opts.narration.ducking.releaseMs}[bed]`,
+      );
+      musicLabel = "[bed]";
+      narrationLabel = "[voice]";
+    } else {
+      narrationLabel = "[voice0]";
+    }
+  }
+
   const sfxLabels: string[] = [];
   opts.sfx.forEach((e, i) => {
     inputs.push("-i", e.file);
@@ -560,17 +640,17 @@ async function muxAudio(
     sfxLabels.push(`[s${i}]`);
     idx++;
   });
-  const mixInputs = 1 + sfxLabels.length;
-  filters.push(`${bedLabel}${sfxLabels.join("")}amix=inputs=${mixInputs}:duration=first:normalize=0,atrim=0:${D}[a]`);
+  const mixLabels = [musicLabel, narrationLabel, ...sfxLabels].filter(Boolean);
+  filters.push(`${mixLabels.join("")}amix=inputs=${mixLabels.length}:duration=first:normalize=0,atrim=0:${D}[a]`);
   const premix = outFile.replace(/(\.[a-z0-9]+)?$/i, ".premix.wav");
   try {
     await runFfmpeg(["-y", ...inputs, "-filter_complex", filters.join(";"), "-map", "[a]", "-c:a", "pcm_s24le", premix]);
     let finalFilter: string;
-    if (opts.music) {
+    if (opts.music || opts.narration) {
       const measured = measureAudio(premix);
       if (measured.status !== "present" || measured.integratedLufs == null || measured.truePeakDbtp == null ||
           measured.loudnessRangeLu == null || measured.thresholdLufs == null || measured.targetOffsetLu == null)
-        throw new Error("music-led premix is silent or cannot be measured for two-pass normalization");
+        throw new Error("program premix is silent or cannot be measured for two-pass normalization");
       finalFilter = `loudnorm=I=-14:TP=-1.8:LRA=11:measured_I=${measured.integratedLufs}:measured_TP=${measured.truePeakDbtp}:` +
         `measured_LRA=${measured.loudnessRangeLu}:measured_thresh=${measured.thresholdLufs}:offset=${measured.targetOffsetLu}:linear=true,aresample=48000`;
     } else {
@@ -619,6 +699,10 @@ function pipeEncode(frames: string[], fps: number, outFile: string, preset: stri
     const args = [
       "-y",
       "-f", "image2pipe",
+      // FFmpeg 8 no longer reliably probes concatenated JPEG image2pipe
+      // streams. Chitra owns the capture profile, so declare the codec instead
+      // of depending on version-specific probing.
+      "-vcodec", frames[0]?.toLowerCase().endsWith(".jpg") ? "mjpeg" : "png",
       "-framerate", String(fps),
       "-i", "-",
       "-c:v", "libx264",

@@ -603,6 +603,12 @@ const At = z.object({
   /** ADR-0011: fire at detected beat index N (absolute, from audio.music.beats),
    *  converted to scene-relative at compile. Overrides `after` when present. */
   onBeat: z.number().int().min(0).max(1999).optional(),
+  /** ADR-0044: exact ID in audio.narration.words. The word clock is global;
+   * the compiler converts it to this animation's scene-relative time. */
+  onNarrationWord: id.optional(),
+}).superRefine((value, ctx) => {
+  if (value.onBeat != null && value.onNarrationWord != null)
+    ctx.addIssue({ code: "custom", message: "animation timing cannot combine onBeat with onNarrationWord" });
 });
 
 const Stagger = z.object({
@@ -834,6 +840,46 @@ export const Style = z.object({
 export type StyleT = z.infer<typeof Style>;
 
 // ── Tier 2 root: Score ─────────────────────────────────────────────────────
+const NarrationWord = z.object({
+  id,
+  text: z.string().min(1).max(120),
+  startMs: z.number().int().min(0).max(600000),
+  endMs: z.number().int().min(1).max(600000),
+}).strict().refine((word) => word.endMs > word.startMs, {
+  path: ["endMs"],
+  message: "narration word endMs must be greater than startMs",
+});
+
+const NarrationTrack = z.object({
+  src: projectAssetPath.refine(
+    (value) => /\.(?:wav|mp3|m4a|aac|flac|ogg|opus)$/i.test(value),
+    "narration source must be WAV, MP3, M4A, AAC, FLAC, OGG, or Opus",
+  ),
+  assetUse: AssetUse.optional(),
+  startMs: z.number().int().min(0).max(600000).default(0),
+  gainDb: z.number().min(-24).max(12).default(0),
+  script: z.string().min(1).max(30000),
+  words: z.array(NarrationWord).min(1).max(4000),
+  ducking: z.object({
+    threshold: z.number().min(0.001).max(0.5).default(0.02),
+    ratio: z.number().min(1).max(20).default(8),
+    attackMs: z.number().int().min(1).max(2000).default(20),
+    releaseMs: z.number().int().min(10).max(5000).default(250),
+  }).strict().default({ threshold: 0.02, ratio: 8, attackMs: 20, releaseMs: 250 }),
+}).strict().superRefine((value, ctx) => {
+  const ids = new Set<string>();
+  value.words.forEach((word, index) => {
+    if (ids.has(word.id))
+      ctx.addIssue({ code: "custom", path: ["words", index, "id"], message: `duplicate narration word id ${word.id}` });
+    ids.add(word.id);
+    if (index > 0 && word.startMs < value.words[index - 1].endMs)
+      ctx.addIssue({ code: "custom", path: ["words", index, "startMs"], message: "narration words must be ordered and non-overlapping" });
+  });
+  const normalize = (text: string) => text.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  if (normalize(value.words.map((word) => word.text).join(" ")) !== normalize(value.script))
+    ctx.addIssue({ code: "custom", path: ["words"], message: "narration words must exactly cover the locked script in order" });
+});
+
 export const Score = z.object({
   irVersion: z.literal(IR_VERSION),
   tier: z.literal("score"),
@@ -873,8 +919,20 @@ export const Score = z.object({
           fadeOutMs: z.number().int().min(0).max(5000).default(800),
         })
         .optional(),
+      /** ADR-0044: provider-neutral frozen voice plus exact word clock. */
+      narration: NarrationTrack.optional(),
     })
+    .strict()
     .optional(),
+}).superRefine((value, ctx) => {
+  const narration = value.audio?.narration;
+  if (!narration) return;
+  const durationMs = value.scenes.reduce((sum, scene) => sum + scene.durationMs, 0);
+  const finalWord = narration.words.at(-1);
+  if (narration.startMs >= durationMs)
+    ctx.addIssue({ code: "custom", path: ["audio", "narration", "startMs"], message: "narration must start before the film ends" });
+  if (finalWord && narration.startMs + finalWord.endMs > durationMs)
+    ctx.addIssue({ code: "custom", path: ["audio", "narration", "words", narration.words.length - 1, "endMs"], message: "narration word clock must remain within the film" });
 });
 export type ScoreT = z.infer<typeof Score>;
 

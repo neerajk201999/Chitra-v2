@@ -28,7 +28,8 @@ Do not dump `core/src/ir/schema.ts` into context. Copy the closest element from
   normal/reverse/alternate scene-time playback;
 - bounded nested local-coordinate groups with typed overflow/compositing;
 - typed clips, alpha/luminance or gradient mattes, blend modes, and filters;
-- music bed, sparse choreography-bound SFX, beat landmarks;
+- music bed, frozen narration with exact word timing, narration-aware ducking,
+  sparse choreography-bound SFX, and beat landmarks;
 - token presets and typed frame-addressed transform tracks.
 
 This vocabulary is a ceiling, not permission to approximate unsupported work.
@@ -54,6 +55,13 @@ precompositions in the JSON; expressions, external images/fonts, network URLs,
 dotLottie, and Rive are rejected. Treat a supplied animation like any other
 source: declare `assetUse`, choose an explicit source-frame range, and inspect
 random/backward seeks when timing is critical.
+
+Narration is a frozen input, not a render-time service. Use an authorized host
+TTS tool or a supplied recording, save the audio locally, and lock its exact
+word IDs/times under `audio.narration`. Bind visual reveals with
+`at.onNarrationWord`; do not guess millisecond offsets from the script. Chitra
+mixes voice, ducks music, preserves sparse SFX, and measures the final bus.
+Provider choice and voice taste stay outside core.
 
 ## Composition and motion
 

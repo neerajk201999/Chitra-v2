@@ -23,6 +23,12 @@ versioned separately.
 
 ### Added
 
+- ADR-0044 provider-neutral Score narration: frozen local voice with strict word
+  clock and provenance, `at.onNarrationWord` choreography, typed music ducking,
+  narration/music/SFX measured final bus, release/cache identity, and
+  real-browser plus frequency-isolated audio proof.
+- Explicit image-pipe input codecs for reliable fresh JPEG draft encoding on
+  FFmpeg 8.
 - ADR-0043 typed seekable Lottie: project-local vector-only JSON, a pinned MIT
   SVG runtime included only when used, compile-time trust-boundary validation,
   normal/reverse/alternate scene-time mapping, local composition/compositing,
