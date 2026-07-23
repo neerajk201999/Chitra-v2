@@ -27,6 +27,9 @@ Do not dump `core/src/ir/schema.ts` into context. Copy the closest element from
 - project-local vector-only `lottie` JSON with typed trim, repetition, and
   normal/reverse/alternate scene-time playback;
 - bounded nested local-coordinate groups with typed overflow/compositing;
+- native free/stack/grid layout plus rendered focal/reading/alignment/gap
+  contracts;
+- bounded, reasoned optical typography treatments without raw CSS;
 - typed clips, alpha/luminance or gradient mattes, blend modes, and filters;
 - music bed, frozen narration with exact word timing, narration-aware ducking,
   sparse choreography-bound SFX, and beat landmarks;
@@ -83,6 +86,10 @@ Relational timing uses `at.after`. Exact transform tracks use typed keyframes.
 Compositing parameters are static: animate the outer element transform/opacity,
 or use an authorized pre-rendered plate when the concept needs animated masks,
 shaders, motion blur, or an independent nested timeline.
+
+For an open or multi-shot production, the accepted board is a contract rather
+than a disposable draft. Load [frame-production.md](frame-production.md) and
+prove board→motion→master ownership with `chitra stage-check`.
 
 ## Figure and source integrity
 

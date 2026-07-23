@@ -1,7 +1,7 @@
-export const CAPABILITY_MATRIX_VERSION = "0.5.0";
+export const CAPABILITY_MATRIX_VERSION = "0.6.0";
 export type CapabilitySupport = "native" | "asset-assisted" | "unsupported";
 export const CAPABILITY_IDS = [
-  "typography-layout", "image-ui", "video-plates", "transform-motion", "particles",
+  "typography-layout", "frame-design-system", "image-ui", "video-plates", "transform-motion", "particles",
   "curated-3d", "arbitrary-3d", "environment-reflections-shadows",
   "masks-blends-deep-comps", "motion-blur-dof", "music-sfx",
   "voiceover-word-sync", "narration-generation", "reference-analysis", "generated-media", "professional-taste",
@@ -20,6 +20,8 @@ export interface Capability {
 
 export const CAPABILITIES: Capability[] = [
   { id: "typography-layout", support: "native", mechanism: "text, shapes, figures, browser layout", boundary: "no calibrated professional optical-spacing guarantee" },
+
+  { id: "frame-design-system", support: "native", mechanism: "free/stack/grid local compositions, bounded optical type treatments, rendered focal/reading/alignment/gap contracts, staged Frame→Motion→Sound ownership", boundary: "no automatic taste guarantee, constraint solver, large template gallery, or token-pure arbitrary figure CSS" },
   { id: "image-ui", support: "native", mechanism: "local image and sanitized figure elements", boundary: "rasterized text has reduced structural inspection" },
   { id: "video-plates", support: "native", mechanism: "deterministic frame extraction plus transcript-addressed edit plates", boundary: "Score video elements remain visual-only; use edit-render to preserve clip audio" },
   { id: "transform-motion", support: "native", mechanism: "presets, typed tracks, and bounded local-coordinate compositions", boundary: "composition depth is 8; no nested time remapping or independent timelines" },

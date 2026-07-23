@@ -45,4 +45,12 @@ Design rules:
 3. **Taste is data, not vibes.** Directors and critics read the encoded design language in `docs/motion/` — versioned rules with named values (type scales, easing families, duration ranges, pacing curves), so critique findings are objective and testable.
 4. **Distribution:** the runtime pipeline ships as installable skills, single-sourced and compiled per harness — see ADR-0005.
 
+ADR-0045 makes the Frame/Motion/Sound ownership boundary executable without
+embedding an agent SDK. Frame Designers author a static `board.score.json`;
+Motion Designers may add only choreography/transitions to
+`motion.score.json`; Sound/Editor may add only root audio and
+choreography-bound SFX to `score.json`. `chitra stage-check` rejects drift.
+One host may perform all roles. Parallel Frame Designers operate only on
+independently specified shots after the film-wide system is locked.
+
 Resolved by research (2026-07-14): substrate → own Motion IR compiled to HTML/GSAP, renderer abstracted (ADR-0002); representation → two-tier IR (ADR-0003); critique design → three-layer Quality Engine with isolated critics and a ≤3-pass loop (ADR-0004); packaging → HyperFrames/Impeccable-style multi-harness skills over a deterministic no-LLM core (ADR-0005). Critic set for v0.1 is defined in the roadmap (M2).

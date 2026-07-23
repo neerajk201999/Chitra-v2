@@ -46,6 +46,7 @@ if (!quick) {
   run("Typed compositing and local-composition benchmark", process.execPath, ["benchmarks/compositing/run.mjs", "--check"]);
   run("Seekable Lottie import benchmark", process.execPath, ["benchmarks/lottie-import/run.mjs", "--check"]);
   run("Narration and word-sync benchmark", process.execPath, ["benchmarks/narration-sync/run.mjs", "--check"]);
+  run("Frame System and staged-handoff benchmark", process.execPath, ["benchmarks/frame-system/run.mjs", "--check"]);
   run("Reference Decomposer benchmark", process.execPath, ["benchmarks/reference-decomposer/run.mjs", "--check"]);
   run("Reference Comparator benchmark", process.execPath, ["benchmarks/reference-comparator/run.mjs", "--check"]);
   run("Frame-addressed browser benchmark", process.execPath, ["benchmarks/keyframe-track/run.mjs", "--check"]);

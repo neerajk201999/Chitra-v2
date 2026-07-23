@@ -2,7 +2,8 @@ export * from "./ir/schema.js";
 export * from "./motion/tokens.js";
 export * from "./capabilities/index.js";
 export { compile, resolveSceneTimeline, totalDurationMs, type CompileResult } from "./compile/index.js";
-export { openSession, renderScore, renderInputFiles, sceneHash, scoreHash, type RenderSession, type RenderResult, type TextRegion, type Quality } from "./render/index.js";
+export { openSession, renderScore, renderInputFiles, sceneHash, scoreHash, type RenderSession, type RenderResult, type TextRegion, type LayoutRegion, type Quality } from "./render/index.js";
+export { checkStageStructure, checkStageTransition, scoreStageDigest, type StageTransition, type StageFinding, type StageCheckOptions } from "./production/stages.js";
 export {
   RULE_POLICIES,
   applyGatePolicies,
@@ -47,7 +48,7 @@ export { COMPARISON_VERSION, ReferenceComparison, type ReferenceComparisonT } fr
 export { compareReference, type CompareMode, type CompareOptions, type CompareRegion } from "./reference/compare.js";
 export { INTAKE_VERSION, Intake, IntakeSource, validateIntake, type IntakeT, type IntakeSourceT } from "./intake/schema.js";
 export { materializeIntake } from "./intake/materialize.js";
-export { BRAND_SYSTEM_VERSION, BUNDLED_FONT_FAMILIES, BrandSystem, validateBrandSystem, materializeBrandSystem, brandSystemDigest, type BrandSystemT } from "./brand/index.js";
+export { BRAND_SYSTEM_VERSION, BUNDLED_FONT_FAMILIES, BUNDLED_FONT_WEIGHTS, BrandSystem, validateBrandSystem, materializeBrandSystem, brandSystemDigest, type BrandSystemT } from "./brand/index.js";
 export { CREATIVE_REVIEW_VERSION, CRAFT_PRINCIPLES, REVIEW_DOMAINS, CreativeReview, CalibrationCaseLabel, validateCreativeReview, scoreCreativeReview, type CreativeReviewT, type CalibrationCaseLabelT, type CraftPrincipleId } from "./creative/review.js";
 export { INDEPENDENT_CALIBRATION_VERSION, IndependentCalibrationStudy, validateIndependentCalibrationStudy, scoreIndependentCalibrationStudy, type IndependentCalibrationStudyT } from "./creative/calibration.js";
 export { REVISION_MEMORY_VERSION, REVISION_CONTEXT_VERSION, RevisionMemory, validateRevisionMemory, validateRevisionContextQuery, compileRevisionContext, type RevisionMemoryT, type RevisionEntryT, type RevisionContextQuery } from "./creative/memory.js";

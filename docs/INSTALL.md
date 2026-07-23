@@ -7,31 +7,36 @@ Requirements: Node.js 22.12+, FFmpeg on `PATH`, and installed Chrome, Chromium,
 or Edge. Git is needed only for a repository clone. `chitra probe` launches the
 actual browser and checks FFmpeg after installation.
 
-## Recommended public-preview install
+## Recommended source-matched candidate install
 
 Install the CLI and agent skills from a normal terminal before opening the
 project in Cursor/Claude/Codex. This avoids agent-sandbox Git permissions and
 does not download a second browser:
 
 ```bash
-npm install -g https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz
-npx skills add neerajk201999/Chitra-v2 --skill '*' --copy --global --yes
+git clone https://github.com/neerajk201999/Chitra-v2.git
+cd Chitra-v2
+npm install --prefix ./core
+npm pack ./core --pack-destination .
+npm install -g ./chitra-video-0.6.0-rc.1.tgz
+npx skills add . --skill '*' --copy --global --yes
 chitra probe
 ```
 
-This installs the verified 0.5.0 GitHub prerelease while public npm still serves
-0.4.0. The artifact SHA-256 is
+This installs the `0.6.0-rc.1` CLI and skills from the same checkout. The older
+verified 0.5.0 GitHub prerelease remains available at
+https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz
+with SHA-256
 `b1feb333f8c4cafa4852859e088dc9fa1162ffcfb7753c9f7bcff76123cdd79d`.
-After 0.5.0 is published and independently reinstalled from the registry, the
-short stable command returns to `npm install -g chitra-video`.
+Do not pair that 0.5 CLI with current-main skills.
 
 Select a harness explicitly when auto-detection is ambiguous:
 
 ```bash
-npx skills add neerajk201999/Chitra-v2 --agent cursor --skill '*' --copy --global --yes
-npx skills add neerajk201999/Chitra-v2 --agent claude-code --skill '*' --copy --global --yes
-npx skills add neerajk201999/Chitra-v2 --agent codex --skill '*' --copy --global --yes
-npx skills add neerajk201999/Chitra-v2 --agent gemini-cli --skill '*' --copy --global --yes
+npx skills add . --agent cursor --skill '*' --copy --global --yes
+npx skills add . --agent claude-code --skill '*' --copy --global --yes
+npx skills add . --agent codex --skill '*' --copy --global --yes
+npx skills add . --agent gemini-cli --skill '*' --copy --global --yes
 ```
 
 Clone only when developing Chitra or when the agent needs the full examples and
@@ -72,6 +77,9 @@ chitra intake intake.json -o intake.lock.json
 chitra init . --style night --register brand-film --title "My film"
 chitra creative-check intake.lock.json direction.json storyboard.json score.json
 chitra evidence score.json -o out/evidence # inspect stills before motion
+# For open/multi-shot work, preserve specialist ownership:
+chitra stage-check board.score.json motion.score.json --transition board-to-motion
+chitra stage-check motion.score.json score.json --transition motion-to-master
 chitra check score.json
 chitra render score.json -o out/draft.mp4 -q draft
 # After the evidence critique and revisions:

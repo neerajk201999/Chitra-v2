@@ -1,6 +1,6 @@
 # Current State — read this after VISION
 
-**Verified:** 2026-07-23 · **Package:** 0.5.0 release candidate · **Intake IR:** 0.1.0 · **Brand System:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0 · **Release Receipt:** 0.2.0
+**Verified:** 2026-07-23 · **Package:** 0.6.0-rc.1 · **Intake IR:** 0.1.0 · **Brand System:** 0.1.0 · **Transcript IR:** 0.1.0 · **Edit IR:** 0.1.0 · **Footage Evidence:** 0.1.0 · **Directorial Search:** 0.1.0 · **Direction Selection:** 0.1.0 · **Direction:** 0.3.0 · **Storyboard:** 0.1.0 · **Motion IR:** 0.1.0 · **Style DNA:** 0.1.0 · **Comparison:** 0.2.0 · **Creative Review:** 0.1.0 · **Independent Calibration:** 0.1.0 · **Revision Memory:** 0.1.0 · **Release Receipt:** 0.2.0
 
 This is the compact handoff for a fresh builder. It records current truth, not
 history or aspiration. Detailed history belongs in the roadmap, ADRs, research,
@@ -51,6 +51,14 @@ and CHANGELOG.
   events on the same Score clock; typed side-chain ducking mixes voice, music,
   and SFX through the measured final bus. TTS/voice generation stays
   host-assisted and core remains credential/model-free.
+- ADR-0045 Frame System 0.1: local groups now support typed free/stack/grid
+  layout; native text supports bounded reasoned optical treatments; optional
+  scene contracts bind focal/reading targets and authored alignment/gap ranges
+  to actual browser geometry. `chitra stage-check` prevents accepted static
+  frames from drifting across board→motion and prevents accepted motion/timing
+  from drifting across motion→master. Frame, Motion, and Sound roles remain
+  host-agent passes over one executable Score rather than bundled agent
+  runtimes or duplicate IRs.
 - ADR-0015 Reference Decomposer: `chitra decompose` emits validated Style DNA
   with source hash/media facts, hard-cut rhythm, quantized palette,
   luminance/saturation, frame-difference energy, audio onsets, and shot evidence.
@@ -333,12 +341,19 @@ The evidence and reasoning for this rebaseline are in
   dependencies; ADR-0042 adds no runtime dependency and the full dry-run is
   603.0 kB/2.4 MB. ADR-0043's pinned Lottie SVG build moves the measured dry-run
   to 669.8 kB/2.7 MB without adding an npm dependency; ADR-0044's typed
-  narration/mix path moves it to 672.1 kB/2.7 MB, still with no new dependency.
+  narration/mix path moves it to 672.1 kB/2.7 MB. ADR-0045's Frame System and
+  staged handoff code measures 680.6 kB/2.7 MB, still with no new dependency.
   Compiled Scores include Lottie runtime bytes only when they contain Lottie. Installed footprint previously fell
   33% from 93.7 to 62.8 MiB. GSAP remains a normal licensed dependency.
 - The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”
   claim: it now has a sophisticated human plan/sketch/final-preview loop.
   Chitra still has no calibrated evidence that its critic or output is better.
+- The ADR-0045 first-party browser benchmark resolves thirteen layout regions,
+  measures 0.00px declared center-axis drift and a 4.03px declared stack gap,
+  proves equal-cell stack placement, catches seeded gap/alignment/transparent-
+  matte visibility defects, catches both staged ownership drifts, invalidates
+  scene identity on layout change, and repeats a backward seek byte-identically.
+  This proves contracts, not professional taste.
 - The 2026-07-23 HyperFrames audit checks source commit `7a294f1` and published
   `0.7.68`: HyperFrames now has broader runtime, mask/shader, registry, Figma,
   media/TTS, player/Studio/SDK, cloud, and specialized workflow surfaces plus a

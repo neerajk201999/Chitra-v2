@@ -133,6 +133,21 @@ sessions inherit the taste instead of relearning it.
   Directions and reconstruction jobs may skip with an explicit reason. Pixel
   difference detects duplicates; it never chooses taste. *(ADR-0036 receipt)*
 
+- **CC-FRAME-1 — The approved frame resolves to visible subjects.** A scene's
+  optional Frame System contract names its focal target and intended
+  reading-order targets; each must exist and paint visible pixels at the
+  representative rendered frame. Sequence quality remains review metadata
+  rather than inferred from coordinates. *(hard; rendered paint + geometry —
+  ADR-0045)*
+- **CC-FRAME-2 — Authored alignments survive pixels.** Alignment is neither a
+  demand for symmetry nor a universal grid. When the Frame Designer explicitly
+  declares a shared edge/axis, browser geometry must remain inside its stated
+  tolerance. *(hard; rendered geometry — ADR-0045)*
+- **CC-FRAME-3 — Authored spacing survives pixels.** A declared ordered
+  horizontal/vertical gap must remain inside its stated range. Undeclared
+  overlaps, asymmetry, density, and optical balance remain contextual review
+  rather than fake universal math. *(hard; rendered geometry — ADR-0045)*
+
 Each principle above is a hypothesis about quality. The Chitra method: state it,
 find a deterministic or VLM-scored proxy, calibrate against labelled examples,
 then promote it to a `CC-*` gate in the Creative QA layer (M4). Examples already

@@ -12,6 +12,15 @@
 > all-shot style board and optional cut animatic before motion without adding a
 > redundant planning IR. See the
 > [current audit](../research/hyperframes-and-studio-process-audit-2026-07-23.md).
+>
+> **Frame-system closure (ADR-0045).** Chitra now has native free/stack/grid
+> local layout, reasoned optical type treatments, rendered
+> focal/reading/alignment/gap contracts, and executable board→motion→master
+> role ownership. The first browser benchmark is deterministic and catches
+> seeded geometry/stage drift. This closes the prose-only frame-handoff gap; it
+> does not close HyperFrames' remaining runtime breadth or establish blind
+> creative superiority. Next evidence is a real outside-produced launch film
+> through this staged workflow, followed by the neutral paired benchmark.
 
 > **Capability-program rebaseline (2026-07-18).** Current-source verification
 > confirms Remotion leads renderer/ecosystem breadth, HyperFrames leads workflow/

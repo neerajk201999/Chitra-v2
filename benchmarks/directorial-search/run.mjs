@@ -63,7 +63,7 @@ function direction(id, concept) {
 
 const style = {
   name: "aether-probe", palette: { bg: "#08090c", surface: "#171922", primary: "#665cff", accent: "#ff4d6d", text: "#f7f5ef", textDim: "#a6a7b0", onMedia: "#ffffff" },
-  fonts: { display: "Space Grotesk", text: "Inter", mono: "JetBrains Mono" }, displayWeight: 600, textWeight: 400, trackingDisplay: -0.025, grain: 0,
+  fonts: { display: "Space Grotesk", text: "Inter", mono: "JetBrains Mono" }, displayWeight: 500, textWeight: 400, trackingDisplay: -0.025, grain: 0,
 };
 function score(id) {
   const scene = { id: `${id}-scene`, reason: `Test the ${id} governing image before any timeline is authored`, durationMs: 2000, background: "bg", elements: [], choreography: [], transitionOut: { type: "cut", duration: "standard" } };

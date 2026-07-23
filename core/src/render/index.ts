@@ -54,7 +54,7 @@ const ENCODE = {
  * markup changes, GSAP upgrades). Part of every scene hash — without it the
  * cache serves frames compiled by an older compiler.
  */
-export const COMPILER_CACHE_VERSION = "18";
+export const COMPILER_CACHE_VERSION = "20";
 
 /** Content digest of a file, memoized on (path, mtime, size) — video files are
  *  tens of MB and sceneHash runs per scene per render. */
@@ -168,7 +168,9 @@ export interface RenderSession {
   close(): Promise<void>;
   seekAndCapture(ms: number, capture?: { type: "png"; scale?: number } | { type: "jpeg"; quality: number; scale?: number }): Promise<Buffer>;
   contrastCapture(ms: number): Promise<Buffer>;
+  targetPaints(ms: number, sceneId: string, target: string, region: LayoutRegion): Promise<boolean>;
   textRegions(ms: number): Promise<TextRegion[]>;
+  layoutRegions(ms: number): Promise<LayoutRegion[]>;
 }
 
 export interface TextRegion {
@@ -186,6 +188,17 @@ export interface TextRegion {
   figureId?: string;
   target?: string;
   text?: string;
+}
+
+export interface LayoutRegion {
+  scene: string;
+  target: string;
+  visible: boolean;
+  role?: "hero" | "support" | "ambient" | null;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 function audioDurationMs(file: string): number {
@@ -329,9 +342,66 @@ export async function openSession(score: ScoreT, projectDir: string, workDir: st
         try { return Buffer.from(await stage.screenshot({ type: "png" })); }
         finally { await page.evaluate(() => document.getElementById("__chitra-contrast-mask")?.remove()); }
       },
+      async targetPaints(ms: number, sceneId: string, target: string, region: LayoutRegion) {
+        await page.evaluate(`window.__chitra.seek(${ms})`);
+        const left = Math.max(0, Math.floor(region.x));
+        const top = Math.max(0, Math.floor(region.y));
+        const right = Math.min(compiled.width, Math.ceil(region.x + region.w));
+        const bottom = Math.min(compiled.height, Math.ceil(region.y + region.h));
+        if (right <= left || bottom <= top) return false;
+        const clip = {
+          x: stageBox.x + left,
+          y: stageBox.y + top,
+          width: right - left,
+          height: bottom - top,
+        };
+        const painted = Buffer.from(await page.screenshot({ type: "png", clip }));
+        const hidden = await page.evaluate(({ sceneId, target }) => {
+          let element = document.getElementById(`${sceneId}--${target}`);
+          if (!element && target.includes("/")) {
+            const [figureId, innerId] = target.split("/", 2);
+            const figure = document.querySelector(`.figure[data-chitra-scene="${CSS.escape(sceneId)}"][data-chitra-figure="${CSS.escape(figureId)}"]`);
+            element = (Array.from(figure?.querySelectorAll<HTMLElement>("[id]") ?? [])
+              .find((candidate) => candidate.id === innerId)) ?? null;
+          }
+          if (!element) return false;
+          element.setAttribute("data-chitra-prior-visibility", element.style.visibility);
+          element.setAttribute("data-chitra-prior-visibility-priority", element.style.getPropertyPriority("visibility"));
+          element.style.setProperty("visibility", "hidden", "important");
+          return true;
+        }, { sceneId, target });
+        if (!hidden) return false;
+        try {
+          const withoutTarget = Buffer.from(await page.screenshot({ type: "png", clip }));
+          return !painted.equals(withoutTarget);
+        }
+        finally {
+          await page.evaluate(({ sceneId, target }) => {
+            let element = document.getElementById(`${sceneId}--${target}`);
+            if (!element && target.includes("/")) {
+              const [figureId, innerId] = target.split("/", 2);
+              const figure = document.querySelector(`.figure[data-chitra-scene="${CSS.escape(sceneId)}"][data-chitra-figure="${CSS.escape(figureId)}"]`);
+              element = (Array.from(figure?.querySelectorAll<HTMLElement>("[id]") ?? [])
+                .find((candidate) => candidate.id === innerId)) ?? null;
+            }
+            if (!element) return;
+            element.style.setProperty(
+              "visibility",
+              element.getAttribute("data-chitra-prior-visibility") ?? "",
+              element.getAttribute("data-chitra-prior-visibility-priority") ?? "",
+            );
+            element.removeAttribute("data-chitra-prior-visibility");
+            element.removeAttribute("data-chitra-prior-visibility-priority");
+          }, { sceneId, target });
+        }
+      },
       async textRegions(ms: number) {
         await page.evaluate(`window.__chitra.seek(${ms})`);
         return (await page.evaluate("window.__chitra.textRegions()")) as TextRegion[];
+      },
+      async layoutRegions(ms: number) {
+        await page.evaluate(`window.__chitra.seek(${ms})`);
+        return (await page.evaluate("window.__chitra.layoutRegions()")) as LayoutRegion[];
       },
     };
   } catch (error) {

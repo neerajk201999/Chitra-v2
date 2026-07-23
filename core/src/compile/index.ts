@@ -385,6 +385,17 @@ function figureAssetReferences(html: string): string[] {
   return [...references].sort();
 }
 
+function assertUniqueFigureIds(html: string, figureId: string): void {
+  const seen = new Set<string>();
+  for (const match of html.matchAll(/\bid\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s"'=<>`]+))/gi)) {
+    const value = match[1] ?? match[2] ?? match[3];
+    if (value.includes("&"))
+      throw new Error(`figure ${figureId} contains an encoded inner id; use a literal unique id`);
+    if (seen.has(value)) throw new Error(`figure ${figureId} contains duplicate inner id: ${value}`);
+    seen.add(value);
+  }
+}
+
 /** ADR-0009: deterministic per-formation dot coordinates in element-box percent
  *  (0..100 within the particle element's own box). Pure math → identical every
  *  render. `n` is fixed per element (max of grid cols*rows and count) so a morph
@@ -433,20 +444,24 @@ function renderElement(
   viewport: { width: number; height: number },
 ): string {
   const p = score.style.palette;
+  const paintOpacity = el.type === "shape" ? el.opacity : 1;
   const wrap = (inner: string, extra = "") =>
-    `<div class="pos" style="${posStyle(el as never)}${extra}"><div class="el" id="${sceneId}--${el.id}"><div class="comp" style="${compositingStyle(el, scale, projectDir)}">${inner}</div></div></div>`;
+    `<div class="pos" style="${posStyle(el as never)}${extra}"><div class="el" id="${sceneId}--${el.id}" data-chitra-role="${el.role}" data-chitra-paint-opacity="${paintOpacity}"><div class="comp" style="${compositingStyle(el, scale, projectDir)}">${inner}</div></div></div>`;
 
   switch (el.type) {
     case "text": {
-      const sizePx = Math.round(TYPE_SCALE[el.textRole as keyof typeof TYPE_SCALE] * scale);
-      const fam = el.textRole === "display" || el.textRole === "headline" || el.textRole === "title"
+      const sizePx = Math.round((el.treatment?.sizePx1080 ?? TYPE_SCALE[el.textRole as keyof typeof TYPE_SCALE]) * scale);
+      const display = el.textRole === "display" || el.textRole === "headline" || el.textRole === "title";
+      const fam = display
         ? score.style.fonts.display
         : score.style.fonts.text;
-      const weight = el.textRole === "kicker" ? 600 : el.textRole === "display" || el.textRole === "headline" ? score.style.displayWeight : score.style.textWeight;
-      const tracking = el.textRole === "kicker" ? "0.14em" : el.textRole === "display" || el.textRole === "headline" ? `${score.style.trackingDisplay}em` : "0";
-      const transform = el.textRole === "kicker" ? "text-transform:uppercase;" : "";
+      const weight = el.treatment?.weight ?? (el.textRole === "kicker" ? 600 : display ? score.style.displayWeight : score.style.textWeight);
+      const tracking = `${el.treatment?.trackingEm ?? (el.textRole === "kicker" ? 0.14 : el.textRole === "display" || el.textRole === "headline" ? score.style.trackingDisplay : 0)}em`;
+      const textCase = el.treatment?.case ?? (el.textRole === "kicker" ? "upper" : "preserve");
+      const transform = textCase === "upper" ? "text-transform:uppercase;" : textCase === "lower" ? "text-transform:lowercase;" : "";
       const maxW = el.maxWidth ? `max-width:${el.maxWidth * (viewport.width / 100)}px;` : "";
-      const lh = el.textRole === "body" || el.textRole === "caption" ? 1.5 : 1.08;
+      const lh = el.treatment?.lineHeight ?? (el.textRole === "body" || el.textRole === "caption" ? 1.5 : 1.08);
+      const wrapStyle = el.treatment?.wrap === "balance" ? "text-wrap:balance;" : el.treatment?.wrap === "nowrap" ? "white-space:nowrap;" : "white-space:pre-wrap;";
       // ADR-0008 type-in: split into char spans + caret when targeted by the preset
       const scene = score.scenes.find((s) => s.id === sceneId);
       const typed = scene?.choreography.some((a) => a.preset === "type-in" && a.target === el.id);
@@ -456,11 +471,11 @@ function renderElement(
           .join("");
         const caretH = Math.round(sizePx * 0.9);
         return wrap(
-          `<div class="txt" data-text-role="${el.textRole}" style="font-family:'${fam}';font-weight:${weight};font-size:${sizePx}px;letter-spacing:${tracking};${transform}color:${colorOf(p, el.color)};text-align:${el.align};line-height:${lh};${maxW}white-space:pre-wrap;">${chars}<span class="caret" style="height:${caretH}px;background:${colorOf(p, el.color)};"></span></div>`
+          `<div class="txt" data-text-role="${el.textRole}" style="font-family:'${fam}';font-weight:${weight};font-size:${sizePx}px;letter-spacing:${tracking};${transform}color:${colorOf(p, el.color)};text-align:${el.align};line-height:${lh};${maxW}${wrapStyle}">${chars}<span class="caret" style="height:${caretH}px;background:${colorOf(p, el.color)};"></span></div>`
         );
       }
       return wrap(
-        `<div class="txt" data-text-role="${el.textRole}" style="font-family:'${fam}';font-weight:${weight};font-size:${sizePx}px;letter-spacing:${tracking};${transform}color:${colorOf(p, el.color)};text-align:${el.align};line-height:${lh};${maxW}white-space:pre-wrap;">${esc(el.content)}</div>`
+        `<div class="txt" data-text-role="${el.textRole}" style="font-family:'${fam}';font-weight:${weight};font-size:${sizePx}px;letter-spacing:${tracking};${transform}color:${colorOf(p, el.color)};text-align:${el.align};line-height:${lh};${maxW}${wrapStyle}">${esc(el.content)}</div>`
       );
     }
     case "shape": {
@@ -510,6 +525,7 @@ function renderElement(
       const r = `${(el.radius * Math.min(viewport.width, viewport.height)) / 100}px`;
       const file = resolveProjectAsset(projectDir, el.src);
       const fragment = sanitizeFragment(readFileSync(file, "utf8"));
+      assertUniqueFigureIds(fragment, el.id);
       const declared = new Set(el.assets.map((asset) => asset.src));
       for (const reference of figureAssetReferences(fragment))
         if (!declared.has(reference)) throw new Error(`figure ${el.id} references undeclared asset: ${reference}`);
@@ -591,7 +607,7 @@ function renderElement(
         // non-highlight bars: dim but legible on both bg and surface backgrounds
         const fill = i === el.highlight ? p.accent : p.textDim;
         const fillOpacity = i === el.highlight ? "1" : "0.28";
-        bars += `<g><rect class="bar" id="${sceneId}--${el.id}-bar-${i}" x="${x.toFixed(2)}" y="${(plotH - bh).toFixed(2)}" width="${barW.toFixed(2)}" height="${bh.toFixed(2)}" rx="${Math.min(6, barW / 6).toFixed(2)}" fill="${fill}" fill-opacity="${fillOpacity}" style="transform-origin:${(x + barW / 2).toFixed(2)}px ${plotH.toFixed(2)}px;"/><text x="${(x + barW / 2).toFixed(2)}" y="${(plotH + labelPx * 1.3).toFixed(2)}" text-anchor="middle" font-family="${score.style.fonts.text}" font-size="${labelPx}" fill="${p.textDim}">${esc(s.label)}</text></g>`;
+        bars += `<g><rect class="bar" id="${sceneId}--${el.id}-bar-${i}" x="${x.toFixed(2)}" y="${(plotH - bh).toFixed(2)}" width="${barW.toFixed(2)}" height="${bh.toFixed(2)}" rx="${Math.min(6, barW / 6).toFixed(2)}" fill="${fill}" fill-opacity="${fillOpacity}" style="transform-origin:${(x + barW / 2).toFixed(2)}px ${plotH.toFixed(2)}px;"/><text x="${(x + barW / 2).toFixed(2)}" y="${(plotH + labelPx * 1.3).toFixed(2)}" text-anchor="middle" font-family="${score.style.fonts.text}" font-weight="${score.style.textWeight}" font-size="${labelPx}" fill="${p.textDim}">${esc(s.label)}</text></g>`;
       });
       return wrap(`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${bars}</svg>`);
     }
@@ -642,18 +658,55 @@ function renderSceneElements(elements: ElementT[], score: ScoreT, scale: number,
     const width = (element.width * viewport.width) / 100;
     const height = (element.height * viewport.height) / 100;
     const nextAncestry = [...ancestry, element.id];
+    const layout = element.layout;
+    const unit = Math.min(width, height) / 100;
+    const cross = (value: "start" | "center" | "end" | "stretch") =>
+      value === "start" ? "flex-start" : value === "end" ? "flex-end" : value;
+    const main = (value: "start" | "center" | "end" | "space-between") =>
+      value === "start" ? "flex-start" : value === "end" ? "flex-end" : value;
+    const childViewport = (index: number) => {
+      if (layout.kind === "grid") {
+        const rows = Math.ceil(element.children.length / layout.columns);
+        const pad = layout.padding * unit;
+        return {
+          width: Math.max(0, (width - 2 * pad - (layout.columns - 1) * layout.columnGap * unit) / layout.columns),
+          height: Math.max(0, (height - 2 * pad - (rows - 1) * layout.rowGap * unit) / rows),
+        };
+      }
+      if (layout.kind === "stack" && layout.itemSizing === "equal") {
+        const pad = layout.padding * unit;
+        const gaps = (element.children.length - 1) * layout.gap * unit;
+        const main = Math.max(0, ((layout.axis === "horizontal" ? width : height) - 2 * pad - gaps) / element.children.length);
+        return layout.axis === "horizontal"
+          ? { width: main, height: Math.max(0, height - 2 * pad) }
+          : { width: Math.max(0, width - 2 * pad), height: main };
+      }
+      void index;
+      return { width, height };
+    };
     const children = element.children
-      .map((childId) => renderNode(byId.get(childId)!, { width, height }, nextAncestry))
+      .map((childId, index) => {
+        const child = renderNode(byId.get(childId)!, childViewport(index), nextAncestry);
+        if (layout.kind !== "stack" || layout.itemSizing !== "equal") return child;
+        const cellStyle = `flex:1 1 0;min-width:0;min-height:0;${layout.axis === "horizontal" ? "height:100%;" : "width:100%;"}display:flex;flex-direction:${layout.axis === "horizontal" ? "row" : "column"};align-items:${cross(layout.align)};`;
+        return `<div class="layout-cell" style="${cellStyle}">${child}</div>`;
+      })
       .join("\n");
     const style = [
       `position:relative;width:${width}px;height:${height}px`,
     ].join(";");
+    const layoutStyle = layout.kind === "free" ? ""
+      : layout.kind === "stack"
+        ? `display:flex;flex-direction:${layout.axis === "horizontal" ? "row" : "column"};gap:${layout.gap * unit}px;padding:${layout.padding * unit}px;align-items:${cross(layout.align)};justify-content:${main(layout.justify)};`
+        : `display:grid;grid-template-columns:repeat(${layout.columns},minmax(0,1fr));column-gap:${layout.columnGap * unit}px;row-gap:${layout.rowGap * unit}px;padding:${layout.padding * unit}px;align-items:${cross(layout.align)};justify-items:${cross(layout.justify)};`;
     const compStyle = [
       "position:absolute;inset:0",
       `overflow:${element.overflow}`,
+      layoutStyle,
       compositingStyle(element, scale, projectDir),
     ].join(";");
-    return `<div class="pos" style="${posStyle(element)}"><div class="el group" id="${sceneId}--${element.id}" style="${style}"><div class="comp" style="${compStyle}">${children}</div></div></div>`;
+    const layoutClass = layout.kind === "free" ? "" : " layout-managed";
+    return `<div class="pos" style="${posStyle(element)}"><div class="el group" id="${sceneId}--${element.id}" data-chitra-role="${element.role}" style="${style}"><div class="comp${layoutClass}" style="${compStyle}">${children}</div></div></div>`;
   };
   const stage = { width: score.meta.width, height: score.meta.height };
   return elements
@@ -1051,6 +1104,21 @@ export function compile(score: ScoreT, projectDir = "."): CompileResult {
       : "";
 
   const fonts = fontFaces(score.style, projectDir);
+  const requiredFaces = [
+    { family: score.style.fonts.display, weight: score.style.displayWeight },
+    { family: score.style.fonts.text, weight: score.style.textWeight },
+    { family: score.style.fonts.mono, weight: 400 },
+    ...score.scenes.flatMap((scene) => scene.elements.flatMap((element) => {
+      if (element.type === "stat" && element.label)
+        return [{ family: score.style.fonts.text, weight: 600 }];
+      if (element.type !== "text") return [];
+      const display = element.textRole === "display" || element.textRole === "headline" || element.textRole === "title";
+      const weight = element.treatment?.weight ??
+        (element.textRole === "kicker" ? 600 : display ? score.style.displayWeight : score.style.textWeight);
+      return [{ family: display ? score.style.fonts.display : score.style.fonts.text, weight }];
+    })),
+  ].filter((face, index, faces) =>
+    faces.findIndex((candidate) => candidate.family === face.family && candidate.weight === face.weight) === index);
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>${esc(score.meta.title)}</title>
@@ -1063,6 +1131,8 @@ html,body{background:#000;}
 .pos{position:absolute;}
 .el{will-change:transform,opacity;}
 .comp{will-change:filter,opacity;min-width:0;min-height:0;}
+.layout-managed>.pos{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;}
+.layout-cell>.pos{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;}
 #blackout{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:95;}
 .grain{position:absolute;inset:0;pointer-events:none;z-index:99;}
 .click-ring{position:absolute;border-radius:50%;border:2.5px solid #fff;opacity:0;box-shadow:0 0 12px rgba(255,255,255,0.35);}
@@ -1273,11 +1343,7 @@ window.__chitra = {
     return waits.length ? Promise.all(waits).then(function () { return true; }) : true;
   },
   ready: function () {
-    var faces = ${JSON.stringify([
-      { family: score.style.fonts.display, weight: score.style.displayWeight },
-      { family: score.style.fonts.text, weight: score.style.textWeight },
-      { family: score.style.fonts.mono, weight: 400 },
-    ])};
+    var faces = ${JSON.stringify(requiredFaces)};
     var need3d = ${hasScene3d};
     var wait3d = need3d
       ? new Promise(function (res) {
@@ -1390,6 +1456,55 @@ window.__chitra = {
       }
     });
     return regions;
+  },
+  layoutRegions: function () {
+    var stageEl = document.getElementById("stage");
+    var stage = stageEl.getBoundingClientRect();
+    function visibleBox(el, rect) {
+      var left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom;
+      var opacity = 1, current = el;
+      while (current) {
+        var style = getComputedStyle(current);
+        opacity *= parseFloat(style.opacity || "1");
+        if (style.display === "none" || style.visibility === "hidden" || opacity <= 0.05)
+          return { visible:false,left:left,top:top,right:right,bottom:bottom };
+        var box = current.getBoundingClientRect();
+        if (style.overflowX !== "visible") { left = Math.max(left, box.left); right = Math.min(right, box.right); }
+        if (style.overflowY !== "visible") { top = Math.max(top, box.top); bottom = Math.min(bottom, box.bottom); }
+        if (left >= right || top >= bottom)
+          return { visible:false,left:left,top:top,right:right,bottom:bottom };
+        if (current === stageEl) break;
+        current = current.parentElement;
+      }
+      return { visible:true,left:left,top:top,right:right,bottom:bottom };
+    }
+    var out = [];
+    Array.prototype.forEach.call(document.querySelectorAll(".scene .el[id]"), function (el) {
+      var scene = el.closest(".scene");
+      if (!scene) return;
+      var sceneId = String(scene.id || "").replace(/^scene-/, "");
+      var prefix = sceneId + "--";
+      var target = String(el.id || "").indexOf(prefix) === 0 ? String(el.id).slice(prefix.length) : null;
+      if (!target) return;
+      var box = visibleBox(el, el.getBoundingClientRect());
+      var comp = el.querySelector(":scope > .comp");
+      var paintOpacity = parseFloat(el.getAttribute("data-chitra-paint-opacity") || "1");
+      var compOpacity = comp ? parseFloat(getComputedStyle(comp).opacity || "1") : 1;
+      if (paintOpacity * compOpacity <= 0.05) box.visible = false;
+      out.push({ scene:sceneId,target:target,visible:box.visible,role:el.getAttribute("data-chitra-role") || null,
+        x:box.left-stage.left,y:box.top-stage.top,w:Math.max(0,box.right-box.left),h:Math.max(0,box.bottom-box.top) });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".figure[data-chitra-figure] [id]"), function (el) {
+      if (!/^[a-z][a-z0-9-]*$/.test(el.id)) return;
+      var figure = el.closest(".figure[data-chitra-figure]");
+      if (!figure) return;
+      var sceneId = figure.getAttribute("data-chitra-scene");
+      var figureId = figure.getAttribute("data-chitra-figure");
+      var box = visibleBox(el, el.getBoundingClientRect());
+      out.push({ scene:sceneId,target:figureId+"/"+el.id,visible:box.visible,role:null,
+        x:box.left-stage.left,y:box.top-stage.top,w:Math.max(0,box.right-box.left),h:Math.max(0,box.bottom-box.top) });
+    });
+    return out;
   },
 };
 </script>
