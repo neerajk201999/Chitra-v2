@@ -63,7 +63,7 @@ about blocked user work, not competitor prestige.
 | 2D effects/shaders | Expressive visual grammar and treatment | Remotion effects; HyperFrames shader transitions | shapes/gradients/particles, no general effect graph | adopt narrow effect nodes when a film residual demands them | P2 |
 | Arbitrary HTML/CSS/JS composition | Escape hatch for bespoke motion | HyperFrames/Remotion | sanitized HTML figures; no arbitrary runtime scripts | intentionally constrain render trust boundary; allow vetted adapters | P2 |
 | 3D/glTF/materials/lights | Product visualization and spatial storytelling | Remotion Three/R3F ecosystem, HyperFrames adapters | curated card/coin/slab with typed camera/light tracks | adopt glTF/PBR/shadows as optional pack after product-CG benchmark | P1 |
-| Lottie/Rive/animation adapters | Reuse authored assets and designer workflows | Remotion, HyperFrames | asset-assisted video only | adopt seekable local adapters | P1 |
+| Lottie/Rive/animation adapters | Reuse authored assets and designer workflows | Remotion, HyperFrames | typed seekable vector-only Lottie JSON is native (ADR-0043); Rive/dotLottie/generic runtimes remain asset-assisted | keep capability IDs and runtime boundaries separate | P1 residual |
 | Player/Studio/timeline UI | Scrub, review, edit and embed without rerendering | Remotion, HyperFrames, EditFrame | evidence sheets and files only | adopt a viewer; omit full GUI editor before quality proof | P2 |
 | Cloud/distributed rendering | Scale long/high-res/batch jobs | Remotion Lambda/Cloud Run; HyperFrames cloud/Lambda/GCP | absent | adopt chunk plan/assemble after local throughput proof | P2 |
 | Media import and clip seeking | Use user footage, not only generated scenes | all | deterministic visual plates plus ADR-0034 audio-preserving transcript edits; direct Score video remains visual-only | improve only where unified compositor/audio timelines unblock measured jobs | P0 partially closed |
@@ -95,7 +95,7 @@ every competitor API name exists. The remaining P0 parity gaps are therefore:
 public first-use proof, narration generation/sync, semantic brand research, calibrated
 judgment, and neutral evaluation. ADR-0036 closes the first still-first approval
 contract, not the quality of its choices. Masks/deep comps and
-seekable imported animation are P1
+Rive/dotLottie and broader seekable imported animation are P1
 because they block important premium film grammars. A hosted editor, every
 codec, and every transition preset are not prerequisites for the product thesis.
 

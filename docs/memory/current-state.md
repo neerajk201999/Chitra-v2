@@ -41,6 +41,11 @@ and CHANGELOG.
   eight. Motion and appearance use separate layers; matte bytes participate in
   provenance/cache/release identity. Animated masks/shaders/time remapping
   remain unsupported.
+- ADR-0043 typed seekable Lottie: project-local vector-only JSON, a pinned MIT
+  SVG runtime included only when used, compile-time rejection of expressions
+  and external assets, deterministic normal/reverse/alternate playback, and
+  provenance/cache/release identity. Rive, dotLottie, arbitrary runtimes, and
+  broad After Effects parity remain unsupported.
 - ADR-0015 Reference Decomposer: `chitra decompose` emits validated Style DNA
   with source hash/media facts, hard-cut rhythm, quantized palette,
   luminance/saturation, frame-difference energy, audio onsets, and shot evidence.
@@ -321,7 +326,9 @@ The evidence and reasoning for this rebaseline are in
   files, removing five full runtime packages. With Transcript/Edit IR included,
   the pre-ADR-0042 npm artifact was 586.1 kB compressed/2.2 MB unpacked before
   dependencies; ADR-0042 adds no runtime dependency and the full dry-run is
-  603.0 kB/2.4 MB. Installed footprint previously fell
+  603.0 kB/2.4 MB. ADR-0043's pinned Lottie SVG build moves the measured dry-run
+  to 669.8 kB/2.7 MB without adding an npm dependency; compiled Scores include
+  those runtime bytes only when they contain Lottie. Installed footprint previously fell
   33% from 93.7 to 62.8 MiB. GSAP remains a normal licensed dependency.
 - The 2026-07-18 audit corrects the stale “HyperFrames has no review loop”
   claim: it now has a sophisticated human plan/sketch/final-preview loop.
@@ -331,7 +338,8 @@ The evidence and reasoning for this rebaseline are in
   media/TTS, player/Studio/SDK, cloud, and specialized workflow surfaces plus a
   complete product-launch brief/capture/frame/storyboard/sketch/build/preview
   process. ADR-0042 closes Chitra's static typed masks/blends/local-composition
-  gap, but imported runtimes, animated shaders/masks, 3D breadth, narration,
+  gap and ADR-0043 closes a bounded vector-only Lottie JSON slice. Rive,
+  dotLottie, generic runtimes, animated shaders/masks, 3D breadth, narration,
   Studio/player, alpha/HDR/codecs, and cloud remain; Chitra does not have parity
   and makes no superiority claim.
 - GitHub vulnerability alerts/private reporting and protected `main` are live;

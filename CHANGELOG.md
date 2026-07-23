@@ -23,6 +23,10 @@ versioned separately.
 
 ### Added
 
+- ADR-0043 typed seekable Lottie: project-local vector-only JSON, a pinned MIT
+  SVG runtime included only when used, compile-time trust-boundary validation,
+  normal/reverse/alternate scene-time mapping, local composition/compositing,
+  provenance and cache/release identity, and random/backward real-browser proof.
 - ADR-0042 typed compositing and local compositions: static clips,
   alpha/luminance and gradient mattes, blend/filter/isolation controls, nested
   local coordinates to depth eight, separate motion/appearance layers, matte

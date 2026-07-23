@@ -12,6 +12,7 @@ const lock = readJson("core/package-lock.json");
 const manifest = readJson("skills/manifest.json");
 const failures = [];
 const runtimeAssetHashes = {
+  "core/runtime-assets/lottie/lottie_svg.min.js": "ac64292815e1d96628a5c412f0b6f71a5134846e43b5b972ab85687bd7b53508",
   "core/runtime-assets/three/three.module.js": "0a3368c165eea773490aec7b77c22de70e3eac288503409256fdbf4d12578416",
   "core/runtime-assets/fonts/inter/inter-latin-400-normal.woff2": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc",
   "core/runtime-assets/fonts/inter/inter-latin-500-normal.woff2": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",

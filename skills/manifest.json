@@ -3,8 +3,8 @@
   "version": "0.5.0",
   "skills": {
     "create-video": {
-      "sha256": "8f8a744024bc94f3dd834058d4216766e47de48644c461a8dd22b848695f498a",
-      "bytes": 35630,
+      "sha256": "176be54f54cf88d0d20c24024cf818395335cca853906091c1cda34916ed46fe",
+      "bytes": 36343,
       "files": 10
     },
     "critique-video": {

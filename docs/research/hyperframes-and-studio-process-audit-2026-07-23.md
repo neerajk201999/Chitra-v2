@@ -83,7 +83,8 @@ Chitra is not at HyperFrames capability parity while any important brief can be
 blocked by:
 
 - masks/mattes/blend modes and deeper local compositions;
-- seekable Lottie/Rive/imported animation;
+- Rive/dotLottie and arbitrary imported-animation runtimes (typed seekable
+  vector-only Lottie JSON is native under ADR-0043);
 - arbitrary HTML/runtime adapters or an equivalent safe extension boundary;
 - custom glTF/PBR/environment/shadow/post-production scenes;
 - narration/TTS and word-synchronized Score audio;

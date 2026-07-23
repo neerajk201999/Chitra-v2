@@ -745,7 +745,7 @@ export async function runFrameGates(score: ScoreT, session: RenderSession): Prom
     if (scene.background === "image") return;
     // Text sitting ON media (image/video/figure) is lit by the media, not the
     // scene background — its legibility belongs to MO-MED-1 + frame gates.
-    const media = scene.elements.filter((e) => e.type === "image" || e.type === "video" || e.type === "figure");
+    const media = scene.elements.filter((e) => e.type === "image" || e.type === "video" || e.type === "lottie" || e.type === "figure");
     const onMedia = (tx: number, ty: number) =>
       media.some((m) => {
         const cx = m.position.x ?? 50, cy = m.position.y ?? 50, a = m.position.anchor;
@@ -1036,6 +1036,8 @@ function renderedAssets(score: ScoreT): RenderedAsset[] {
     scene.elements.forEach((element, elementIndex) => {
       const base = `score.scenes[${sceneIndex}].elements[${elementIndex}]`;
       if (element.type === "image" || element.type === "video")
+        assets.push({ path: element.src, assetUse: element.assetUse, irPath: `${base}.src`, sceneId: scene.id });
+      if (element.type === "lottie")
         assets.push({ path: element.src, assetUse: element.assetUse, irPath: `${base}.src`, sceneId: scene.id });
       if (element.type === "figure") element.assets.forEach((asset, assetIndex) =>
         assets.push({ path: asset.src, assetUse: asset.assetUse, irPath: `${base}.assets[${assetIndex}].src`, sceneId: scene.id }));
