@@ -10,18 +10,11 @@ evidence.
 Requirements: Node.js 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-git clone https://github.com/neerajk201999/Chitra-v2.git
-cd Chitra-v2
-npm install --prefix ./core
-npm pack ./core --pack-destination .
-npm install -g ./chitra-video-0.6.0-rc.1.tgz
-npx skills add . --skill '*' --copy --global --yes
-chitra probe
+npx --yes chitra-video@next setup
 ```
 
-This source-matched candidate path avoids pairing the older
-https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz
-CLI with current-main skills.
+This uses the matching skill kit embedded in the published CLI, avoiding a
+mutable repository/CLI mismatch.
 
 Open a new project folder in Claude Code, Codex, Cursor, or Gemini CLI. Paste one
 prompt below. The agent should route through the installed `create-video` skill.

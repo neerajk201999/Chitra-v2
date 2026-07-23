@@ -7,24 +7,18 @@ Requirements: Node.js 22.12+, FFmpeg on `PATH`, and installed Chrome, Chromium,
 or Edge. Git is needed only for a repository clone. `chitra probe` launches the
 actual browser and checks FFmpeg after installation.
 
-## Recommended source-matched candidate install
+## Recommended one-command install
 
-Install the CLI and agent skills from a normal terminal before opening the
-project in Cursor/Claude/Codex. This avoids agent-sandbox Git permissions and
-does not download a second browser:
+Run this from a normal terminal before opening the project in Cursor, Claude
+Code, Codex, or Gemini CLI:
 
 ```bash
-git clone https://github.com/neerajk201999/Chitra-v2.git
-cd Chitra-v2
-npm install --prefix ./core
-npm pack ./core --pack-destination .
-npm install -g ./chitra-video-0.6.0-rc.1.tgz
-npx skills add . --skill '*' --copy --global --yes
-chitra probe
+npx --yes chitra-video@next setup
 ```
 
-This installs the `0.6.0-rc.1` CLI and skills from the same checkout. The older
-verified 0.5.0 GitHub prerelease remains available at
+`setup` globally installs that exact CLI version, installs the matching bundled
+skills for detected coding agents, and proves FFmpeg/browser availability. It
+does not download a browser. The older verified 0.5.0 GitHub prerelease remains available at
 https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz
 with SHA-256
 `b1feb333f8c4cafa4852859e088dc9fa1162ffcfb7753c9f7bcff76123cdd79d`.
@@ -33,17 +27,20 @@ Do not pair that 0.5 CLI with current-main skills.
 Select a harness explicitly when auto-detection is ambiguous:
 
 ```bash
-npx skills add . --agent cursor --skill '*' --copy --global --yes
-npx skills add . --agent claude-code --skill '*' --copy --global --yes
-npx skills add . --agent codex --skill '*' --copy --global --yes
-npx skills add . --agent gemini-cli --skill '*' --copy --global --yes
+npx --yes chitra-video@next setup --agent cursor
+npx --yes chitra-video@next setup --agent claude-code
+npx --yes chitra-video@next setup --agent codex
+npx --yes chitra-video@next setup --agent gemini-cli
 ```
 
-Clone only when developing Chitra or when the agent needs the full examples and
-architecture memory. Run this outside an agent sandbox:
+For source development only, clone, install `core` dependencies, then run the
+current checked-out CLI and local skill package. Run this outside an agent sandbox:
 
 ```bash
 git clone https://github.com/neerajk201999/Chitra-v2.git
+cd Chitra-v2
+npm install --prefix ./core
+node core/dist/cli/index.js setup --no-global
 ```
 
 ## Native plugin paths

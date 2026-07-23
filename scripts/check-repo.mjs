@@ -114,7 +114,9 @@ const publicPreviewSha256 = publicPreviewBenchmark.match(/PUBLIC_PREVIEW_SHA256\
 if (!publicPreviewUrl || !publicPreviewSha256) failures.push("public-preview benchmark URL/SHA-256 is not discoverable");
 for (const file of ["README.md", "docs/INSTALL.md", "docs/quickstarts/README.md"]) {
   const source = readFileSync(path.join(root, file), "utf8");
-  if (publicPreviewUrl && !source.includes(publicPreviewUrl)) failures.push(`${file} does not install the pinned public-preview URL`);
+  const oneCommandSetup = source.includes("npx --yes chitra-video@next setup");
+  if (publicPreviewUrl && !oneCommandSetup && !source.includes(publicPreviewUrl))
+    failures.push(`${file} does not provide either the one-command setup or pinned public-preview install`);
 }
 for (const file of ["docs/INSTALL.md", "benchmarks/public-preview-install/results.md"]) {
   const source = readFileSync(path.join(root, file), "utf8");

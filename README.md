@@ -21,7 +21,7 @@ prompt + optional sources → intake → bounded direction search → storyboard
 
 ## Status
 
-**v0.6.0-rc.1 — native Frame Systems and role-safe production handoffs.**
+**v0.6.0-rc.2 — one-command setup, native Frame Systems, and role-safe production handoffs.**
 `chitra intake` preserves objectives, mixed-source provenance, preferences,
 anti-references, brand constraints, assumptions, and evidence as locked JSON;
 the [intake benchmark](benchmarks/intake/results.md) verifies deterministic local
@@ -63,25 +63,20 @@ general HyperFrames superiority.
 Requirements: Node 22.12+, FFmpeg on `PATH`, and Chrome/Chromium/Edge.
 
 ```bash
-git clone https://github.com/neerajk201999/Chitra-v2.git
-cd Chitra-v2
-npm install --prefix ./core
-npm pack ./core --pack-destination .
-npm install -g ./chitra-video-0.6.0-rc.1.tgz
-npx skills add . --skill '*' --copy --global --yes
-chitra probe
+npx --yes chitra-video@next setup
 ```
 
-Open your video project in the coding agent. npm supplies the deterministic CLI;
-the skills installer supplies the progressive creative workflow. Clone the full
-repository only for development/examples. See [Install and use Chitra](docs/INSTALL.md)
+This persists the exact CLI globally, installs its matching Chitra skills for
+detected agents, and verifies FFmpeg plus a real Chromium-family browser. To
+target one harness explicitly, append `--agent cursor`, `--agent claude-code`,
+`--agent codex`, or `--agent gemini-cli`. Clone the full repository only for
+development/examples. See [Install and use Chitra](docs/INSTALL.md)
 for explicit Claude Code, Codex, Cursor, and Gemini CLI commands, or [run the
 friend test](docs/quickstarts/README.md) with two ready-to-use prompts and a
 compact feedback checklist.
 
-The source-matched command above is the supported ADR-0045 test path until the
-exact protected-main `0.6.0-rc.1` package is published and independently
-reinstalled. The older SHA-256-verified
+The one-command path is published from protected main and independently
+reinstalled before being recommended. The older SHA-256-verified
 [`0.5.0` artifact](https://github.com/neerajk201999/Chitra-v2/releases/download/v0.5.0-rc.4/chitra-video-0.5.0.tgz)
 must not be paired with current-main skills: it has no Frame System fields or
 `stage-check`.

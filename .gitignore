@@ -1,5 +1,6 @@
 node_modules/
 core/dist/
+core/runtime-assets/agent-kit/
 .chitra-cache/
 .chitra-page.html
 examples/*/out/

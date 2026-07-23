@@ -1,4 +1,4 @@
-# Known Issues (v0.6.0-rc.1 source candidate; public preview remains v0.5.0-rc.4 — 2026-07-23)
+# Known Issues (v0.6.0-rc.2 source candidate; public preview remains v0.5.0-rc.4 — 2026-07-23)
 
 Honest ledger. Each item is scheduled (milestone) or explicitly accepted. Fixed items move to the adversarial review record ([docs/reviews/0001](../reviews/0001-adversarial-review.md)).
 

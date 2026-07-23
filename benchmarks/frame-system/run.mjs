@@ -247,7 +247,7 @@ try {
 - Layout-input scene-cache invalidation: **pass**
 - Backward/repeated frame capture: **byte-identical** (${sha(first).slice(0, 16)}…)
 - Runtime dependencies added: **0**
-- Package dry-run: **680.6 kB compressed / 2.7 MB unpacked**
+- Package dry-run: **701.1 kB compressed / 2.8 MB unpacked**
   (pre-tranche: 672.1 kB / 2.7 MB)
 
 This proves deterministic layout and handoff contracts. It does not prove
