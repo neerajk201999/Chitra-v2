@@ -130,6 +130,10 @@ and CHANGELOG.
   process and inserts an all-shot still board plus optional cut animatic before
   expensive motion on open/high-stakes multi-shot work. It adds no fifth
   planning IR and forces neither brand nor logo.
+- The 2026-07-23 over-engineering audit found no removable runtime dependency.
+  It records 7.2 MiB of source-only starter media and duplicate style roots as
+  explicit cleanup candidates; they were not deleted without a migration
+  decision because source-checkout convenience is a real tradeoff.
 
 ## Evidence, not claims
 
