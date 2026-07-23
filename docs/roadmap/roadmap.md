@@ -116,12 +116,14 @@ Landed 2026-07-16 from the measured Card Vault residual: **ADR-0028 textured
 3D property tracks** — rights-traced card/slab front artwork plus typed internal
 mesh, camera, key/fill light, and exposure states. The browser benchmark lands
 3/3 states under backward seeks and repeats a PNG byte-identically.
-Remaining honest gaps vs Remotion for exact reconstruction: masks/mattes,
-local-coordinate/deeper compositions, blend modes, motion blur, back/side
-textures and custom 3D geometry/materials, and narration/TTS generation. Clip
-audio is native through ADR-0034 edit plates but not direct Score-video mixing.
-Automated exhaustive reference comparison and named ROI
-diagnostics are built (ADR-0019/0022).
+ADR-0042 now closes the static typed mask/matte, blend/filter, and bounded
+local/deeper-composition slice with real-browser pixel evidence and
+provenance/cache binding. Remaining honest gaps vs Remotion/HyperFrames for
+exact reconstruction include animated masks/shaders, motion blur, back/side
+textures and custom 3D geometry/materials, alpha/HDR/color output, imported
+animation, and narration/TTS generation. Clip audio is native through ADR-0034
+edit plates but not direct Score-video mixing. Automated exhaustive reference
+comparison and named ROI diagnostics are built (ADR-0019/0022).
 
 ## M4 — Creative Intelligence (the missing brain) — STARTED 2026-07-16
 *Goal: Chitra makes the creative decisions a top director + motion designer would — before rendering. The pipeline begins at intent, not at Motion IR (ADR-0012).*

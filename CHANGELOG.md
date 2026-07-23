@@ -23,6 +23,10 @@ versioned separately.
 
 ### Added
 
+- ADR-0042 typed compositing and local compositions: static clips,
+  alpha/luminance and gradient mattes, blend/filter/isolation controls, nested
+  local coordinates to depth eight, separate motion/appearance layers, matte
+  provenance/cache identity, and a real-browser pixel/determinism benchmark.
 - Phase 0 production-readiness audit with explicit first-party evidence limits,
   reproduced gate-policy/package defects, edge-case ledger, and Definition-of-
   Done status instead of a rounded-up production claim.

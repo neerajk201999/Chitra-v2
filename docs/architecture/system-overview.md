@@ -2,7 +2,8 @@
 
 Governing decisions: ADR-0002 (substrate), ADR-0003 (Motion IR), ADR-0004
 (Quality Engine), ADR-0005 (distribution), ADR-0017 (Intake), ADR-0018
-(creative ladder), ADR-0036 (still-first Direction selection).
+(creative ladder), ADR-0036 (still-first Direction selection), ADR-0042
+(typed compositing and local compositions).
 
 ```
                         USER'S CODING AGENT (Claude Code / Codex / Cursor / Gemini CLI)
@@ -48,7 +49,8 @@ DETERMINISTIC CORE (CLI + library; no LLM calls; the only thing that touches pix
   motion/    token registry: easing families, duration scale, stagger patterns,
              transition types, register definitions (machine-readable mirror of docs/motion/)
   compile/   IR → HTML/CSS/GSAP page (stable IDs, one paused master timeline,
-             seeded randomness, font pinning) — determinism is a compiler obligation
+             seeded randomness, font pinning, typed appearance layer, bounded
+             local compositions) — determinism is a compiler obligation
   render/    backend interface; v0: system Chrome seek/capture → frame cache →
              FFmpeg encode; content hashes make sequential dirty-scene reuse possible
   gates/     Quality Engine layers 1–2 (ID-tagged rules, thresholds from motion/)

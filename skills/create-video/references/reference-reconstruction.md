@@ -24,9 +24,11 @@ declared direct/derived lineage.
 
 Typed DOM keyframe tracks own X/Y, scale, 3-axis rotation, opacity, perspective,
 origin, and token easing. Curated 3D tracks own bounded mesh, camera, key/fill
-light, and exposure properties. They do not provide masks, blend modes, local or
-deep nested compositions, arbitrary geometry/materials, environment reflections,
-cast shadows, or motion blur.
+light, and exposure properties. Typed compositing owns static clips,
+alpha/luminance and gradient mattes, blend/filter/isolation controls, and nested
+local-coordinate groups to depth eight. It does not provide animated mask/filter
+tracks, shaders, nested time remapping, arbitrary geometry/materials,
+environment reflections, cast shadows, or motion blur.
 
 Compare equal geometry/FPS/frame-count renders with:
 
@@ -42,4 +44,3 @@ is for style/rhythm iteration and cannot be called exact.
 If the requested reference grammar requires an unsupported capability, stop at
 the production approach gate. Obtain an authorized pre-rendered asset/plate,
 build the capability against a benchmark, or approve a different concept.
-

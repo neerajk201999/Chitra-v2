@@ -197,6 +197,27 @@ describe("creative ladder conformance (ADR-0018)", () => {
     });
     expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, value.score)).toEqual([]);
 
+    const matteOnly = structuredClone(value.score);
+    matteOnly.scenes[0].elements = [{
+      type: "shape", id: "licensed-matte", role: "hero", shape: "rect",
+      color: "primary", opacity: 1, position: { anchor: "center" },
+      width: 50, height: 50, radius: 0,
+      compositing: {
+        opacity: 1, blendMode: "normal", isolation: false, filters: [],
+        matte: {
+          kind: "asset", src: "assets/card.png",
+          assetUse: { sourceId: "licensed-card", kind: "derived", note: "Use the approved artwork alpha as a reveal matte" },
+          mode: "alpha", fit: "cover", positionX: 50, positionY: 50,
+        },
+      },
+    }];
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, matteOnly)).toEqual([]);
+    const untrackedMatte = structuredClone(matteOnly);
+    const matteElement = untrackedMatte.scenes[0].elements[0];
+    if (matteElement.compositing.matte?.kind === "asset")
+      matteElement.compositing.matte.assetUse = undefined;
+    expect(runAssetProvenanceConformance(value.intake, value.direction, value.storyboard, untrackedMatte).map((finding) => finding.ruleId)).toContain("CC-ASSET-1");
+
     const untracked = structuredClone(value.score);
     const untrackedImage = untracked.scenes[0].elements.find((element) => element.id === "licensed-art");
     if (untrackedImage?.type === "image") untrackedImage.assetUse = undefined;

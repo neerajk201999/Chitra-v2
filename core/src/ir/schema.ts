@@ -243,6 +243,103 @@ const Position = z.object({
   y: z.number().min(-20).max(120).optional(),
 });
 
+/** ADR-0042: deterministic browser-native compositing. This stays typed and
+ * dependency-free instead of accepting arbitrary CSS strings. */
+const FilterOperation = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("blur"), px: z.number().min(0).max(200) }).strict(),
+  z.object({ kind: z.literal("brightness"), amount: z.number().min(0).max(4) }).strict(),
+  z.object({ kind: z.literal("contrast"), amount: z.number().min(0).max(4) }).strict(),
+  z.object({ kind: z.literal("saturate"), amount: z.number().min(0).max(4) }).strict(),
+  z.object({ kind: z.literal("hue-rotate"), deg: z.number().min(-360).max(360) }).strict(),
+  z.object({ kind: z.literal("grayscale"), amount: z.number().min(0).max(1) }).strict(),
+  z.object({ kind: z.literal("sepia"), amount: z.number().min(0).max(1) }).strict(),
+]);
+const ClipShape = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("inset"),
+    top: z.number().min(0).max(100).default(0),
+    right: z.number().min(0).max(100).default(0),
+    bottom: z.number().min(0).max(100).default(0),
+    left: z.number().min(0).max(100).default(0),
+    radius: z.number().min(0).max(50).default(0),
+  }).strict(),
+  z.object({
+    kind: z.literal("circle"),
+    radius: z.number().min(0).max(100),
+    x: z.number().min(0).max(100).default(50),
+    y: z.number().min(0).max(100).default(50),
+  }).strict(),
+  z.object({
+    kind: z.literal("ellipse"),
+    radiusX: z.number().min(0).max(100),
+    radiusY: z.number().min(0).max(100),
+    x: z.number().min(0).max(100).default(50),
+    y: z.number().min(0).max(100).default(50),
+  }).strict(),
+  z.object({
+    kind: z.literal("polygon"),
+    points: z.array(z.object({
+      x: z.number().min(0).max(100),
+      y: z.number().min(0).max(100),
+    }).strict()).min(3).max(32),
+  }).strict(),
+]);
+const Matte = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("asset"),
+    src: projectAssetPath.refine(
+      (value) => /\.(?:png|jpe?g|webp|svg)$/i.test(value),
+      "matte asset must be PNG, JPEG, WebP, or SVG",
+    ),
+    assetUse: AssetUse.optional(),
+    mode: z.enum(["alpha", "luminance"]).default("alpha"),
+    fit: z.enum(["cover", "contain", "stretch"]).default("cover"),
+    positionX: z.number().min(0).max(100).default(50),
+    positionY: z.number().min(0).max(100).default(50),
+  }).strict(),
+  z.object({
+    kind: z.literal("linear-gradient"),
+    angleDeg: z.number().min(-360).max(360).default(90),
+    stops: z.array(z.object({
+      offset: z.number().min(0).max(1),
+      opacity: z.number().min(0).max(1),
+    }).strict()).min(2).max(8),
+  }).strict(),
+  z.object({
+    kind: z.literal("radial-gradient"),
+    x: z.number().min(0).max(100).default(50),
+    y: z.number().min(0).max(100).default(50),
+    stops: z.array(z.object({
+      offset: z.number().min(0).max(1),
+      opacity: z.number().min(0).max(1),
+    }).strict()).min(2).max(8),
+  }).strict(),
+]).superRefine((value, ctx) => {
+  if (value.kind === "asset") return;
+  for (let index = 1; index < value.stops.length; index++) {
+    if (value.stops[index].offset <= value.stops[index - 1].offset)
+      ctx.addIssue({ code: "custom", path: ["stops", index, "offset"], message: "matte stop offsets must be strictly increasing" });
+  }
+});
+const Compositing = z.object({
+  opacity: z.number().min(0).max(1).default(1),
+  blendMode: z.enum([
+    "normal", "multiply", "screen", "overlay", "darken", "lighten",
+    "color-dodge", "color-burn", "hard-light", "soft-light", "difference",
+    "exclusion", "hue", "saturation", "color", "luminosity", "plus-lighter",
+  ]).default("normal"),
+  isolation: z.boolean().default(false),
+  filters: z.array(FilterOperation).max(8).default([]),
+  clip: ClipShape.optional(),
+  matte: Matte.optional(),
+}).strict();
+const compositing = Compositing.default({
+  opacity: 1,
+  blendMode: "normal",
+  isolation: false,
+  filters: [],
+});
+
 const TextElement = z.object({
   type: z.literal("text"),
   id,
@@ -253,6 +350,7 @@ const TextElement = z.object({
   maxWidth: z.number().min(10).max(100).optional(), // stage units
   align: z.enum(["left", "center", "right"]).default("center"),
   position: Position.default({ anchor: "center" }),
+  compositing,
 });
 
 const ShapeElement = z.object({
@@ -266,6 +364,7 @@ const ShapeElement = z.object({
   width: z.number().min(0).max(140).default(20),
   height: z.number().min(0).max(140).default(20),
   radius: z.number().min(0).max(50).default(0), // corner radius, stage units
+  compositing,
 });
 
 const ImageElement = z.object({
@@ -282,6 +381,7 @@ const ImageElement = z.object({
   height: z.number().min(1).max(140).default(100),
   radius: z.number().min(0).max(50).default(0),
   scrim: z.number().min(0).max(0.8).default(0), // darkening overlay for text legibility
+  compositing,
 });
 
 const VideoElement = z.object({
@@ -298,6 +398,7 @@ const VideoElement = z.object({
   height: z.number().min(1).max(140).default(100),
   radius: z.number().min(0).max(50).default(0),
   scrim: z.number().min(0).max(0.8).default(0),
+  compositing,
 });
 
 /** ADR-0009/0020: deterministic dot-matrix particle field. Authors pick a
@@ -330,6 +431,7 @@ const ParticlesElement = z.object({
   position: Position.default({ anchor: "center" }),
   width: z.number().min(5).max(140).default(40),
   height: z.number().min(5).max(140).default(40),
+  compositing,
 }).superRefine((value, ctx) => {
   if (value.formation === "custom" && !value.points)
     ctx.addIssue({ code: "custom", path: ["points"], message: "custom particle formation requires points" });
@@ -350,6 +452,7 @@ const FigureElement = z.object({
   height: z.number().min(5).max(140).default(60),
   radius: z.number().min(0).max(50).default(0),
   shadow: z.boolean().default(true), // soft elevation, theme-aware
+  compositing,
 }).superRefine((value, ctx) => {
   const seen = new Set<string>();
   value.assets.forEach((asset, index) => {
@@ -366,6 +469,7 @@ const CursorElement = z.object({
   variant: z.enum(["arrow", "hand"]).default("arrow"),
   position: Position.default({ anchor: "center" }),
   scale: z.number().min(0.6).max(2).default(1),
+  compositing,
 });
 
 /** ADR-0010: real 3D via a curated Three.js scene driven by our seek clock.
@@ -391,6 +495,7 @@ const Scene3dElement = z.object({
   position: Position.default({ anchor: "center" }),
   width: z.number().min(10).max(140).default(70),
   height: z.number().min(10).max(140).default(50),
+  compositing,
 }).superRefine((value, ctx) => {
   if (value.frontTexture && value.primitive === "coin")
     ctx.addIssue({ code: "custom", path: ["frontTexture"], message: "scene3d coin front textures are unsupported" });
@@ -408,6 +513,7 @@ const StatElement = z.object({
   label: z.string().optional(),
   color: z.enum(["text", "primary", "accent"]).default("text"),
   position: Position.default({ anchor: "center" }),
+  compositing,
 });
 
 const ChartBarElement = z.object({
@@ -422,14 +528,29 @@ const ChartBarElement = z.object({
   position: Position.default({ anchor: "center" }),
   width: z.number().min(20).max(100).default(60),
   height: z.number().min(10).max(80).default(40),
+  compositing,
 });
 
-/** ADR-0021: one-level full-stage transform hierarchy. */
+/** ADR-0021/0042: reference-addressed local composition. Children remain in
+ * the scene's flat registry for stable selectors and asset provenance, while
+ * nested groups establish bounded local coordinate systems. */
 const GroupElement = z.object({
   type: z.literal("group"),
   id,
-  role: z.enum(["support", "ambient"]).default("support"),
-  children: z.array(id).min(1).max(11),
+  role: z.enum(["hero", "support", "ambient"]).default("support"),
+  children: z.array(id).min(1).max(32),
+  position: Position.default({ anchor: "center" }),
+  width: z.number().min(1).max(140).default(100),
+  height: z.number().min(1).max(140).default(100),
+  overflow: z.enum(["visible", "hidden"]).default("visible"),
+  compositing,
+}).superRefine((value, ctx) => {
+  const seen = new Set<string>();
+  value.children.forEach((childId, index) => {
+    if (seen.has(childId))
+      ctx.addIssue({ code: "custom", path: ["children", index], message: `duplicate composition child ${childId}` });
+    seen.add(childId);
+  });
 });
 
 export const Element = z.discriminatedUnion("type", [
@@ -600,7 +721,7 @@ export const Scene = z.object({
   background: z.enum(["bg", "surface", "primary", "image"]).default("bg"),
   backgroundImage: projectAssetPath.optional(),
   backgroundAssetUse: AssetUse.optional(),
-  elements: z.array(Element).min(1).max(12),
+  elements: z.array(Element).min(1).max(64),
   choreography: z.array(Animation).default([]),
   transitionOut: z
     .object({ type: transition, duration: durationToken.default("standard") })
@@ -612,6 +733,18 @@ export const Scene = z.object({
     ctx.addIssue({ code: "custom", path: ["backgroundImage"], message: "backgroundImage and backgroundAssetUse require background image" });
   if (value.backgroundAssetUse && !value.backgroundImage)
     ctx.addIssue({ code: "custom", path: ["backgroundAssetUse"], message: "backgroundAssetUse requires backgroundImage" });
+  const elementIds = new Set<string>();
+  value.elements.forEach((element, index) => {
+    if (elementIds.has(element.id))
+      ctx.addIssue({ code: "custom", path: ["elements", index, "id"], message: `duplicate scene element id ${element.id}` });
+    elementIds.add(element.id);
+  });
+  const animationIds = new Set<string>();
+  value.choreography.forEach((animation, index) => {
+    if (animationIds.has(animation.id))
+      ctx.addIssue({ code: "custom", path: ["choreography", index, "id"], message: `duplicate scene animation id ${animation.id}` });
+    animationIds.add(animation.id);
+  });
 });
 export type SceneT = z.infer<typeof Scene>;
 

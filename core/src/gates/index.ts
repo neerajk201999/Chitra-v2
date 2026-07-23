@@ -175,8 +175,11 @@ export function runStaticGates(score: ScoreT): Finding[] {
         f.push({ ruleId: "IR-REF-2", severity: "P1", path: p(`.choreography[${ai}]`), message: `Animation "${a.id}" targets "${a.target}" but no such element exists in this scene${a.target.includes("/") ? " (figureId/innerId requires a figure element with that id)" : ""}` });
     });
 
-    // IR-GROUP-1 (ADR-0021): one-level, single-owner transform hierarchy.
+    // IR-GROUP-1 (ADR-0021/0042): acyclic, bounded, single-owner hierarchy.
     const groupOwner = new Map<string, string>();
+    const groups = new Map(scene.elements
+      .filter((element): element is Extract<(typeof scene.elements)[number], { type: "group" }> => element.type === "group")
+      .map((element) => [element.id, element]));
     scene.elements.forEach((element, ei) => {
       if (element.type !== "group") return;
       element.children.forEach((childId, ci) => {
@@ -184,14 +187,32 @@ export function runStaticGates(score: ScoreT): Finding[] {
         const path = p(`.elements[${ei}].children[${ci}]`);
         if (!child)
           f.push({ ruleId: "IR-GROUP-1", severity: "P1", path, message: `group "${element.id}" references missing child "${childId}"` });
-        else if (child.type === "group")
-          f.push({ ruleId: "IR-GROUP-1", severity: "P1", path, message: `group "${element.id}" cannot contain group "${childId}" — composition groups are one level` });
         const prior = groupOwner.get(childId);
         if (prior)
           f.push({ ruleId: "IR-GROUP-1", severity: "P1", path, message: `element "${childId}" belongs to both groups "${prior}" and "${element.id}"` });
         else groupOwner.set(childId, element.id);
       });
     });
+    const visitGroup = (groupId: string, ancestry: string[]) => {
+      if (ancestry.includes(groupId)) {
+        f.push({
+          ruleId: "IR-GROUP-1", severity: "P1", path: p(".elements"),
+          message: `composition cycle ${[...ancestry, groupId].join(" -> ")}`,
+        });
+        return;
+      }
+      if (ancestry.length >= 8) {
+        f.push({
+          ruleId: "IR-GROUP-1", severity: "P1", path: p(".elements"),
+          message: `composition depth exceeds 8 at "${groupId}"`,
+        });
+        return;
+      }
+      const next = [...ancestry, groupId];
+      for (const childId of groups.get(groupId)?.children ?? [])
+        if (groups.has(childId)) visitGroup(childId, next);
+    };
+    for (const groupId of groups.keys()) visitGroup(groupId, []);
 
     // IR-CUR-1 (ADR-0008): waypoints exist ONLY on cursor-move aimed at a cursor;
     // interaction presets must aim at their element kind.
@@ -1020,6 +1041,13 @@ function renderedAssets(score: ScoreT): RenderedAsset[] {
         assets.push({ path: asset.src, assetUse: asset.assetUse, irPath: `${base}.assets[${assetIndex}].src`, sceneId: scene.id }));
       if (element.type === "scene3d" && element.frontTexture)
         assets.push({ path: element.frontTexture, assetUse: element.frontTextureAssetUse, irPath: `${base}.frontTexture`, sceneId: scene.id });
+      if (element.compositing?.matte?.kind === "asset")
+        assets.push({
+          path: element.compositing.matte.src,
+          assetUse: element.compositing.matte.assetUse,
+          irPath: `${base}.compositing.matte.src`,
+          sceneId: scene.id,
+        });
     });
     scene.choreography.forEach((animation, animationIndex) => {
       if (animation.sfx) assets.push({ path: animation.sfx.src, assetUse: animation.sfx.assetUse, irPath: `score.scenes[${sceneIndex}].choreography[${animationIndex}].sfx.src`, sceneId: scene.id });

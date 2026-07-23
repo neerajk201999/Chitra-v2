@@ -109,7 +109,8 @@ Stop before spending more time/tokens when:
 - the required hero is unsupported and no viable asset-assisted approach exists;
 - the governing concept or hero still is weak;
 - requested “premium CGI” depends on arbitrary geometry, environment
-  reflections, cast shadows, motion blur, or compositing Chitra does not have;
+  reflections, cast shadows, motion blur, animated masks/shaders, or nested
+  time remapping Chitra does not have;
 - critique repeats the same finding after a targeted revision.
 
 Name the blocker precisely and propose the smallest truthful route forward.
